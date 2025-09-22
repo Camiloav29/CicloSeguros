@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Reporte de Cartera - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/cartera_cargar.css">
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="{{ url_for('dashboard') }}" class="back-to-dashboard"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+                <h1><i class="fas fa-file-upload"></i> Cargar Reporte de Cartera</h1>
+                <p>Seleccione el archivo Excel (.xlsx, .xls) del reporte de cartera para procesar.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="flash-messages-container" style="margin-bottom: 1rem;">
+                  {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('procesar_reporte_cartera') }}" enctype="multipart/form-data" id="cargarCarteraForm">
+                <fieldset>
+                    <legend><i class="fas fa-file-excel"></i> Selección de Archivo</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reporte_cartera">Archivo del Reporte de Cartera</label>
+                            <input type="file" name="reporte_cartera" id="reporte_cartera" class="custom-file-input" accept=".xlsx, .xls" required>
+                            <small class="form-text text-muted" style="display: block; margin-top: 0.5rem; font-size: 0.85em;">Formatos aceptados: .xlsx, .xls</small>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-cogs"></i> Procesar Reporte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+     document.getElementById('cargarCarteraForm').addEventListener('submit', function() {
+         const btn = this.querySelector('.btn-submit');
+         const originalBtnText = btn.innerHTML;
+         btn.disabled = true;
+         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+         // Consider adding a timeout to re-enable the button if something goes wrong client-side
+         // setTimeout(() => { 
+         //    if(btn.disabled) { btn.disabled = false; btn.innerHTML = originalBtnText; }
+         // }, 30000); // 30 seconds timeout for example
+     });
+    </script>
+</body>
+</html>

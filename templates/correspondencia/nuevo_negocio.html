@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Calibri, sans-serif; font-size: 11pt; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-table td { vertical-align: top; }
+        .logo-cell { text-align: right; }
+        .logo-cell p { margin: 0; font-size: 9pt; }
+        .main-content { margin-top: 20px; }
+        .policy-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .policy-table th, .policy-table td { border-bottom: 1px solid black; padding: 5px; text-align: left; }
+        .policy-table th { font-weight: bold; }
+        .footer { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td>
+                <p>Señores</p>
+                <p><strong>{{ empresa }}</strong></p>
+                <p>Atn. Sr./Sra. <strong>{{ sr_sra }}</strong></p>
+                <p>{{ correo }}</p>
+                <p>Ciudad</p>
+            </td>
+            <td class="logo-cell">
+                <p><strong>UIB Corredores de Seguros S.A.</strong></p>
+                <p>Cra.7 # 71-21 Of.601, Torre B</p>
+                <p>Bogotá D.C., Colombia</p>
+                <p>+57 (601) 326 7100</p>
+                <p>www.uibseguros.com.co</p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="main-content">
+        <p>Bogotá D.C., {{ fecha }}</p>
+        <p>{{ consecutivo }}</p>
+        <p><strong>Ref.: {{ ref_asunto }}</strong></p>
+        <hr>
+        <p>Apreciados señores:</p>
+        <p>Agradecemos la confianza depositada en UIB CORREDORES DE SEGUROS S.A. y nos complace formalizar el inicio de nuestra relación como sus corredores de seguros, haciéndoles entrega de las pólizas suscritas con <strong>{{ aseguradora }}</strong>, con vigencia desde las 00:00 horas del <strong>{{ fecha_inicio }}</strong> hasta las 00:00 horas del <strong>{{ fecha_terminacion }}</strong>, según el siguiente detalle:</p>
+
+        <table class="policy-table">
+            <thead>
+                <tr>
+                    <th>Póliza No.</th>
+                    <th>Descripción</th>
+                    <th>Valor por pagar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ ramo }} No.{{ poliza }}</td>
+                    <td>{{ descripcion }}</td>
+                    <td>$ {{ valor_a_pagar }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><strong>GARANTÍAS PARTICULARES:</strong></p>
+        <p>{{ garantias }}</p>
+        <hr>
+        <p>Adjuntamos el recibo de pago correspondiente, los cuales deberá ser cancelado a más tardar el día <strong>{{ fecha_de_pago }}</strong>. Una vez efectuado el pago, les agradecemos notificarlo al correo electrónico sbarrios@uiblatam.com.</p>
+        <p><a href="{{ link_de_pago }}">{{ link_de_pago }}</a></p>
+        <hr>
+        <p>Finalmente, reiteramos que nuestro principal compromiso es ofrecer un servicio de excelencia y atención personalizada. Bajo esta filosofía y con el respaldo de nuestro equipo humano, UIB CORREDORES DE SEGUROS S.A. continúa brindando a sus clientes asesoría permanente, generando la confianza y tranquilidad necesarias para delegar en nuestra organización el manejo integral de sus programas de seguros.</p>
+        <p>Cordialmente,</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">
+        <button onclick="copiarContenido()">Copiar al Portapapeles</button>
+    </div>
+
+    <script>
+        function copiarContenido() {
+            const body = document.body;
+            const range = document.createRange();
+            range.selectNode(body);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            try {
+                document.execCommand('copy');
+                alert('¡Contenido copiado al portapapeles!');
+            } catch (err) {
+                alert('No se pudo copiar el contenido.');
+            }
+            window.getSelection().removeAllRanges();
+        }
+    </script>
+</body>
+</html>

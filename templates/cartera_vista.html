@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista de Cartera - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/cartera_vista.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="page-header">
+            <h1><i class="fas fa-folder-open"></i> Vista de Cartera Procesada</h1>
+            <div class="header-actions">
+                <a href="{{ url_for('descargar_reporte_cartera_final') }}" class="btn btn-success">
+                    <i class="fas fa-file-download"></i> Descargar Reporte Final
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages-container">
+              {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="filter-bar card">
+            <form method="GET" action="{{ url_for('visualizar_cartera') }}" class="form-inline">
+                <div class="form-group">
+                    <label for="mes_filtro">Filtrar por Mes de Creación:</label>
+                    <select name="mes_filtro" id="mes_filtro" class="form-control">
+                        <option value="">Todos los Meses</option>
+                        {% set nombres_meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"] %}
+                        {% for i in range(1, 13) %}
+                            <option value="{{ i }}" {% if request.args.get('mes_filtro')|int == i %}selected{% endif %}>{{ nombres_meses[i-1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ano_filtro" style="margin-left: 1rem;">Año:</label>
+                    <select name="ano_filtro" id="ano_filtro" class="form-control">
+                        <option value="">Todos los Años</option>
+                        {% for ano in anos_disponibles_filtro %}
+                            <option value="{{ ano }}" {% if ano_seleccionado_actual_int == ano %}selected{% endif %}>{{ ano }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="aseguradora_filtro" style="margin-left: 1rem;">Aseguradora:</label>
+                    <select name="aseguradora_filtro" id="aseguradora_filtro" class="form-control" style="min-width: 200px;">
+                        <option value="">Todas las Aseguradoras</option>
+                        {% for aseguradora_nombre in aseguradoras_disponibles_filtro %}
+                            <option value="{{ aseguradora_nombre }}" {% if aseguradora_seleccionada_actual == aseguradora_nombre %}selected{% endif %}>{{ aseguradora_nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filtrar</button>
+            </form>
+        </div>
+
+        <div class="table-responsive card">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 1%; text-align:center;"><input type="checkbox" id="seleccionar_todos_chk" title="Seleccionar Todos/Ninguno"></th>
+                        <th>ID Cartera</th>
+                        <th>FECHA CREACIÓN</th>
+                        <th>N° FACTURA</th>
+                        <th>NÚMERO PÓLIZA</th>
+                        <th>ASEGURADORA</th>
+                        <th>NOMBRES CLIENTE</th>
+                        <th>PRIMA NETA</th>
+                        <th>COMISIÓN</th>
+                        <th>% COMISIÓN UIB</th>
+                        <th>Intermediario</th>
+                        <th>Retención ($)</th>
+                        <th>Reteica ($)</th>
+                        <th>Vlr. Comisión UIB Neto ($)</th>
+                        <th>% Com. Intermediario</th>
+                        <th>Vlr. Comisión Intermediario ($)</th>
+                        <th>Clasificación</th>
+                        <th>Line of Business</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if remisiones %}
+                        {% for remision in remisiones %}
+                            <tr>
+                                <td data-label="Sel." style="text-align:center;"><input type="checkbox" class="seleccionar_registro_chk" name="id_registro_lote[]" value="{{ remision.ID_CARTERA }}"></td>
+                                <td data-label="ID Cartera">{{ remision['ID_CARTERA']|default('', true) }}</td>
+                                <td data-label="FECHA CREACIÓN">{{ remision['FECHA CREACIÓN']|default('', true) }}</td>
+                                <td data-label="N° FACTURA">{{ remision['N_FACTURA_Manual']|default('', true) }}</td>
+                                <td data-label="NÚMERO PÓLIZA">{{ remision['NÚMERO PÓLIZA']|default('', true) }}</td>
+                                <td data-label="ASEGURADORA">{{ remision['ASEGURADORA']|default('', true) }}</td>
+                                <td data-label="NOMBRES CLIENTE">{{ remision['NOMBRES CLIENTE']|default('', true) }}</td>
+                                <td data-label="PRIMA NETA">{{ remision['PRIMA NETA']|default('', true) }}</td>
+                                <td data-label="COMISIÓN">{{ remision['COMISIÓN']|default('', true) }}</td>
+                                <td data-label="% COMISIÓN UIB">{{ remision['PORCENTAJE DE COMISIÓN']|default('', true) }}</td>
+                                <td data-label="Intermediario">{{ remision['VENDEDOR']|default('', true) }}</td>
+                                <td data-label="Retención ($)">{{ remision['Retencion_Calc']|default('', true) }}</td>
+                                <td data-label="Reteica ($)">{{ remision['Reteica_Calc']|default('', true) }}</td>
+                                <td data-label="Vlr. Comisión UIB Neto ($)">{{ remision['Valor_Comision_UIB_Neto_Calc']|default('', true) }}</td>
+                                <td data-label="% Com. Intermediario">{{ remision['Porc_Com_Intermediario_Original']|default('', true) }}</td>
+                                <td data-label="Vlr. Comisión Intermediario ($)">{{ remision['Valor_Comision_Intermediario_Calc']|default('', true) }}</td>
+                                <td data-label="Clasificación">{{ remision['Clasificacion_Manual']|default('', true) }}</td>
+                                <td data-label="Line of Business">{{ remision['Line_of_Business_Manual']|default('', true) }}</td>
+                                <td data-label="Acciones" style="text-align: center;">
+                                    <a href="{{ url_for('mostrar_formulario_editar_cartera', id_registro=remision.ID_CARTERA) }}" class="btn btn-secondary btn-sm">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="19">No hay datos de cartera para mostrar. Por favor, cargue un reporte o ajuste los filtros.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card batch-action-form" style="margin-top: 2rem; padding: 1.5rem;">
+            <h3 style="margin-bottom: 1.5rem; text-align:center; font-weight:600; color: var(--primary-dark);">Aplicar Factura a Lote Seleccionado</h3>
+            <form id="formAplicarFacturaLote" class="form-inline" style="justify-content: center; gap: 1rem; flex-wrap:wrap;">
+                <div class="form-group" style="flex-grow: 1; min-width: 250px;">
+                    <label for="numero_factura_lote" class="sr-only">N° Factura para Lote:</label>
+                    <input type="text" name="numero_factura_lote" id="numero_factura_lote" class="form-control" placeholder="Ingrese N° Factura para Lote" required style="width:100%;">
+                </div>
+                <button type="submit" class="btn btn-success" style="padding-top: 0.6rem; padding-bottom: 0.6rem;"><i class="fas fa-check-double"></i> Aplicar a Seleccionados</button>
+            </form>
+            <div id="lote_notification" class="notification-placeholder" style="display:none; margin-top:1.5rem; text-align:center;"></div>
+        </div>
+    </div>
+    <script>
+    // Ensure this is within a <script> tag, ideally at the end of <body>
+    document.addEventListener('DOMContentLoaded', function() {
+        const seleccionarTodosChk = document.getElementById('seleccionar_todos_chk');
+        const registrosChk = document.querySelectorAll('input.seleccionar_registro_chk'); 
+        const formAplicarFacturaLote = document.getElementById('formAplicarFacturaLote');
+        const numeroFacturaLoteInput = document.getElementById('numero_factura_lote');
+        const loteNotificationDiv = document.getElementById('lote_notification');
+        const filterForm = document.querySelector('.filter-bar form'); 
+
+        if (seleccionarTodosChk) {
+            seleccionarTodosChk.addEventListener('change', function() {
+                registrosChk.forEach(chk => {
+                    chk.checked = seleccionarTodosChk.checked;
+                });
+            });
+        }
+        
+        registrosChk.forEach(chk => {
+             chk.addEventListener('change', function(){
+                 if(!this.checked){
+                     seleccionarTodosChk.checked = false;
+                 }
+                 let allChecked = true;
+                 registrosChk.forEach(c => { if(!c.checked) allChecked = false; });
+                 seleccionarTodosChk.checked = allChecked;
+             });
+        });
+
+        if (formAplicarFacturaLote) {
+            formAplicarFacturaLote.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                const idsSeleccionados = Array.from(registrosChk)
+                                            .filter(chk => chk.checked)
+                                            .map(chk => chk.value);
+                
+                const numeroFactura = numeroFacturaLoteInput.value.trim();
+
+                if (idsSeleccionados.length === 0) {
+                    showLoteNotification('Por favor, seleccione al menos un registro.', 'warning');
+                    return;
+                }
+                if (numeroFactura === '') {
+                    showLoteNotification('Por favor, ingrese un número de factura.', 'warning');
+                    numeroFacturaLoteInput.focus();
+                    return;
+                }
+
+                const btnSubmitLote = formAplicarFacturaLote.querySelector('button[type="submit"]');
+                const originalBtnLoteText = btnSubmitLote.innerHTML;
+                btnSubmitLote.disabled = true;
+                btnSubmitLote.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aplicando...';
+
+                fetch("{{ url_for('aplicar_factura_lote') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ids_registros: idsSeleccionados,
+                        numero_factura: numeroFactura
+                    })
+                })
+                .then(response => {
+                     if (!response.ok) {
+                         return response.json().catch(() => { 
+                             throw new Error(response.statusText || `Error del servidor: ${response.status}`); 
+                         }).then(errorData => { 
+                             throw new Error(errorData.message || `Error del servidor: ${response.status}`); 
+                         });
+                     }
+                     return response.json();
+                 })
+                .then(data => {
+                    if (data.success) {
+                        showLoteNotification(data.message, 'success');
+                        formAplicarFacturaLote.reset(); 
+                        const currentParams = filterForm ? new URLSearchParams(new FormData(filterForm)).toString() : '';
+                        setTimeout(() => { 
+                           window.location.href = "{{ url_for('visualizar_cartera') }}" + (currentParams ? "?" + currentParams : "");
+                        }, 2500); 
+                    } else {
+                        showLoteNotification(data.message || 'Error al aplicar factura al lote.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en fetch para aplicar factura lote:', error);
+                    showLoteNotification('Error de conexión o del servidor: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    btnSubmitLote.disabled = false;
+                    btnSubmitLote.innerHTML = originalBtnLoteText;
+                    if(seleccionarTodosChk) seleccionarTodosChk.checked = false;
+                    registrosChk.forEach(chk => { chk.checked = false; });
+                });
+            });
+        }
+
+        function showLoteNotification(message, type) {
+            if (!loteNotificationDiv) return;
+            loteNotificationDiv.textContent = message;
+            let categoryClass = 'flash-info';
+            if (type === 'success') categoryClass = 'flash-success';
+            if (type === 'error') categoryClass = 'flash-danger';
+            if (type === 'warning') categoryClass = 'flash-warning';
+            
+            loteNotificationDiv.className = 'flash-message ' + categoryClass; 
+            loteNotificationDiv.style.display = 'block';
+            setTimeout(() => {
+                loteNotificationDiv.style.display = 'none';
+            }, 7000); 
+        }
+    });
+    </script>
+</body>
+</html>

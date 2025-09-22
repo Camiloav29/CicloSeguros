@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Carpeta de Cliente - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/crear_carpeta_cliente.css">
+</head>
+<body>
+    <div class="form-container"> <!-- Changed from .container to .form-container -->
+        <div class="form-card">
+            <div class="form-header"> <!-- New specific header class -->
+                <a href="{{ url_for('index') }}" class="back-to-dashboard"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+                <h1><i class="fas fa-folder-plus"></i> Crear Nueva Carpeta de Cliente</h1>
+                <p>Ingrese los datos para crear la estructura de carpetas del cliente.</p>
+            </div>
+
+            <div class="notification-placeholder" id="notificationCardCrearCarpeta" style="display: none; margin-bottom: 1rem;"></div>
+            
+            <form method="POST" action="{{ url_for('ejecutar_crear_carpeta') }}" id="crearCarpetaForm" enctype="multipart/form-data">
+                <fieldset>
+                    <legend><i class="fas fa-user-tie"></i> Información del Cliente</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre_cliente"><i class="fas fa-user"></i> Nombre Completo del Cliente</label>
+                            <input type="text" name="nombre_cliente" id="nombre_cliente" placeholder="Ej: Seguros Pepito S.A.S" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nit_o_cc_cliente"><i class="fas fa-id-card"></i> NIT o C.C. del Cliente</label>
+                            <input type="text" name="nit_o_cc_cliente" id="nit_o_cc_cliente" placeholder="Ej: 900123456-7" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="consulta_cliente"><i class="fas fa-landmark"></i> Consulta de cliente Desqubra</label>
+                            <input type="file" name="consulta_cliente" id="consulta_cliente" class="custom-file-input">
+                        </div>
+                    </div>
+                    <legend><i class="fas fa-file-shield"></i> Documentos SARLAFT (Año: {{ ano_actual }})</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="doc_cedula"><i class="fas fa-id-badge"></i> Cédula / Rep. Legal</label>
+                            <input type="file" name="doc_cedula" id="doc_cedula" class="custom-file-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="doc_sarlaft"><i class="fas fa-file-contract"></i> Formulario SARLAFT</label>
+                            <input type="file" name="doc_sarlaft" id="doc_sarlaft" class="custom-file-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="doc_rut"><i class="fas fa-file-invoice-dollar"></i> RUT</label>
+                            <input type="file" name="doc_rut" id="doc_rut" class="custom-file-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="doc_declaracion"><i class="fas fa-file-invoice"></i> Declaración de Renta</label>
+                            <input type="file" name="doc_declaracion" id="doc_declaracion" class="custom-file-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="doc_camara"><i class="fas fa-landmark"></i> Cámara de Comercio</label>
+                            <input type="file" name="doc_camara" id="doc_camara" class="custom-file-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="estados_financieros"><i class="fas fa-file-invoice-dollar"></i> Estados financieron con notas</label>
+                            <input type="file" name="estados_financieros" id="estados_financieros" class="custom-file-input">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-save"></i> Crear Estructura de Carpetas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    function showNotificationCrearCarpeta(message, type) {
+        const notificationElement = document.getElementById('notificationCardCrearCarpeta');
+        if (!notificationElement) return;
+
+        notificationElement.textContent = message;
+        let categoryClass = 'flash-info'; // Default class from index.css
+        if (type === 'success') categoryClass = 'flash-success';
+        if (type === 'error') categoryClass = 'flash-danger';
+        
+        // Ensure it uses the same base class as defined in index.css for flash messages
+        notificationElement.className = 'flash-message ' + categoryClass; 
+        notificationElement.style.display = 'block';
+
+        // Optional: Auto-hide after some time
+        // setTimeout(() => {
+        //    notificationElement.style.display = 'none';
+        // }, 7000); // Hide after 7 seconds
+    }
+
+    document.getElementById('crearCarpetaForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent traditional form submission
+
+        const btn = this.querySelector('.btn-submit');
+        const originalBtnText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando carpetas...';
+
+        const formData = new FormData(this);
+
+        fetch("{{ url_for('ejecutar_crear_carpeta') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            // Check if the response is ok (status in the range 200-299)
+            if (!response.ok) {
+                // If not ok, try to parse as JSON for an error message from the server, 
+                // otherwise fall back to statusText.
+                return response.json().catch(() => {
+                    throw new Error(response.statusText || `Error del servidor: ${response.status}`);
+                }).then(errorData => {
+                    // We expect errorData to have a 'message' field if it's our custom JSON error
+                    throw new Error(errorData.message || `Error del servidor: ${response.status}`);
+                });
+            }
+            return response.json(); // If ok, parse as JSON
+        })
+        .then(data => {
+            if (data.success) {
+                showNotificationCrearCarpeta(data.message, 'success');
+                document.getElementById('crearCarpetaForm').reset(); // Reset form on success
+            } else {
+                showNotificationCrearCarpeta(data.message || 'Ocurrió un error.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error en fetch:', error);
+            showNotificationCrearCarpeta('Error de conexión o del servidor: ' + error.message, 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnText;
+        });
+    });
+    </script>
+</body>
+</html>

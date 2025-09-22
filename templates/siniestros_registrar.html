@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Siniestro - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='prospectos.css') }}"> <!-- Estilos base del formulario -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='siniestros.css') }}"> <!-- Estilos de fondo y layout -->
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="{{ url_for('index') }}" class="back-to-link"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+                <h1><i class="fas fa-car-crash"></i> Registrar Siniestro</h1>
+                <p>Ingrese los detalles del siniestro y adjunte los documentos necesarios.</p>
+            </div>
+
+            <div id="notification-container" class="notification-placeholder" style="display: none;"></div>
+
+            <form action="{{ url_for('siniestros_registrar') }}" method="POST" enctype="multipart/form-data" id="siniestro-form">
+                <fieldset>
+                    <legend><i class="fas fa-user-tie"></i> Información del Cliente y Póliza</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre_cliente">Nombre Cliente</label>
+                            <input type="text" id="nombre_cliente" name="nombre_cliente" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nit_cc">NIT / CC</label>
+                            <input type="text" id="nit_cc" name="nit_cc" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="numero_poliza">Número de Póliza</label>
+                            <input type="text" id="numero_poliza" name="numero_poliza" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ramo">Ramo</label>
+                            <input type="text" id="ramo" name="ramo" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend><i class="fas fa-calendar-alt"></i> Detalles del Siniestro</legend>
+                     <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha_siniestro">Fecha del Siniestro</label>
+                            <input type="date" id="fecha_siniestro" name="fecha_siniestro" required>
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <fieldset>
+                    <legend><i class="fas fa-cloud-upload-alt"></i> Documentos del Siniestro</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="documentos">Adjuntar Documentos (selección múltiple)</label>
+                            <input type="file" id="documentos" name="documentos" multiple>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit"><i class="fas fa-save"></i> Registrar Siniestro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('siniestro-form');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('.btn-submit');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+            fetch("{{ url_for('siniestros_registrar') }}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const notification = document.getElementById('notification-container');
+                notification.textContent = data.message;
+                if (data.status === 'success') {
+                    notification.className = 'flash-message flash-success';
+                    form.reset();
+                } else {
+                    notification.className = 'flash-message flash-danger';
+                }
+                notification.style.display = 'block';
+                 setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 7000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const notification = document.getElementById('notification-container');
+                notification.textContent = 'Error de conexión. Intente de nuevo.';
+                notification.className = 'flash-message flash-danger';
+                notification.style.display = 'block';
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            });
+        });
+    });
+    </script>
+</body>
+</html>

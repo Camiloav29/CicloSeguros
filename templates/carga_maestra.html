@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Reporte Maestro - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/carga_maestra.css">
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="{{ url_for('index') }}" class="back-to-dashboard"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+                <h1><i class="fas fa-sync-alt"></i> Cargar Reporte Maestro</h1>
+                <p>Seleccione el archivo Excel (.xlsx, .xls) con los datos maestros para actualizar los módulos.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="flash-messages-container" style="margin-bottom: 1rem;">
+                  {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('procesar_reporte_maestro') }}" enctype="multipart/form-data" id="cargarMaestroForm">
+                <fieldset>
+                    <legend><i class="fas fa-file-excel"></i> Selección de Archivo Maestro</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="archivo">Archivo del Reporte Maestro</label>
+                            <input type="file" name="archivo" id="archivo" class="custom-file-input" accept=".xlsx, .xls" required>
+                            <small class="form-text text-muted" style="display: block; margin-top: 0.5rem; font-size: 0.85em;">Formatos aceptados: .xlsx, .xls</small>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-cogs"></i> Procesar Reporte Maestro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+     document.getElementById('cargarMaestroForm').addEventListener('submit', function() {
+         const btn = this.querySelector('.btn-submit');
+         btn.disabled = true;
+         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+     });
+    </script>
+</body>
+</html>

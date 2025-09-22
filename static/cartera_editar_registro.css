@@ -1,0 +1,328 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Colores UIB Corporativos */
+    --primary-color: #005faa;
+    --primary-dark: #004a8c;
+    --primary-light: #327fc2;
+    --secondary-color: #f8fafc;
+    --accent-color: #04a0d9;
+    --success-color: #84c44c;
+    --warning-color: #f57c21;
+    --error-color: #de2a2b;
+    --purple-accent: #750f4f;
+    --purple-light: #6c52a2;
+    --dark-blue: #23496d;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --border-focus: #327fc2;
+    --background-gradient: linear-gradient(135deg, #005faa 0%, #327fc2 50%, #04a0d9 100%);
+    --card-shadow: 0 20px 25px -5px rgba(0, 95, 170, 0.15), 0 10px 10px -5px rgba(0, 95, 170, 0.08);
+    --input-shadow: 0 1px 2px 0 rgba(0, 95, 170, 0.05);
+    --hover-shadow: 0 25px 50px -12px rgba(0, 95, 170, 0.3);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background-gradient);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    margin:0;
+}
+
+.form-container { 
+    width: 100%;
+    max-width: 900px; /* Adjusted for potentially wider form with more fields */
+}
+
+.form-header { 
+    text-align: center; 
+    margin-bottom: 2rem;
+}
+
+.back-to-link { /* Style for the back link */
+    display: block; 
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem; 
+}
+
+.back-to-link:hover {
+    text-decoration: underline;
+    color: var(--primary-dark);
+}
+
+.form-header h1 { 
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem; 
+    font-size: 1.8rem; 
+    font-weight: 600;
+}
+
+.form-header p { 
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem 3rem; 
+    box-shadow: var(--card-shadow);
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+fieldset {
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem 2rem; /* Slightly reduced padding for fieldsets */
+    margin-bottom: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+}
+
+fieldset:hover {
+    border-color: var(--primary-light);
+}
+
+legend {
+    font-weight: 600;
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--input-shadow);
+    border: 1px solid var(--border-color);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjusted minmax for potentially more items */
+    gap: 1.25rem; /* Adjusted gap */
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    position: relative;
+    display: flex; /* For aligning label and input if needed, or just for input */
+    flex-direction: column; /* Stack label and input */
+}
+
+.form-group label { /* For labels not directly associated with an input via for="" */
+    display: block;
+    margin-bottom: 0.3rem; /* Reduced margin */
+    font-weight: 500;
+    color: var(--text-secondary); /* Muted color for readonly field labels */
+    font-size: 0.85rem;
+}
+
+
+label { /* General label styling */
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+input, select, textarea { 
+    width: 100%;
+    padding: 0.85rem 1rem; /* Slightly reduced padding */
+    border: 1px solid var(--border-color); /* Changed to 1px for a lighter look */
+    border-radius: 8px; /* Reduced radius */
+    background: white;
+    font-size: 0.95rem; /* Slightly reduced font size */
+    transition: all 0.3s ease;
+    box-shadow: var(--input-shadow);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(0, 95, 170, 0.1);
+}
+
+input:hover, select:hover, textarea:hover {
+    border-color: var(--primary-light);
+}
+
+input[readonly],
+textarea[readonly] {
+    background-color: #e9ecef; 
+    cursor: not-allowed;
+    border-color: var(--border-color);
+    color: #495057; /* Darker muted text for readability */
+}
+select[disabled] { /* Though no selects are in this specific form, kept for consistency if added */
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    border-color: var(--border-color);
+    color: #495057;
+    -webkit-appearance: none; 
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none; 
+}
+textarea[readonly] {
+   resize: none; 
+}
+
+.btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 0.9rem 1.8rem; /* Adjusted padding */
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px; /* Adjusted radius */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 95, 170, 0.25); /* Adjusted shadow */
+    text-decoration: none; 
+    display: inline-flex; 
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 95, 170, 0.35);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-secondary { /* For "Ver Remisiones" or similar secondary actions if needed */
+    background: var(--text-secondary);
+    border-color: var(--text-secondary);
+}
+.btn-secondary:hover {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.btn-outline-secondary { /* For "Cancelar" button */
+    color: var(--text-secondary);
+    border-color: var(--text-secondary);
+    background-color: transparent;
+}
+.btn-outline-secondary:hover {
+    color: #fff;
+    background-color: var(--text-secondary);
+    border-color: var(--text-secondary);
+}
+
+
+.btn-submit {
+    width: 100%;
+    margin-top: 1rem; 
+    padding: 1rem; /* Adjusted padding */
+    font-size: 1.1rem;
+}
+
+.form-actions {
+    display: flex;
+    flex-direction: column; 
+    gap: 0.75rem; /* Reduced gap */
+    justify-content: center;
+    margin-top: 1.5rem; /* Reduced margin */
+}
+
+.form-actions .btn {
+    width: 100%; 
+}
+
+/* Flash Messages Styles */
+.flash-messages-container {
+    width: 100%;
+    margin-bottom: 1rem; /* Matches inline style in HTML */
+    padding: 0;
+}
+.flash-message {
+    padding: 0.9rem 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 10px; 
+    font-size: 1rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    text-align: left;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    display: block; 
+}
+.flash-success { color: #ffffff; background-color: var(--success-color); border-color: var(--success-color); }
+.flash-danger { color: #ffffff; background-color: var(--error-color); border-color: var(--error-color); }
+.flash-info { color: #ffffff; background-color: var(--primary-color); border-color: var(--primary-dark); }
+.flash-warning { color: var(--text-primary); background-color: var(--warning-color); border-color: #f0ad4e; }
+
+
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 95, 170, 0.3); } 50% { transform: scale(1.03); box-shadow: 0 8px 25px rgba(0, 95, 170, 0.4); } }
+
+.loading { 
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@media (max-width: 768px) {
+    body { padding: 1rem 0.5rem; align-items: flex-start; }
+    .form-container { margin-top: 1rem; max-width: 100%; }
+    .form-card { padding: 1.5rem; }
+    .form-header h1 { font-size: 1.6rem; }
+    .form-row { grid-template-columns: 1fr; gap: 1rem; }
+    .form-actions { margin-top: 1.5rem; }
+    .btn-submit { padding: 1rem; }
+    .form-group label { font-size: 0.8rem; } /* Smaller labels for readonly fields on mobile */
+    input, select, textarea { font-size: 0.9rem; padding: 0.75rem 0.9rem; }
+}
+
+fieldset { 
+    animation: fadeInUp 0.6s ease-out both;
+}
+fieldset:nth-of-type(1) { animation-delay: 0.1s; }
+fieldset:nth-of-type(2) { animation-delay: 0.2s; } 
+fieldset:nth-of-type(3) { animation-delay: 0.3s; }
+
+/* Removed specific styles for .currency, file inputs etc. if not in this form */
+/* Kept select style for consistency if a select is added later */
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 3rem; 
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+select[disabled] {
+    background-image: none;
+}
+.form-card:hover {
+    box-shadow: var(--hover-shadow);
+}

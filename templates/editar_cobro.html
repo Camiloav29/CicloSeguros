@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Cobro y Generar Carta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; color: #333; padding: 2rem; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 2rem; margin-bottom: 2rem; }
+        .page-header { border-bottom: 1px solid #dee2e6; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .btn { display: inline-flex; align-items: center; padding: 0.7rem 1.5rem; border-radius: 6px; text-decoration: none; border: 1px solid transparent; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        #cartaGenerada { border: 1px solid #ddd; padding: 2rem; background-color: #fff; margin-top: 2rem; white-space: pre-wrap; font-family: 'Times New Roman', serif; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1><i class="fas fa-edit"></i> Editar Cobro</h1>
+        </header>
+
+        <div class="card">
+            <h3>Detalles del Cobro</h3>
+            <p><strong>ID:</strong> {{ cobro.ID_COBRO }}</p>
+            <p><strong>Tomador:</strong> {{ cobro.Tomador }}</p>
+            <p><strong>Póliza No:</strong> {{ cobro.N_Poliza }}</p>
+            <p><strong>Cuota:</strong> {{ cobro.N_Cuota }} de {{ cobro.Total_Cuotas }}</p>
+            <p><strong>Vencimiento:</strong> {{ cobro.Fecha_Vencimiento_Cuota }}</p>
+            <hr>
+            <button id="generarCartaBtn" class="btn btn-primary"><i class="fas fa-envelope"></i> Generar Carta de Cobro</button>
+            <a href="{{ url_for('panel_cobros') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+        </div>
+
+        <!-- The Modal -->
+        <div id="cartaModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>Datos para la Carta</h2>
+                <form id="cartaForm">
+                    <div class="form-group"><label for="sr_sra">Atn. Sr./Sra.:</label><input type="text" id="sr_sra" required></div>
+                    <div class="form-group"><label for="correo">Correo:</label><input type="email" id="correo" required></div>
+                    <div class="form-group"><label for="ref_asunto">Asunto (Ref):</label><input type="text" id="ref_asunto" required></div>
+                    <div class="form-group"><label for="descripcion">Descripción (para la tabla):</label><textarea id="descripcion" rows="2"></textarea></div>
+                    <div class="form-group"><label for="garantias">Garantías Particulares:</label><textarea id="garantias" rows="3"></textarea></div>
+                    <div class="form-group">
+                        <label for="fecha_inicio_cobro">Fecha Inicio del Periodo de Cobro:</label>
+                        <input type="date" id="fecha_inicio_cobro" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fecha_fin_cobro">Fecha Fin del Periodo de Cobro:</label>
+                        <input type="date" id="fecha_fin_cobro" required>
+                    </div>
+                        <div class="form-group">
+                        <label for="fecha_de_pago">Fecha de pago:</label>
+                        <input type="date" id="fecha_de_pago" required>
+                    </div>
+                    <div class="form-group"><label for="valor_a_pagar">Valor a Pagar:</label><input type="number" id="valor_a_pagar" step="0.01" required></div>
+                    <div class="form-group"><label for="link_de_pago">Link de Pago (Opcional):</label><input type="url" id="link_de_pago"></div>
+                    <button type="submit" class="btn btn-primary">Crear Carta</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Generated Letter Display Area -->
+        <div id="cartaGenerada" style="display:none;"></div>
+    </div>
+
+    <script>
+        // Store cobro data from Flask into a JS variable
+        const cobroData = {{ cobro | tojson }};
+
+        // Get modal and other elements
+        const modal = document.getElementById("cartaModal");
+        const btn = document.getElementById("generarCartaBtn");
+        const span = document.getElementsByClassName("close-btn")[0];
+        const form = document.getElementById("cartaForm");
+        
+        // Open the modal
+        btn.onclick = function() {
+            document.getElementById('ref_asunto').value = `Cobro Póliza ${cobroData.N_Poliza} - ${cobroData.Tomador}`;
+            modal.style.display = "block";
+        }
+
+        // Close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Handle form submission
+        form.onsubmit = function(event) {
+            event.preventDefault();
+            
+            // Get data from the form
+            const formData = {
+                sr_sra: document.getElementById('sr_sra').value,
+                correo: document.getElementById('correo').value,
+                ref_asunto: document.getElementById('ref_asunto').value,
+                descripcion: document.getElementById('descripcion').value,
+                garantias: document.getElementById('garantias').value,
+                fecha_inicio_cobro: document.getElementById('fecha_inicio_cobro').value,
+                fecha_fin_cobro: document.getElementById('fecha_fin_cobro').value,
+                fecha_de_pago: document.getElementById('fecha_de_pago').value,
+                valor_a_pagar: parseFloat(document.getElementById('valor_a_pagar').value).toLocaleString('es-CO'),
+                link_de_pago: document.getElementById('link_de_pago').value,
+            };
+
+            const cartaHTML = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Carta de Cobro - ${cobroData.Tomador}</title>
+    <style>
+        body { font-family: Calibri, sans-serif; font-size: 11pt; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-table td { vertical-align: top; }
+        .logo-cell { text-align: right; }
+        .logo-cell p { margin: 0; font-size: 9pt; }
+        .main-content { margin-top: 20px; }
+        .policy-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .policy-table th, .policy-table td { border-bottom: 1px solid black; padding: 5px; text-align: left; }
+        .policy-table th { font-weight: bold; }
+        .footer { margin-top: 20px; }
+        .copy-button { text-align: center; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td>
+                <p>Señores</p>
+                <p><strong>${cobroData.Tomador}</strong></p>
+                <p>Atn. Sr./Sra. <strong>${formData.sr_sra}</strong></p>
+                <p>${formData.correo}</p>
+                <p>Ciudad</p>
+            </td>
+            <td class="logo-cell">
+                <p><strong>UIB Corredores de Seguros S.A.</strong></p>
+                <p>Cra.7 # 71-21 Of.601, Torre B</p>
+                <p>Bogotá D.C., Colombia</p>
+                <p>+57 (601) 326 7100</p>
+                <p>www.uibseguros.com.co</p>
+            </td>
+        </tr>
+    </table>
+    <div class="main-content">
+        <p>Bogotá D.C., ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <p>${cobroData.CONSECUTIVO_REMISION || ''}</p>
+        <p><strong>Ref.: ${formData.ref_asunto}</strong></p>
+        <hr>
+        <p>Apreciados señores:</p>
+        <p>Agradecemos la confianza depositada en <strong>UIB Corredores de Seguros S.A.</strong> y nos complace hacerles entrega del presente cobro, correspondiente a la póliza suscrita con <strong>${cobroData.Aseguradora}</strong>, cuya vigencia se extiende desde las 00:00 horas del <strong>${formData.fecha_inicio_cobro}</strong> hasta las 00:00 horas del <strong>${formData.fecha_fin_cobro}</strong>, según el siguiente detalle:</p>
+        <table class="policy-table">
+            <thead>
+                <tr><th>Póliza No.</th><th>Descripción</th><th>Valor por pagar</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>${cobroData.Ramo} No.${cobroData.N_Poliza}</td>
+                    <td>${formData.descripcion}</td>
+                    <td>$ ${formData.valor_a_pagar}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><strong>GARANTÍAS PARTICULARES:</strong></p>
+        <p>${formData.garantias}</p>
+        <hr>
+        <p>Adjuntamos el recibo de pago correspondiente, los cuales deberá ser cancelado a más tardar el día <strong>${formData.fecha_de_pago}</strong>. Una vez efectuado el pago, les agradecemos notificarlo al correo electrónico sbarrios@uiblatam.com.</p>
+        <p>${formData.link_de_pago ? `<a href="${formData.link_de_pago}">${formData.link_de_pago}</a>` : ''}</p>
+        <hr>
+        <p>Finalmente, reiteramos que nuestro principal compromiso es ofrecer un servicio de excelencia y atención personalizada. Bajo esta filosofía y con el respaldo de nuestro equipo humano, UIB CORREDORES DE SEGUROS S.A. continúa brindando a sus clientes asesoría permanente, generando la confianza y tranquilidad necesarias para delegar en nuestra organización el manejo integral de sus programas de seguros.</p>
+        <p>Cordialmente,</p>
+    </div>
+    <div class="copy-button">
+        <button onclick="copiarContenido()">Copiar al Portapapeles</button>
+    </div>
+    <script>
+        function copiarContenido() {
+            const body = document.body;
+            const range = document.createRange();
+            range.selectNode(body);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            try {
+                document.execCommand('copy');
+                alert('¡Contenido copiado al portapapeles!');
+            } catch (err) {
+                alert('No se pudo copiar el contenido.');
+            }
+            window.getSelection().removeAllRanges();
+        }
+    <\/script>
+</body>
+</html>
+            `;
+
+            // Open the generated HTML in a new window
+            const newWindow = window.open();
+            newWindow.document.write(cartaHTML);
+            newWindow.document.close();
+            
+            // Close the modal
+            modal.style.display = "none";
+        }
+    </script>
+</body>
+</html>

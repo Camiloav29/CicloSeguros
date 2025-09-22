@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Control de Remisiones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='control.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='modal.css') }}">
+</head>
+<body>
+    <h1><i class="fas fa-clipboard-list"></i> Control de Remisiones</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Consecutivo</th>
+                <th>Fecha Recepción</th>
+                <th>Tomador</th>
+                <th>Póliza</th>
+                <th>Aseguradora</th>
+                <th>Ramo</th>
+                <th>Prima Neta</th>
+                <th>Comisión $</th>
+                <th>Estado</th>
+                <th>Número Remisión Manual</th>
+                <th>Archivos</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if remisiones %}
+                {% for remision in remisiones %}
+                <tr>
+                    <td data-label="Consecutivo">{{ remision.consecutivo }}</td>
+                    <td data-label="Fecha Recepción">{{ remision.get('fecha_recepcion', 'N/A') }}</td>
+                    <td data-label="Tomador">{{ remision.get('tomador', 'N/A') }}</td>
+                    <td data-label="Póliza">{{ remision.get('poliza', 'N/A') }}</td>
+                    <td data-label="Aseguradora">{{ remision.get('aseguradora', 'N/A') }}</td>
+                    <td data-label="Ramo">{{ remision.get('ramo', 'N/A') }}</td>
+                    <td data-label="Prima Neta">$ {{ "{:,.0f}".format(remision.get('prima_neta', 0)) }}</td>
+                    <td data-label="Comisión $">$ {{ "{:,.0f}".format(remision.get('Comision$', 0)) }}</td>
+                    <td data-label="Estado">
+                        {% if remision.estado == "Pendiente" %}
+                            <span class="estado-pendiente">Pendiente</span>
+                        {% elif remision.estado == "Creado" %}
+                            <span class="estado-creado">Creado</span>
+                        {% else %}
+                            <span class="estado-desconocido">{{ remision.estado }}</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Número Remisión Manual">{{ remision.get('numero_remision_manual', 'N/A') }}</td>
+                    <td data-label="Archivos">
+                        {% if remision.archivos %}
+                            {% for archivo in remision.archivos.split(',') %}
+                                <div>{{ archivo.strip() }}</div>
+                            {% endfor %}
+                        {% else %}
+                            Sin archivos
+                        {% endif %}
+                    </td>
+                    <td data-label="Acción">
+                        <a href="{{ url_for('editar_remision', consecutivo_id=remision.consecutivo) }}" class="boton-accion editar-num-remision" title="Editar Número de Remisión Manual">
+                            <i class="fas fa-pencil-alt"></i>
+                        </a>
+                        <button class="boton-accion btn-generar-correo" data-consecutivo="{{ remision.consecutivo }}" title="Generar Correo">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+                        {% if remision.estado == "Pendiente" %}
+                        <form action="{{ url_for('marcar_creado') }}" method="POST" style="display: inline-block; margin: 0;">
+                            <input type="hidden" name="consecutivo" value="{{ remision.consecutivo }}">
+                            <button type="submit" class="boton-accion marcar-creado" title="Marcar como Creado">
+                                <i class="fas fa-check-circle"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="12" style="text-align:center; padding:20px;">No hay remisiones registradas.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="botones-navegacion">
+        <a href="{{ url_for('index') }}" class="btn-navegacion">
+            <i class="fas fa-tachometer-alt"></i> Volver al Panel Principal
+        </a>
+        <a href="{{ url_for('formulario_remision') }}" class="btn-navegacion">
+            <i class="fas fa-plus-circle"></i> Crear Nueva Remisión
+        </a>
+    </div>
+
+    <!-- Modal para Correspondencia -->
+    <div id="correo-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Generar Correspondencia</h2>
+            <p><strong>Remisión:</strong> <span id="modal-consecutivo"></span></p>
+            
+            <div class="modal-form">
+                <div class="form-group">
+                    <label for="tipo_plantilla">Tipo de Plantilla</label>
+                    <select id="tipo_plantilla" name="tipo_plantilla">
+                        <option value="nuevo_negocio">Nuevo Negocio</option>
+                        <option value="renovacion">Renovación</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sr_sra">Atn. Sr./Sra.</label>
+                    <input type="text" id="sr_sra" name="sr_sra" placeholder="Nombre del contacto">
+                </div>
+                <div class="form-group">
+                    <label for="correo">Correo Electrónico</label>
+                    <input type="email" id="correo" name="correo" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label for="valor_a_pagar">Valor a Pagar:</label>
+                    <input type="text" id="valor_a_pagar" name="valor_a_pagar" placeholder="Ej: 1.200.000">
+                </div>
+                <div class="form-group">
+                    <label for="garantias">Garantías:</label>
+                    <textarea id="garantias" name="garantias" rows="3" placeholder="Describa las garantías"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="link_de_pago">Link de Pago (Opcional)</label>
+                    <input type="text" id="link_de_pago" name="link_de_pago" placeholder="https://...">
+                </div>
+                <button id="btn-generar-texto" class="btn-navegacion">
+                    <i class="fas fa-file-import"></i> Generar Vista Previa
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('correo-modal');
+        const closeModal = document.querySelector('.close-button');
+        const generarBotones = document.querySelectorAll('.btn-generar-correo');
+        
+        generarBotones.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const consecutivo = this.dataset.consecutivo;
+                document.getElementById('modal-consecutivo').textContent = consecutivo;
+                modal.style.display = 'block';
+            });
+        });
+
+        closeModal.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        document.getElementById('btn-generar-texto').addEventListener('click', function() {
+            const consecutivo = document.getElementById('modal-consecutivo').textContent;
+            const tipoPlantilla = document.getElementById('tipo_plantilla').value;
+            const srSra = encodeURIComponent(document.getElementById('sr_sra').value);
+            const correo = encodeURIComponent(document.getElementById('correo').value);
+            const valorAPagar = encodeURIComponent(document.getElementById('valor_a_pagar').value);
+            const garantias = encodeURIComponent(document.getElementById('garantias').value);
+            const linkDePago = encodeURIComponent(document.getElementById('link_de_pago').value);
+
+            const url = `/correspondencia/vista_previa?consecutivo=${consecutivo}&tipo_plantilla=${tipoPlantilla}&sr_sra=${srSra}&correo=${correo}&valor_a_pagar=${valorAPagar}&garantias=${garantias}&link_de_pago=${linkDePago}`;
+            
+            window.open(url, '_blank');
+            modal.style.display = 'none';
+        });
+    });
+    </script>
+</body>
+</html>

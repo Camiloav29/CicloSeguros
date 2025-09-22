@@ -1,0 +1,248 @@
+/* Import :root variables */
+:root {
+    --primary-color: #005faa;
+    --primary-dark: #004a8c;
+    --primary-light: #327fc2;
+    --secondary-color: #f8fafc;
+    --accent-color: #04a0d9;
+    --success-color: #84c44c;
+    --warning-color: #f57c21;
+    --error-color: #de2a2b;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --background-gradient: linear-gradient(135deg, #005faa 0%, #327fc2 50%, #04a0d9 100%);
+    --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.08);
+    --hover-shadow: 0 15px 30px rgba(0, 0, 0, 0.15), 0 10px 10px rgba(0, 0, 0, 0.1);
+    --purple-accent: #750f4f;
+    --dark-blue: #23496d;
+    --input-shadow: 0 1px 2px 0 rgba(0, 95, 170, 0.05);
+    --border-focus: #327fc2;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background-gradient);
+    min-height: 100vh;
+    line-height: 1.6;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    margin: 0;
+}
+
+.dashboard-container {
+    width: 100%;
+    max-width: 1000px;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    padding: 2.5rem 3rem;
+    text-align: center;
+    animation: fadeInUp 0.7s ease-out;
+}
+
+.dashboard-header {
+    margin-bottom: 2.5rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 1.5rem;
+}
+
+#logo_dashboard {
+    max-width: 400px;
+    margin-bottom: 1rem;
+    
+}
+
+.dashboard-header h1 {
+    color: var(--primary-dark);
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 0;
+}
+
+.dashboard-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.nav-button {
+    background-color: var(--secondary-color, #f8fafc);
+    border: 1px solid var(--border-color);
+    border-top: 4px solid transparent; /* Added top border */
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text-primary); /* Changed text color */
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.nav-button:hover {
+    transform: translateY(-4px); /* Adjusted transform */
+    box-shadow: var(--hover-shadow);
+    border-color: var(--primary-light); /* Applies to left, right, bottom */
+}
+
+.nav-button i {
+    transition: color 0.3s ease;
+    margin-bottom: 0.25rem; /* Small space between icon and text */
+}
+
+.nav-button span {
+    text-align: center;
+    color: var(--text-primary); /* Explicitly set span color */
+}
+
+/* Style for the Master Report Upload Button */
+.nav-button-maestro {
+    border-top-color: var(--purple-accent, #750f4f);
+}
+.nav-button-maestro i {
+    color: var(--purple-accent, #750f4f);
+}
+.nav-button-maestro:hover i {
+    color: #510936; /* Darker purple */
+}
+
+/* Specific styles for nav-buttons by class */
+.btn-remision { border-top-color: var(--primary-color); }
+.btn-remision i { color: var(--primary-color); }
+.btn-remision:hover i { color: var(--primary-dark); }
+
+.btn-control { border-top-color: var(--accent-color); }
+.btn-control i { color: var(--accent-color); }
+.btn-control:hover i { color: var(--primary-color); }
+
+.btn-cartera { border-top-color: var(--success-color); }
+.btn-cartera i { color: var(--success-color); }
+.btn-cartera:hover i { color: #5a9c28; }
+
+.btn-vencimientos { border-top-color: var(--warning-color); }
+.btn-vencimientos i { color: var(--warning-color); }
+.btn-vencimientos:hover i { color: #c45e0f; }
+
+.btn-prospectos { border-top-color: var(--dark-blue); }
+.btn-prospectos i { color: var(--dark-blue); }
+.btn-prospectos:hover i { color: #1a3852; }
+
+.btn-crear-carpeta { border-top-color: var(--purple-accent); }
+.btn-crear-carpeta i { color: var(--purple-accent); }
+.btn-crear-carpeta:hover i { color: #510936; }
+
+.btn-siniestros { border-top-color: var(--error-color); }
+.btn-siniestros i { color: var(--error-color); }
+.btn-siniestros:hover i { color: #a71d2a; }
+
+.btn-recaudo { border-top-color: #20c997; }
+.btn-recaudo i { color: #20c997; }
+.btn-recaudo:hover i { color: #17a77e; }
+
+.btn-sarlaft { border-top-color: #6f42c1; }
+.btn-sarlaft i { color: #6f42c1; }
+.btn-sarlaft:hover i { color: #5a32a3; }
+
+.btn-cobros { border-top-color: #55d35b; }
+.btn-cobros i { color: #55d35b; }
+.btn-cobros:hover i { color: #2fb035; }
+
+.disabled-button {
+    background-color: #f0f0f0;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.disabled-button i {
+    color: #aaa;
+}
+
+.disabled-button:hover {
+    transform: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-color: var(--border-color);
+    color: #aaa;
+}
+.disabled-button:hover i {
+    color: #aaa;
+}
+
+.dashboard-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Flash Messages Styles */
+.flash-messages-container {
+    width: 100%;
+    margin-top: 1rem; /* Space from elements above if any */
+    margin-bottom: 1.5rem; /* Space before other content */
+    padding: 0;
+}
+
+.flash-message {
+    padding: 0.9rem 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 10px; /* Slightly more rounded */
+    font-size: 1rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    text-align: left;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    display: block; /* Ensure it takes full width if not already */
+}
+
+/* Using UIB corporate colors for flash messages */
+.flash-success {
+    color: #ffffff; 
+    background-color: var(--success-color); 
+    border-color: var(--success-color); 
+}
+
+.flash-danger {
+    color: #ffffff;
+    background-color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+.flash-info {
+    color: #ffffff;
+    background-color: var(--primary-color); /* Using primary for info */
+    border-color: var(--primary-dark);
+}
+
+.flash-warning {
+    color: var(--text-primary); /* Darker text for better contrast on yellow */
+    background-color: var(--warning-color); 
+    border-color: #f0ad4e; /* A slightly darker shade of warning */
+}

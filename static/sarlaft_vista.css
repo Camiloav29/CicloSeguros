@@ -1,0 +1,49 @@
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.result-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    color: var(--uib-dark-gray);
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+}
+
+.result-card i {
+    font-size: 3rem;
+    color: var(--uib-blue);
+    margin-bottom: 1rem;
+}
+
+.result-card span {
+    font-weight: 500;
+}
+
+.year-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--uib-gold);
+    color: var(--uib-dark-gray);
+    padding: 0.3em 0.6em;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}

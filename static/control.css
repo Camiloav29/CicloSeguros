@@ -1,0 +1,238 @@
+:root {
+    /* Colores UIB Corporativos */
+    --primary-color: #005faa;
+    --primary-dark: #004a8c;
+    --primary-light: #327fc2;
+    --secondary-color: #f8fafc;
+    --accent-color: #04a0d9;
+    --success-color: #84c44c;
+    --warning-color: #f57c21;
+    --error-color: #de2a2b;
+    --purple-accent: #750f4f;
+    --purple-light: #6c52a2;
+    --dark-blue: #23496d;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --border-focus: #327fc2;
+    --background-gradient: linear-gradient(135deg, #005faa 0%, #327fc2 50%, #04a0d9 100%);
+    --card-shadow: 0 20px 25px -5px rgba(0, 95, 170, 0.15), 0 10px 10px -5px rgba(0, 95, 170, 0.08);
+    --hover-shadow: 0 25px 50px -12px rgba(0, 95, 170, 0.3);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background-gradient);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+h1 {
+    color: white;
+    font-size: 2.2rem; /* Ajustado para consistencia */
+    font-weight: 700;
+    margin-bottom: 2rem; /* Aumentado margen inferior */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem; /* Espacio entre icono y texto */
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    background: white;
+    box-shadow: var(--card-shadow); /* Sombra corporativa */
+    border-radius: 12px; /* Bordes redondeados */
+    overflow: hidden; /* Para que el border-radius afecte a las celdas */
+    margin-bottom: 2rem;
+}
+
+th, td {
+    padding: 1rem; /* Aumentado padding */
+    border-bottom: 1px solid var(--border-color);
+    text-align: left; /* Alineación más estándar para tablas */
+    vertical-align: middle;
+}
+
+td:last-child, th:last-child {
+    text-align: center; /* Centrar última columna (acciones) */
+}
+
+th {
+    background-color: var(--primary-dark);
+    color: white;
+    font-weight: 600; /* Texto más grueso para headers */
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+tr:hover {
+    background-color: #f1f8ff; /* Un hover más sutil y azulado */
+}
+
+.estado-pendiente,
+.estado-creado,
+.estado-desconocido {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px; /* Píldoras más redondeadas */
+    font-weight: 500;
+    font-size: 0.85rem;
+    display: inline-block;
+    text-align: center;
+}
+
+.estado-pendiente {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.estado-creado {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.estado-desconocido {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.boton-accion {
+    background-color: var(--accent-color);
+    border: none;
+    padding: 0.6rem 1rem;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.boton-accion:hover {
+    background-color: #038bb7; /* Un poco más oscuro al hacer hover */
+}
+
+.boton-accion.marcar-creado i {
+    font-size: 0.9em; /* Ajustar tamaño de icono */
+}
+
+.accion-completada {
+    color: var(--success-color);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.accion-completada i {
+    font-size: 1.1em;
+}
+
+.botones-navegacion {
+    display: flex;
+    justify-content: center;
+    gap: 1rem; /* Reducido gap */
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+.btn-navegacion {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 0.8rem 1.5rem; /* Ajustado padding */
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem; /* Ajustado tamaño de fuente */
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 95, 170, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-navegacion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 95, 170, 0.35);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+    th, td {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    /* Force table to not be like tables anymore */
+	/* Hide table headers (but not display: none;, for accessibility) */
+	thead tr {
+		position: absolute;
+		top: -9999px;
+		left: -9999px;
+	}
+	tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+	td {
+		/* Behave  like a "row" */
+		display: block;
+		text-align: right; /* Align content to the right */
+        padding-left: 50%; /* Space for the label */
+        position: relative;
+        border-bottom: 1px solid var(--border-color);
+	}
+    td:last-child {
+        border-bottom: none;
+        text-align: right; /* Re-align last child if needed */
+    }
+	td::before {
+		/* Now like a table header */
+		content: attr(data-label);
+        position: absolute;
+        left: 0.75rem;
+        width: calc(50% - 1.5rem); /* Adjust width considering padding */
+        padding-right: 0.5rem;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+	}
+    .botones-navegacion .btn-navegacion {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 1rem 0.5rem;
+    }
+    h1 {
+        font-size: 1.6rem;
+    }
+    .btn-navegacion {
+        font-size: 0.9rem;
+        padding: 0.7rem 1.2rem;
+    }
+    td {
+        padding-left: 40%; /* Adjust for smaller screens */
+    }
+    td::before {
+        width: calc(40% - 1rem);
+    }
+}

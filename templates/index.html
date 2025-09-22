@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Principal - UIB</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+             <img src="{{ url_for('static', filename='MASTER UIB logo with CREST_CMYK 2024.png') }}" alt="UIB Logo" id="logo_dashboard">
+            <h1>Panel de Control Principal</h1>
+            <p>Bienvenido al sistema de gestión de UIB Corredores de Seguros.</p>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages-container">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('formulario_remision') }}" class="nav-button btn-remision">
+                <i class="fas fa-file-alt fa-2x"></i>
+                <span>Nueva Remisión</span>
+            </a>
+            <a href="{{ url_for('control') }}" class="nav-button btn-control">
+                <i class="fas fa-cogs fa-2x"></i>
+                <span>Control de remisiones</span>
+            </a>
+            <a href="{{ url_for('panel_cobros') }}" class="nav-button btn-cobros">
+                <i class="fas fa-hand-holding-usd fa-2x"></i>
+                <span>Cobros mensuales</span>
+            </a>
+             <a href="{{ url_for('visualizar_cartera') }}" class="nav-button btn-cartera">
+                <i class="fas fa-book fa-2x"></i>
+                <span>Cartera</span>
+            </a>
+            <a href="{{ url_for('visualizar_vencimientos') }}" class="nav-button btn-vencimientos">
+                <i class="fas fa-calendar-times fa-2x"></i>
+                <span>Vencimientos de pólizas</span>
+            </a>
+            <a href="{{ url_for('prospectos_vista') }}" class="nav-button btn-prospectos">
+                <i class="fas fa-users fa-2x"></i>
+                <span>Prospectos</span>
+            </a>
+            <a href="{{ url_for('siniestros_registrar') }}" class="nav-button btn-siniestros">
+                <i class="fas fa-car-crash fa-2x"></i>
+                <span>Registrar Siniestro</span>
+            </a>
+            <a href="{{ url_for('recaudo') }}" class="nav-button btn-recaudo">
+                <i class="fas fa-chart-line fa-2x"></i>
+                <span>Recaudos</span>
+            </a>
+            <a href="{{ url_for('visualizar_sarlaft') }}" class="nav-button btn-sarlaft">
+                <i class="fas fa-user-shield fa-2x"></i>
+                <span>SARLAFT</span>
+            </a>
+            <a href="{{ url_for('mostrar_formulario_crear_carpeta') }}" class="nav-button btn-crear-carpeta">
+                <i class="fas fa-folder-plus fa-2x"></i>
+                <span>Crear Carpeta Cliente</span>
+            </a>
+             <a href="{{ url_for('mostrar_formulario_carga_maestra') }}" class="nav-button nav-button-maestro">
+                <i class="fas fa-upload fa-2x"></i>
+                <span>Carga Maestra</span>
+            </a>
+        </nav>
+
+        <footer class="dashboard-footer">
+            <p>&copy; 2024 UIB Corredores de Seguros S.A. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+</body>
+</html>

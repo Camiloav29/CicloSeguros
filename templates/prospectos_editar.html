@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Prospecto - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/prospectos_styles.css">
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="{{ url_for('prospectos_vista') }}" class="back-to-link"><i class="fas fa-arrow-left"></i> Volver a Prospectos</a>
+                <h1><i class="fas fa-edit"></i> Editar Prospecto</h1>
+                <p>Modifique los datos del prospecto ID: <strong>{{ prospecto.ID_PROSPECTO }}</strong></p>
+            </div>
+
+            <form action="{{ url_for('prospecto_guardar_edicion') }}" method="POST" id="prospecto-edit-form">
+                <input type="hidden" name="ID_PROSPECTO" value="{{ prospecto.ID_PROSPECTO }}">
+                
+                <fieldset>
+                    <legend><i class="fas fa-user-tie"></i> Información del Prospecto</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombre_cliente">Nombre Cliente</label>
+                            <input type="text" id="nombre_cliente" name="Nombre Cliente" value="{{ prospecto['Nombre Cliente'] }}" required>
+                        </div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group">
+                            <label for="responsable_tecnico">Responsable Técnico</label>
+                            <select id="responsable_tecnico" name="Responsable Tecnico" required>
+                                {% for opt in opciones_responsable_tecnico %}
+                                <option value="{{ opt }}" {% if opt == prospecto['Responsable Tecnico'] %}selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="responsable_comercial">Responsable Comercial</label>
+                            <select id="responsable_comercial" name="Responsable Comercial" required>
+                                {% for opt in opciones_responsable_comercial %}
+                                <option value="{{ opt }}" {% if opt == prospecto['Responsable Comercial'] %}selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend><i class="fas fa-file-contract"></i> Detalles de la Cotización</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha_cotizacion">Fecha de Cotización</label>
+                            <input type="date" id="fecha_cotizacion" name="Fecha de Cotizacion" value="{{ prospecto['Fecha de Cotizacion'] }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha_inicio_poliza">Fecha Emisión</label>
+                            <input type="date" id="fecha_inicio_poliza" name="Fecha inicio poliza" value="{{ prospecto['Fecha inicio poliza'] }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ramo">Ramo</label>
+                            <select id="ramo" name="Ramo">
+                                <option value="">Seleccione...</option>
+                                {% for opt in opciones_ramo %}
+                                <option value="{{ opt }}" {% if opt == prospecto.Ramo %}selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="aseguradora">Aseguradora</label>
+                            <select id="aseguradora" name="Aseguradora">
+                                <option value="">Seleccione...</option>
+                                {% for opt in opciones_aseguradora %}
+                                <option value="{{ opt }}" {% if opt == prospecto.Aseguradora %}selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prima">Prima</label>
+                            <input type="text" id="prima" name="Prima" class="currency" placeholder="$0" value="{{ prospecto.Prima | int }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="comision_porcentaje">Comisión %</label>
+                            <input type="number" id="comision_porcentaje" name="Comision %" step="0.01" value="{{ prospecto['Comision %'] }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="comision_valor">Comisión $ (Calculado)</label>
+                            <input type="text" id="comision_valor" name="Comision $" value="{{ prospecto['Comision $'] | int }}" readonly>
+                        </div>
+                    </div>
+                </fieldset>
+                
+                <fieldset>
+                    <legend><i class="fas fa-handshake"></i> TPP</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="es_tpp">¿Es TPP?</label>
+                            <select id="es_tpp" name="es_TPP">
+                                <option value="no" {% if prospecto.es_TPP == 'no' %}selected{% endif %}>No</option>
+                                <option value="si" {% if prospecto.es_TPP == 'si' %}selected{% endif %}>Sí</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="tpp-details" style="display: {% if prospecto.es_TPP == 'si' %}block{% else %}none{% endif %};">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nombre_tpp">Nombre TPP</label>
+                                <input type="text" id="nombre_tpp" name="Nombre_TPP" value="{{ prospecto.Nombre_TPP }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="porcentaje_comision_tpp">Porcentaje Comisión TPP</label>
+                                <input type="number" id="porcentaje_comision_tpp" name="Porcentaje_comision_TPP" step="0.01" value="{{ prospecto.Porcentaje_comision_TPP }}">
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend><i class="fas fa-cogs"></i> Estado y Seguimiento</legend>
+                     <div class="form-row">
+                        <div class="form-group">
+                            <label for="estado">Estado</label>
+                            <select id="estado" name="Estado" required>
+                                {% for opt in opciones_estado %}
+                                <option value="{{ opt }}" {% if opt == prospecto.Estado %}selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="observaciones">Observaciones</label>
+                            <textarea id="observaciones" name="Observaciones" rows="3">{{ prospecto.Observaciones }}</textarea>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit"><i class="fas fa-save"></i> Guardar Cambios</button>
+                    <a href="{{ url_for('prospectos_vista') }}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const primaInput = document.getElementById('prima');
+        const comisionPorcentajeInput = document.getElementById('comision_porcentaje');
+        const comisionValorInput = document.getElementById('comision_valor');
+        const esTppSelect = document.getElementById('es_tpp');
+        const tppDetails = document.getElementById('tpp-details');
+        const porcentajeTppInput = document.getElementById('porcentaje_comision_tpp');
+        // El formulario de edición no tiene un campo para el valor de TPP, así que lo omitimos por ahora.
+        // Si se necesitara, se añadiría aquí: const valorTppInput = document.getElementById('valor_comision_tpp');
+
+        function formatIntegerCurrency(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value) {
+                // Formatea el valor inicial al cargar la página
+                input.value = '$' + parseInt(value, 10).toLocaleString('es-CO');
+            } else {
+                input.value = '';
+            }
+        }
+
+        function calcularComision() {
+            const prima = parseFloat(primaInput.value.replace(/\$|\./g, '')) || 0;
+            const porcentaje = parseFloat(comisionPorcentajeInput.value) || 0;
+            let comisionCalculadaBruta = prima * (porcentaje / 100);
+            let comisionFinal = comisionCalculadaBruta;
+
+            if (esTppSelect.value === 'si') {
+                const porcentajeTpp = parseFloat(porcentajeTppInput.value) || 0;
+                const valorTpp = comisionCalculadaBruta * (porcentajeTpp / 100);
+                // Si se añade el campo 'valor_comision_tpp' al HTML, se actualizaría aquí.
+                comisionFinal -= valorTpp;
+            }
+            
+            comisionValorInput.value = comisionFinal.toLocaleString('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+
+        // Formatear el valor inicial de la prima al cargar la página
+        formatIntegerCurrency(primaInput);
+
+        // Event Listeners
+        primaInput.addEventListener('input', () => {
+            formatIntegerCurrency(primaInput);
+            calcularComision();
+        });
+        comisionPorcentajeInput.addEventListener('input', calcularComision);
+        esTppSelect.addEventListener('change', function() {
+            tppDetails.style.display = this.value === 'si' ? 'block' : 'none';
+            calcularComision();
+        });
+        porcentajeTppInput.addEventListener('input', calcularComision);
+        
+        // Calcular comisiones con los valores iniciales al cargar la página
+        calcularComision();
+    });
+    </script>
+</body>
+</html>

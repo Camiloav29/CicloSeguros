@@ -1,0 +1,65 @@
+/* static/css/cartera_vista.css */
+:root { /* Copy :root variables from another UIB CSS file */
+    --primary-color: #005faa; --primary-dark: #004a8c; --primary-light: #327fc2; --secondary-color: #f8fafc; --accent-color: #04a0d9; --success-color: #84c44c; --warning-color: #f57c21; --error-color: #de2a2b; --text-primary: #1e293b; --text-secondary: #64748b; --border-color: #e2e8f0; --background-gradient: linear-gradient(135deg, #005faa 0%, #327fc2 50%, #04a0d9 100%); --card-shadow: 0 10px 20px rgba(0,0,0,0.07), 0 3px 6px rgba(0,0,0,0.05);
+}
+body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; padding: 1.5rem; color: var(--text-primary); }
+.container-fluid { width: 100%; max-width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom:1rem; border-bottom: 1px solid var(--border-color); }
+.page-header h1 { font-size: 1.8rem; color: var(--primary-dark); font-weight: 600; display:flex; align-items:center; gap:0.5rem; }
+.page-header h1 i { color: var(--primary-color); }
+.header-actions .btn { margin-left: 0.5rem; font-size:0.9rem; padding: 0.5rem 1rem; }
+
+/* Button Styles */
+.btn { display: inline-block; font-weight: 600; color: #fff; text-align: center; vertical-align: middle; cursor: pointer; background-color: var(--primary-color); border: 1px solid var(--primary-color); padding: .575rem .95rem; font-size: 1rem; border-radius: .5rem; transition: all .15s ease-in-out; text-decoration:none; }
+.btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
+.btn-primary:hover { background-color: var(--primary-dark); border-color: var(--primary-dark); }
+.btn-secondary { background-color: var(--accent-color); border-color: var(--accent-color); } /* This was used for "Cargar Nuevo Reporte" and "Editar" in table */
+.btn-secondary:hover { background-color: #038ab8; border-color: #038ab8; }
+.btn-outline-primary { color: var(--primary-color); border-color: var(--primary-color); background-color: transparent; }
+.btn-outline-primary:hover { color: #fff; background-color: var(--primary-color); }
+.btn-success { color: #fff; background-color: var(--success-color); border-color: var(--success-color); }
+.btn-success:hover { color: #fff; background-color: #6aa83d; border-color: #6aa83d; } /* Darker success */
+.btn-sm { padding: .25rem .5rem; font-size: .875rem; border-radius: .2rem; } /* For Edit button in table */
+
+
+.card { background-color: #fff; border-radius: 10px; box-shadow: var(--card-shadow); margin-bottom: 2rem; padding: 1.5rem; }
+.filter-bar .form-inline { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.filter-bar .form-group { display: flex; align-items: center; gap: 0.5rem; }
+.filter-bar label { margin-bottom: 0; font-weight: 500; }
+.form-control { display: block; width: auto; padding: .575rem .95rem; font-size: 1rem; font-weight: 400; line-height: 1.5; color: var(--text-primary); background-color: #fff; background-clip: padding-box; border: 1px solid var(--border-color); appearance: none; border-radius: .5rem; transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out; }
+.form-control:focus { border-color: var(--primary-light); outline: 0; box-shadow: 0 0 0 .2rem rgba(0,95,170,.25); }
+.table-responsive { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table { width: 100%; margin-bottom: 1rem; color: var(--text-secondary); border-collapse: collapse; }
+.table th, .table td { padding: 0.9rem; vertical-align: top; border-top: 1px solid var(--border-color); text-align:left; font-size:0.9rem; }
+.table thead th { vertical-align: bottom; border-bottom: 2px solid var(--primary-dark); color: var(--primary-dark); font-weight:600; }
+.table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0,0,0,.03); }
+.table-hover tbody tr:hover { color: var(--text-primary); background-color: rgba(0,95,170,.075); }
+
+/* Flash Message Styles */ 
+.flash-messages-container { width: 100%; margin-bottom: 1.5rem; padding: 0; }
+.flash-message { padding: 0.9rem 1.25rem; margin-bottom: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 500; border: 1px solid transparent; text-align: left; box-shadow: 0 3px 6px rgba(0,0,0,0.08); display: block; }
+.flash-success { color: #ffffff; background-color: var(--success-color); border-color: var(--success-color); }
+.flash-danger { color: #ffffff; background-color: var(--error-color); border-color: var(--error-color); }
+.flash-info { color: #ffffff; background-color: var(--primary-color); border-color: var(--primary-dark); }
+.flash-warning { color: var(--text-primary); background-color: var(--warning-color); border-color: #f0ad4e; }
+
+/* Responsive table styles */
+@media (max-width: 992px) { 
+  .table thead { display: none; } 
+  .table tr { display: block; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: .5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); } 
+  .table td { display: block; text-align: right; padding-left: 50%; position: relative; border-top:none; border-bottom: 1px solid var(--border-color); } 
+  .table td:last-child { border-bottom: none; } 
+  .table td::before { content: attr(data-label); position: absolute; left: .9rem; width: calc(50% - 1.8rem); padding-right: .5rem; white-space: nowrap; text-align: left; font-weight: 600; color:var(--primary-dark); } 
+}
+
+/* sr-only class for accessibility (hiding labels visually but keeping for screen readers) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}

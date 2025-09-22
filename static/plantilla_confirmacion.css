@@ -1,0 +1,244 @@
+/* Import :root variables and basic body styles */
+:root {
+    /* Colores UIB Corporativos */
+    --primary-color: #005faa;
+    --primary-dark: #004a8c;
+    --primary-light: #327fc2;
+    --secondary-color: #f8fafc;
+    --accent-color: #04a0d9;
+    --success-color: #84c44c;
+    --warning-color: #f57c21;
+    --error-color: #de2a2b;
+    --purple-accent: #750f4f;
+    --purple-light: #6c52a2;
+    --dark-blue: #23496d;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --border-focus: #327fc2;
+    --background-gradient: linear-gradient(135deg, #005faa 0%, #327fc2 50%, #04a0d9 100%);
+    --card-shadow: 0 20px 25px -5px rgba(0, 95, 170, 0.15), 0 10px 10px -5px rgba(0, 95, 170, 0.08);
+    --input-shadow: 0 1px 2px 0 rgba(0, 95, 170, 0.05);
+    --hover-shadow: 0 25px 50px -12px rgba(0, 95, 170, 0.3);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background-gradient);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px; /* Max width for the card */
+    margin: 0 auto;
+}
+
+.confirmacion-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem 3rem;
+    box-shadow: var(--card-shadow);
+    text-align: center;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.header-icon {
+    font-size: 3.5rem;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+}
+
+.confirmacion-card h1 {
+    color: var(--primary-dark);
+    font-size: 2rem; /* Adjusted size */
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.mensaje-principal {
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+}
+
+.datos-remision {
+    background-color: #f8fafc; /* Light background for this section */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.datos-remision h2 {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 0.5rem;
+}
+
+.datos-remision ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.datos-remision ul li {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem; /* Space for icon */
+    position: relative;
+}
+
+.datos-remision ul li::before {
+    content: '\f101'; /* Font Awesome right arrow or similar */
+    font-family: 'Font Awesome 6 Free'; /* Corrected from Font Awesome 5 Free */
+    font-weight: 900;
+    color: var(--primary-light);
+    position: absolute;
+    left: 0;
+    top: 2px; /* Adjust alignment */
+}
+
+.datos-remision ul li strong {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.nota-implementacion {
+    background-color: var(--warning-color_light, #fff3e0); /* Light warning color */
+    color: var(--warning-color_dark, #e65100); /* Darker warning text */
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    border: 1px solid var(--warning-color, #ffcc80);
+    display: inline-flex; /* To align icon and text */
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.nota-implementacion i {
+    font-size: 1.2rem;
+}
+
+.botones-navegacion {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem; /* Increased gap */
+    margin-top: 2.5rem;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+}
+
+.btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 0.9rem 1.8rem; /* Slightly adjusted padding */
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 95, 170, 0.25);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem; /* Space between icon and text in button */
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 95, 170, 0.35);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 95, 170, 0.25);
+}
+
+/*.btn-primary {
+    /* Default .btn style is primary */
+
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #0385a8 100%);
+    box-shadow: 0 4px 15px rgba(4, 160, 217, 0.25);
+}
+
+.btn-secondary:hover {
+    box-shadow: 0 8px 25px rgba(4, 160, 217, 0.35);
+}
+
+/* Keyframes for animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body {
+        padding: 1.5rem 1rem;
+        align-items: flex-start; /* Align card to top on mobile */
+    }
+    .confirmacion-card {
+        padding: 2rem 1.5rem;
+        margin-top: 1rem; /* Add some margin at the top */
+    }
+    .confirmacion-card h1 {
+        font-size: 1.8rem;
+    }
+    .header-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .datos-remision {
+        padding: 1rem 1.5rem;
+    }
+    .botones-navegacion {
+        flex-direction: column; /* Stack buttons */
+        gap: 1rem;
+    }
+    .btn {
+        width: 100%; /* Full width buttons on mobile */
+        padding: 1rem; /* Adjust padding for full width */
+    }
+}
+
+@media (max-width: 480px) {
+    .confirmacion-card {
+        padding: 1.5rem 1rem;
+    }
+     .confirmacion-card h1 {
+        font-size: 1.6rem;
+    }
+    .mensaje-principal {
+        font-size: 1rem;
+    }
+    .datos-remision ul li {
+        font-size: 0.9rem;
+    }
+    .nota-implementacion {
+        font-size: 0.9rem;
+        padding: 0.8rem 1rem;
+    }
+}

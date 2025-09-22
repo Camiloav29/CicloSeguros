@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar SARLAFT - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/vencimientos_vista.css">
+    <link rel="stylesheet" href="/static/sarlaft_vista.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="page-header">
+            <h1><i class="fas fa-search"></i> Visualizar Documentos SARLAFT</h1>
+            <div class="header-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+            </div>
+        </header>
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ url_for('visualizar_sarlaft') }}" method="get" class="search-form">
+                    <div class="form-group">
+                        <input type="text" name="search_query" class="form-control" placeholder="Buscar por nombre de cliente o NIT..." value="{{ search_query or '' }}">
+                        <button type="submit" class="btn btn-primary">Buscar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if folders %}
+        <div class="results-grid">
+            {% for folder in folders %}
+            <a href="{{ url_for('visualizar_sarlaft_docs', folder_name=folder) }}" class="result-card">
+                <i class="fas fa-folder"></i>
+                <span>{{ folder }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% elif search_query %}
+        <div class="card">
+            <div class="card-body">
+                <p>No se encontraron carpetas que coincidan con su búsqueda.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

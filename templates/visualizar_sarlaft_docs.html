@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentos de Cliente - {{ folder_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/prospectos.css">
+    <link rel="stylesheet" href="/static/sarlaft_vista.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="page-header">
+            <h1><i class="fas fa-folder-open"></i> Documentos de {{ folder_name }}</h1>
+            <div class="header-actions">
+                <a href="{{ url_for('visualizar_sarlaft') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Volver a la Búsqueda</a>
+            </div>
+        </header>
+
+        {% if found_docs %}
+        <div class="results-grid">
+            {% for doc in found_docs %}
+            <a href="{{ url_for('serve_sarlaft_doc', folder_name=folder_name, year=doc.year, doc_name=doc.doc_name) }}" target="_blank" class="result-card">
+                <i class="fas fa-file-alt"></i>
+                <span>{{ doc.doc_name }}</span>
+                <span class="year-badge">{{ doc.year }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <p>No se encontraron documentos para este cliente.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

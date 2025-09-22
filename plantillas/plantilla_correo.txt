@@ -1,0 +1,11 @@
+
+Señores
+{Tomador}
+Atn. Sr./Sra. {Tomador}
+Ciudad
+Bogotá D.C., {Fecha}
+UIB - {Consecutivo}
+Ref.: UIB - {Consecutivo} | {Tomador} | Póliza: {Ramo} No {Poliza}
+
+Apreciados señores:
+Adjuntamos los documentos correspondientes a la póliza mencionada.

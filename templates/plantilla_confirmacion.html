@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumen de Remisión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/plantilla_confirmacion.css">
+</head>
+<body>
+    <div class="resumen">
+        <h2>✅ Remisión registrada</h2>
+        <p>Consecutivo generado:</p>
+        <div class="consecutivo">{{ datos.get('consecutivo', 'No asignado') }}</div>
+
+        <div class="botones">
+            <a href="{{ url_for('formulario_remision') }}" class="button">📝 Crear otro registro</a>
+
+            <form method="POST" action="{{ url_for('plantilla') }}">
+                {% for key, value in datos.items() %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endfor %}
+                <button type="submit">📧 Generar plantilla</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

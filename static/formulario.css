@@ -1,0 +1,477 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Colores UIB Corporativos */
+    --primary-color: #005faa;
+    --primary-dark: #004a8c;
+    --primary-light: #327fc2;
+    --secondary-color: #f8fafc;
+    --accent-color: #04a0d9;
+    --success-color: #84c44c;
+    --warning-color: #f57c21;
+    --error-color: #de2a2b;
+    --purple-accent: #750f4f;
+    --purple-light: #6c52a2;
+    --dark-blue: #23496d;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --border-focus: #327fc2;
+    --background-gradient: linear-gradient(135deg, #005faa 0%, #327fc2 50%, #04a0d9 100%);
+    --card-shadow: 0 20px 25px -5px rgba(0, 95, 170, 0.15), 0 10px 10px -5px rgba(0, 95, 170, 0.08);
+    --input-shadow: 0 1px 2px 0 rgba(0, 95, 170, 0.05);
+    --hover-shadow: 0 25px 50px -12px rgba(0, 95, 170, 0.3);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background-gradient);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.header h1 {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header p {
+    color: rgba(255,255,255,0.9);
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: var(--card-shadow);
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--success-color));
+    width: 0%; /* Start at 0% */
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+fieldset {
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+}
+
+fieldset:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 95, 170, 0.15);
+}
+
+legend {
+    font-weight: 600;
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--input-shadow);
+    border: 1px solid var(--border-color);
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    position: relative;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--input-shadow);
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(0, 95, 170, 0.1);
+    transform: translateY(-1px);
+}
+
+input:hover, select:hover, textarea:hover {
+    border-color: var(--primary-light);
+}
+
+.currency input {
+    padding-left: 2.5rem; /* Ensure space for the $ sign */
+}
+
+/* This is a more robust way to handle the currency symbol if the input is directly classed as .currency */
+input.currency {
+    padding-left: 2.5rem; /* Ensure space for the $ sign */
+}
+
+.form-group.currency::before {
+    content: '$';
+    position: absolute;
+    left: 1rem; 
+    top: calc(50% + 0.5rem); /* Adjust to align with text in input */
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-weight: 500;
+    pointer-events: none; /* So it doesn't interfere with input focus */
+}
+
+textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.archivo-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center; /* Align items vertically */
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 2px dashed var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.archivo-group:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 95, 170, 0.02);
+}
+
+.file-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.file-input-wrapper input[type="file"] {
+    opacity: 0;
+    position: absolute;
+    left:0; top:0; width:100%; height:100%; /* Make it cover the label */
+    z-index: 1; /* Above the label text but below custom styled button if any */
+    cursor: pointer;
+}
+
+.file-input-label {
+    display: block;
+    padding: 1rem;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative; /* For z-index to work if needed */
+}
+
+.file-input-label:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 95, 170, 0.02);
+}
+
+.file-input-label i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+}
+
+.btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 95, 170, 0.3);
+    position: relative;
+    overflow: hidden;
+    text-decoration: none; /* For <a> tags styled as buttons */
+    display: inline-flex; /* Helps with alignment if icons are used */
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 95, 170, 0.4);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #0385a8 100%);
+    box-shadow: 0 4px 15px rgba(4, 160, 217, 0.3);
+}
+
+.btn-secondary:hover {
+    box-shadow: 0 8px 25px rgba(4, 160, 217, 0.4);
+}
+
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    background: var(--primary-light) !important; /* Override gradient for specific add button */
+}
+
+.btn-submit {
+    width: 100%;
+    margin-top: 1rem; /* Reduced margin slightly */
+    padding: 1.25rem;
+    font-size: 1.1rem;
+}
+
+.form-actions {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.form-actions .btn {
+    width: 100%; /* Make buttons in form-actions full width */
+}
+
+.notification {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    background: var(--success-color);
+    color: white;
+    font-weight: 500;
+    transform: translateX(calc(100% + 2rem)); /* Start off-screen */
+    transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1000;
+    box-shadow: var(--card-shadow);
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.error {
+    background-color: var(--error-color);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(0, 95, 170, 0.3);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 8px 25px rgba(0, 95, 170, 0.4);
+    }
+}
+
+.loading {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 1rem 0.5rem;
+    }
+
+    .form-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .archivo-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .form-actions {
+        margin-top: 1.5rem;
+    }
+    .btn-submit {
+        padding: 1rem;
+    }
+}
+
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 3rem; /* Increased padding for the arrow */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.form-card:hover {
+    box-shadow: var(--hover-shadow);
+}
+
+fieldset {
+    animation: fadeInUp 0.6s ease-out both;
+}
+
+fieldset:nth-of-type(1) { animation-delay: 0.1s; }
+fieldset:nth-of-type(2) { animation-delay: 0.2s; }
+fieldset:nth-of-type(3) { animation-delay: 0.3s; }
+fieldset:nth-of-type(4) { animation-delay: 0.4s; }
+fieldset:nth-of-type(5) { animation-delay: 0.5s; }
+
+/* Style for the delete button in file upload */
+.archivo-group .btn {
+    padding: 0.75rem; /* Adjust padding for smaller button */
+    min-width: auto; /* Allow button to shrink */
+}
+
+.archivo-group .btn i {
+    margin-right: 0; /* No margin if it's just an icon */
+}
+
+/* Ensure currency symbol is correctly placed for inputs directly having .currency class */
+.form-group input.currency::before {
+    content: '$';
+    position: absolute;
+    left: 1rem; 
+    top: calc(50% + 0.5rem); /* Adjust to align with text in input */
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-weight: 500;
+    pointer-events: none; 
+}
+
+/* Fix for currency inputs that are not inside a .form-group.currency but have class .currency themselves */
+.form-group > input.currency {
+    padding-left: 2.5rem !important; /* ensure padding for the $ symbol */
+}
+
+/* Checkbox group styling */
+.form-group-checkbox {
+    display: flex;
+    align-items: center; /* Vertically align checkbox and label */
+    gap: 0.75rem; /* Space between checkbox and label */
+    /* Adjust padding/margin if it's inside a .form-group that has its own padding for label-on-top */
+    /* If .form-group-checkbox is replacing a .form-group, it might need more specific layout styling */
+    padding-top: 1.5rem; /* Attempt to align with other fields that have top labels */
+    margin-bottom: 1rem; /* Consistent bottom margin */
+}
+.form-group-checkbox input[type="checkbox"] {
+    width: auto; /* Override full width if inherited */
+    height: 1.1em; /* Checkbox size */
+    width: 1.1em;  /* Checkbox size */
+    margin: 0; /* Reset margin if any inherited */
+    cursor: pointer;
+    flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+.form-group-checkbox label {
+    margin-bottom: 0; /* Label is beside checkbox */
+    font-weight: 500; /* Match other labels or use 'normal' */
+    font-size: 0.9rem; /* Match other labels */
+    color: var(--text-primary);
+}

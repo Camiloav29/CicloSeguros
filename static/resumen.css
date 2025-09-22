@@ -1,0 +1,180 @@
+:root {
+    /* Colores UIB Corporativos */
+    --primary-color: #005faa;
+    --primary-dark: #004a8c;
+    --primary-light: #327fc2;
+    --secondary-color: #f8fafc;
+    --accent-color: #04a0d9;
+    --success-color: #84c44c;
+    --warning-color: #f57c21;
+    --error-color: #de2a2b;
+    --purple-accent: #750f4f;
+    --purple-light: #6c52a2;
+    --dark-blue: #23496d;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --border-focus: #327fc2;
+    --background-gradient: linear-gradient(135deg, #005faa 0%, #327fc2 50%, #04a0d9 100%);
+    --card-shadow: 0 20px 25px -5px rgba(0, 95, 170, 0.15), 0 10px 10px -5px rgba(0, 95, 170, 0.08);
+    --input-shadow: 0 1px 2px 0 rgba(0, 95, 170, 0.05);
+    --hover-shadow: 0 25px 50px -12px rgba(0, 95, 170, 0.3);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--background-gradient);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+    margin: 0; /* Ensuring margin is 0 */
+    display: flex; /* Added for centering .resumen */
+    align-items: center; /* Added for centering .resumen */
+    justify-content: center; /* Added for centering .resumen */
+}
+
+.resumen {
+    background: var(--secondary-color); /* Using variable */
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+    max-width: 700px;
+    margin: auto; /* Kept for safety, though body flex centering should handle it */
+    box-shadow: var(--card-shadow);
+    text-align: center;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.resumen h2 { /* Combined h2 and its ::before for clarity */
+    color: var(--success-color);
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.resumen h2::before {
+    content: '\f058'; /* Font Awesome check-circle icon */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900; /* Solid icon */
+    margin-right: 0.75rem;
+    font-size: 1em; 
+}
+
+.resumen p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.consecutivo {
+    color: var(--primary-dark);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    padding: 0.75rem;
+    background-color: #f0f6ff; 
+    border-radius: 8px;
+    border: 1px dashed var(--primary-light);
+}
+
+.botones {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Original gap */
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.botones a.button, 
+.botones button {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 95, 170, 0.3);
+    text-decoration: none;
+    display: inline-flex; 
+    align-items: center;
+    justify-content: center;
+    flex-grow: 0; /* Prevent buttons from growing excessively on flex row */
+}
+
+.botones a.button:hover, 
+.botones button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 95, 170, 0.4);
+    /* background is fine as is, hover doesn't change gradient */
+}
+
+.botones button:active {
+    transform: translateY(0);
+}
+
+/* Secondary button style for 'Generar plantilla' */
+.botones form button { 
+    background: linear-gradient(135deg, var(--accent-color) 0%, #0385a8 100%);
+    box-shadow: 0 4px 15px rgba(4, 160, 217, 0.3);
+}
+
+.botones form button:hover {
+    background: linear-gradient(135deg, var(--accent-color) 0%, #0385a8 100%); /* Keep accent hover */
+    box-shadow: 0 8px 25px rgba(4, 160, 217, 0.4);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 500px) {
+    .resumen {
+        padding: 1.5rem 1rem; /* Adjusted padding for smaller screens */
+        max-width: 100%;
+    }
+
+    .botones a.button, 
+    .botones button {
+        width: 100%; /* Make buttons full width on small screens */
+        margin-bottom: 0.5rem; /* Add some space between stacked buttons */
+    }
+    .botones {
+        gap: 0.5rem; /* Reduce gap for stacked buttons */
+    }
+    .resumen h2 {
+        font-size: 1.5rem; /* Adjust h2 font size */
+    }
+    .resumen h2::before {
+        font-size: 0.9em; /* Adjust icon size */
+    }
+    .resumen p {
+        font-size: 1rem; /* Adjust p font size */
+    }
+    .consecutivo {
+        font-size: 1.2rem; /* Adjust consecutivo font size */
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown { /* Included as good practice */
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

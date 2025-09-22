@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Reporte de Vencimientos - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/vencimientos_cargar.css">
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="{{ url_for('dashboard') }}" class="back-to-dashboard"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+                <h1><i class="fas fa-calendar-times"></i> Cargar Reporte de Vencimientos</h1>
+                <p>Seleccione el archivo Excel (.xlsx, .xls) del reporte de vencimientos.</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="flash-messages-container" style="margin-bottom: 1rem;">
+                  {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('procesar_reporte_vencimientos') }}" enctype="multipart/form-data" id="cargarVencimientosForm">
+                <fieldset>
+                    <legend><i class="fas fa-file-excel"></i> Archivo de Vencimientos</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reporte_vencimientos">Reporte de Vencimientos</label>
+                            <input type="file" name="reporte_vencimientos" id="reporte_vencimientos" class="custom-file-input" accept=".xlsx, .xls" required>
+                            <small class="form-text text-muted" style="display: block; margin-top: 0.5rem; font-size: 0.85em;">Formatos aceptados: .xlsx, .xls</small>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-cogs"></i> Procesar Reporte
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+     document.getElementById('cargarVencimientosForm').addEventListener('submit', function() {
+         const btn = this.querySelector('.btn-submit');
+         const originalBtnText = btn.innerHTML;
+         btn.disabled = true;
+         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+     });
+    </script>
+</body>
+</html>

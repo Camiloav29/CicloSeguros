@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Cobros - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/cobros.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="page-header">
+            <h1><i class="fas fa-cash-register"></i> Panel de Cobros</h1>
+            <div class="header-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+            </div>
+        </header>
+
+        {% if not cobros and not pagos %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <p>No hay cobros ni pagos para el mes actual.</p>
+                </div>
+            </div>
+        {% else %}
+            <!-- Sección de Cobros -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-arrow-down"></i> Cobros Mensuales</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Tomador</th><th>NIT / CC</th><th>Aseguradora</th><th>Ramo</th><th>N° Póliza</th><th># de Cuota</th><th>Vencimiento Cuota</th><th>Estado</th><th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if cobros %}
+                                    {% for cobro in cobros %}
+                                        <tr>
+                                            <td data-label="Tomador">{{ cobro.Tomador }}</td>
+                                            <td data-label="NIT / CC">{{ cobro.NIT_CC }}</td>
+                                            <td data-label="Aseguradora">{{ cobro.Aseguradora }}</td>
+                                            <td data-label="Ramo">{{ cobro.Ramo }}</td>
+                                            <td data-label="N° Póliza">{{ cobro.N_Poliza }}</td>
+                                            <td data-label="# de Cuota">{{ cobro.N_Cuota }} de {{ cobro.Total_Cuotas }}</td>
+                                            <td data-label="Vencimiento Cuota">{{ cobro.Fecha_Vencimiento_Cuota.strftime('%Y-%m-%d') if cobro.Fecha_Vencimiento_Cuota else '' }}</td>
+                                            <td data-label="Estado"><span class="estado-{{ cobro.Estado | lower | replace(' ', '-') }}">{{ cobro.Estado }}</span></td>
+                                            <td data-label="Acciones">
+                                                <a href="{{ url_for('editar_cobro', id_cobro=cobro.ID_COBRO) }}" class="boton-accion"><i class="fas fa-edit"></i> Editar</a>
+                                                {% if cobro.Estado != 'Cobrado' %}
+                                                <form action="{{ url_for('marcar_cobrado', id_cobro=cobro.ID_COBRO) }}" method="POST" style="display: inline; margin-left: 0.5rem;">
+                                                    <button type="submit" class="boton-accion"><i class="fas fa-check"></i> Marcar Cobrado</button>
+                                                </form>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="9" class="text-center">No hay cobros para el mes actual.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de Pagos -->
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-header">
+                    <h3><i class="fas fa-arrow-up"></i> Pagos Mensuales</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Tomador</th><th>NIT / CC</th><th>Aseguradora</th><th>Ramo</th><th>N° Póliza</th><th># de Cuota</th><th>Vencimiento Cuota</th><th>Estado</th><th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if pagos %}
+                                    {% for pago in pagos %}
+                                        <tr>
+                                            <td data-label="Tomador">{{ pago.Tomador }}</td>
+                                            <td data-label="NIT / CC">{{ pago.NIT_CC }}</td>
+                                            <td data-label="Aseguradora">{{ pago.Aseguradora }}</td>
+                                            <td data-label="Ramo">{{ pago.Ramo }}</td>
+                                            <td data-label="N° Póliza">{{ pago.N_Poliza }}</td>
+                                            <td data-label="# de Cuota">{{ pago.N_Cuota }} de {{ pago.Total_Cuotas }}</td>
+                                            <td data-label="Vencimiento Cuota">{{ pago.Fecha_Vencimiento_Cuota.strftime('%Y-%m-%d') if pago.Fecha_Vencimiento_Cuota else '' }}</td>
+                                            <td data-label="Estado"><span class="estado-{{ pago.Estado | lower | replace(' ', '-') }}">{{ pago.Estado }}</span></td>
+                                            <td data-label="Acciones">
+                                                <a href="{{ url_for('editar_cobro', id_cobro=pago.ID_COBRO) }}" class="boton-accion"><i class="fas fa-edit"></i> Editar</a>
+                                                {% if pago.Estado != 'Cobrado' %}
+                                                <form action="{{ url_for('marcar_cobrado', id_cobro=pago.ID_COBRO) }}" method="POST" style="display: inline; margin-left: 0.5rem;">
+                                                    <button type="submit" class="boton-accion"><i class="fas fa-check"></i> Marcar Cobrado</button>
+                                                </form>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="9" class="text-center">No hay pagos para el mes actual.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Vencimientos - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/vencimientos_vista.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <header class="page-header">
+            <h1><i class="fas fa-tachometer-alt"></i> Dashboard de Vencimientos</h1>
+            <div class="header-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages-container">
+              {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <!-- KPIs Resumen -->
+        <div class="kpi-grid">
+            <div class="kpi-card" data-filter-days="15">
+                <div class="kpi-icon icon-danger"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="kpi-info">
+                    <div class="kpi-value">{{ kpis.vencer_15_dias }}</div>
+                    <div class="kpi-label">Por Vencer en &lt; 15 Días</div>
+                </div>
+            </div>
+            <div class="kpi-card" data-filter-days="30">
+                <div class="kpi-icon icon-warning"><i class="fas fa-clock"></i></div>
+                <div class="kpi-info">
+                    <div class="kpi-value">{{ kpis.vencer_30_dias }}</div>
+                    <div class="kpi-label">Por Vencer en &lt; 30 Días</div>
+                </div>
+            </div>
+            <div class="kpi-card" data-filter-days="60">
+                <div class="kpi-icon icon-info"><i class="fas fa-calendar-alt"></i></div>
+                <div class="kpi-info">
+                    <div class="kpi-value">{{ kpis.vencer_60_dias }}</div>
+                    <div class="kpi-label">Por Vencer en &lt; 60 Días</div>
+                </div>
+            </div>
+            <div class="kpi-card" data-filter-vencidas="true">
+                <div class="kpi-icon icon-danger"><i class="fas fa-calendar-times"></i></div>
+                <div class="kpi-info">
+                    <div class="kpi-value">{{ kpis.vencidas }}</div>
+                    <div class="kpi-label">Vencidas</div>
+                </div>
+            </div>
+            <div class="kpi-card" data-filter-cumplimiento="true">
+                <div class="kpi-icon"><i class="fas fa-file-signature"></i></div>
+                <div class="kpi-info">
+                    <div class="kpi-value">{{ kpis.cumplimiento }}</div>
+                    <div class="kpi-label">Cumplimiento</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPIs por Ramo -->
+        <div class="kpi-grid">
+            {% for ramo_kpi in ramos_kpis %}
+            <div class="kpi-card kpi-ramo-card" data-filter-ramo="{{ ramo_kpi.ramo }}">
+                <div class="kpi-icon">
+                    <i class="fas fa-{{ 'car' if 'AUTOS' in ramo_kpi.ramo else ('building' if 'COPROPIEDADES' in ramo_kpi.ramo else ('file-signature' if 'ARRENDAMIENTO' in ramo_kpi.ramo else 'home')) }}"></i>
+                </div>
+                <div class="kpi-info">
+                    <div class="kpi-value">{{ ramo_kpi.count }}</div>
+                    <div class="kpi-label">{{ ramo_kpi.ramo }}</div>
+                    <div class="kpi-sublabel">Vencen en los próximos 30 días</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="search-container">
+            <form method="get" action="{{ url_for('visualizar_vencimientos') }}">
+                <input type="text" id="searchInput" name="search_term" class="form-control" placeholder="Buscar por Tomador..." value="{{ search_term or '' }}">
+                <button type="submit" class="btn-search"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+
+        <div class="table-responsive card">
+            <table class="table table-striped table-hover vencimientos-table">
+                <thead>
+                    <tr>
+                        <th class="col-alerta">Alerta</th>
+                        <th>Días Vencer</th>
+                        <th>Fecha Fin</th>
+                        <th>Tomador</th>
+                        <th>Número Póliza</th>
+                        <th>Aseguradora</th>
+                        <th>Ramo Principal</th>
+                        <th>Responsable</th>
+                        <th>Estado</th>
+                        <th>Observaciones</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if registros %}
+                        {% for registro in registros %}
+                            <tr data-id="{{ registro.ID_VENCIMIENTO }}" data-dias-vencer="{{ registro.Dias_Para_Vencer }}" data-ramo="{{ registro['RAMO PRINCIPAL'] }}">
+                                <td data-label="Alerta" class="cell-alerta">
+                                    <span class="alerta-badge {{ registro.Indicador_Vencimiento_CSS_Class }}" title="{{ registro.Indicador_Vencimiento_Text }}">
+                                        <i class="{{ registro.Indicador_Vencimiento_Icon }}"></i>
+                                    </span>
+                                </td>
+                                <td data-label="Días Vencer" class="cell-dias-vencer">{{ registro.Dias_Para_Vencer }}</td>
+                                <td data-label="Fecha Fin">{{ registro['FECHA FIN'] }}</td>
+                                <td data-label="Tomador">{{ registro.Tomador }}</td>
+                                <td data-label="N° Póliza">{{ registro['NÚMERO PÓLIZA'] }}</td>
+                                <td data-label="Aseguradora">{{ registro.ASEGURADORA }}</td>
+                                <td data-label="Ramo">{{ registro['RAMO PRINCIPAL'] }}</td>
+                                <td data-label="Responsable" class="editable-cell" data-field="Responsable">{{ registro.Responsable | default('', true) }}</td>
+                                <td data-label="Estado" class="editable-cell" data-field="Estado">{{ registro.Estado | default('', true) }}</td>
+                                <td data-label="Observaciones" class="editable-cell" data-field="Observaciones_adicionales">{{ registro.Observaciones_adicionales | default('', true) }}</td>
+                                <td data-label="Acciones" class="actions-cell">
+                                    <button type="button" class="btn btn-primary btn-sm btn-editar">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm btn-guardar-cambios" style="display: none;">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="11">No hay vencimientos que coincidan con los criterios de búsqueda.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+    const opciones_responsable_js = {{ opciones_responsable_js | tojson }};
+    const opciones_estado_js = {{ opciones_estado_js | tojson }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const kpiCards = document.querySelectorAll('.kpi-card');
+        const tableRows = document.querySelectorAll('.vencimientos-table tbody tr');
+        const searchInput = document.getElementById('searchInput');
+
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            let activeCard = document.querySelector('.kpi-card.active');
+
+            tableRows.forEach(row => {
+                const tomador = row.querySelector('[data-label="Tomador"]').textContent.toLowerCase();
+                let showRow = tomador.includes(searchTerm);
+
+                if (activeCard) {
+                    const filterDays = activeCard.dataset.filterDays;
+                    const filterRamo = activeCard.dataset.filterRamo;
+                const filterVencidas = activeCard.dataset.filterVencidas;
+                const filterCumplimiento = activeCard.dataset.filterCumplimiento;
+
+                    if (filterDays) {
+                        const diasVencer = parseInt(row.dataset.diasVencer, 10);
+                    if (diasVencer < 0 || diasVencer > parseInt(filterDays, 10)) {
+                            showRow = false;
+                        }
+                    }
+
+                    if (filterRamo) {
+                    const diasVencer = parseInt(row.dataset.diasVencer, 10);
+                        const ramo = row.dataset.ramo;
+                    if (ramo.toLowerCase().indexOf(filterRamo.toLowerCase()) === -1 || diasVencer < 0 || diasVencer > 30) {
+                            showRow = false;
+                        }
+                    }
+
+                if (filterVencidas) {
+                    const diasVencer = parseInt(row.dataset.diasVencer, 10);
+                    if (diasVencer >= 0) {
+                        showRow = false;
+                    }
+                }
+
+                if (filterCumplimiento) {
+                    const diasVencer = parseInt(row.dataset.diasVencer, 10);
+                    const ramo = row.dataset.ramo;
+                    if (ramo.toLowerCase() !== 'cumplimiento' || diasVencer < 0 || diasVencer > 45) {
+                        showRow = false;
+                    }
+                }
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', filterTable);
+        }
+
+        kpiCards.forEach(card => {
+            card.addEventListener('click', function() {
+                if (this.classList.contains('active')) {
+                    this.classList.remove('active');
+                } else {
+                    kpiCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                }
+                filterTable();
+            });
+        });
+
+        const tableBody = document.querySelector('.vencimientos-table tbody');
+        let activeRow = null;
+
+        tableBody.addEventListener('click', function(event) {
+            const target = event.target;
+            const editButton = target.closest('.btn-editar');
+            const saveButton = target.closest('.btn-guardar-cambios');
+
+            if (editButton) {
+                const row = editButton.closest('tr');
+                if (activeRow && activeRow !== row) {
+                    revertRow(activeRow);
+                }
+                makeRowEditable(row);
+                activeRow = row;
+            } else if (saveButton) {
+                const row = saveButton.closest('tr');
+                saveRow(row);
+                activeRow = null;
+            }
+        });
+
+        function makeRowEditable(row) {
+            row.querySelectorAll('.editable-cell').forEach(cell => {
+                const originalValue = cell.textContent.trim();
+                cell.dataset.originalValue = originalValue; 
+                const field = cell.dataset.field;
+                cell.innerHTML = '';
+                let input;
+
+                if (field === 'Responsable') {
+                    input = document.createElement('select');
+                    opciones_responsable_js.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        if (opt === originalValue) option.selected = true;
+                        input.appendChild(option);
+                    });
+                } else if (field === 'Estado') {
+                    input = document.createElement('select');
+                    opciones_estado_js.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        if (opt === originalValue) option.selected = true;
+                        input.appendChild(option);
+                    });
+                } else { // Observaciones
+                    input = document.createElement('textarea');
+                    input.value = originalValue;
+                }
+                input.className = 'form-control-inline';
+                cell.appendChild(input);
+            });
+            row.querySelector('.btn-editar').style.display = 'none';
+            row.querySelector('.btn-guardar-cambios').style.display = 'inline-block';
+        }
+        
+        function revertRow(row) {
+            row.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.innerHTML = cell.dataset.originalValue;
+            });
+            row.querySelector('.btn-editar').style.display = 'inline-block';
+            row.querySelector('.btn-guardar-cambios').style.display = 'none';
+        }
+
+        function saveRow(row) {
+            const id = row.dataset.id;
+            const dataToSave = { id_vencimiento: id };
+            let hasChanges = false;
+
+            row.querySelectorAll('.editable-cell').forEach(cell => {
+                const input = cell.querySelector('input, select, textarea');
+                const newValue = input.value;
+                const field = cell.dataset.field;
+                dataToSave[field] = newValue;
+                if (newValue !== cell.dataset.originalValue) {
+                    hasChanges = true;
+                }
+                cell.dataset.originalValue = newValue; // Update original value for future edits
+            });
+
+            if (hasChanges) {
+                fetch('/vencimientos/actualizar_registro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToSave)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        console.log('Guardado exitoso:', data.message);
+                        // Optionally, show a success indicator to the user
+                    } else {
+                        console.error('Error al guardar:', data.message);
+                        alert('Error al guardar: ' + data.message); // Show error to user
+                        revertRow(row); // Revert on failure
+                    }
+                })
+                .catch(error => {
+                    console.error('Error de red:', error);
+                    alert('Error de red al intentar guardar los cambios.');
+                    revertRow(row); // Revert on network error
+                });
+            }
+            
+            // Revert row to non-editable state regardless of changes, but after sending fetch
+            revertRow(row);
+        }
+    });
+    </script>
+</body>
+</html>

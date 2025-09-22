@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Remisión - UIB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/editar_remision.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-edit"></i> Editar Remisión</h1>            
+        </div>
+
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('guardar_numero_remision') }}" id="editForm">
+                <input type="hidden" name="consecutivo" value="{{ datos.get('consecutivo', '') }}">
+
+                <!-- Datos de la Remisión (No Editables) -->
+                <fieldset>
+                    <legend>
+                        <div class="legend-icon"><i class="fas fa-info-circle"></i></div>
+                        Datos de la Remisión (No Editables)
+                    </legend>
+                    <div class="form-row">
+                        <div class="form-group"><label>Consecutivo:</label><input type="text" value="{{ datos.consecutivo | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Fecha de Registro:</label><input type="text" value="{{ datos.fecha_registro | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Estado Actual:</label><input type="text" value="{{ datos.estado | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Fecha Recepción:</label><input type="text" value="{{ datos.fecha_recepcion | default('', true) }}" readonly></div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group form-group-checkbox-display">
+                            <label><i class="fas fa-redo"></i> Renovación:</label>
+                            <input type="text" value="{{ 'Sí' if datos.renovacion == 'si' else 'No' }}" readonly>
+                        </div>
+                        <div class="form-group form-group-checkbox-display">
+                            <label><i class="fas fa-plus-circle"></i> Negocio Nuevo:</label>
+                             <input type="text" value="{{ 'Sí' if datos.negocio_nuevo == 'si' else 'No' }}" readonly>
+                        </div>
+                        <div class="form-group form-group-checkbox-display">
+                            <label><i class="fas fa-sync"></i> Renovable:</label>
+                            <input type="text" value="{{ 'Sí' if datos.renovable == 'si' else 'No' }}" readonly>
+                        </div>
+                        <div class="form-group form-group-checkbox-display">
+                            <label><i class="fas fa-edit"></i> Modificación:</label>
+                            <input type="text" value="{{ 'Sí' if datos.modificacion == 'si' else 'No' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        
+                        <div class="form-group"><label>Tomador:</label><input type="text" value="{{ datos.tomador | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>NIT/CC:</label><input type="text" value="{{ datos.nit | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Categorías / Grupo:</label><input type="text" value="{{ datos.categorias_grupo | default('', true) }}" readonly></div>
+                    </div>
+                     <div class="form-row">
+                        <div class="form-group"><label>N° Póliza:</label><input type="text" value="{{ datos.poliza | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Anexo / Certificado:</label><input type="text" value="{{ datos.anexo | default('', true) }}" readonly></div>
+                        
+                    </div>
+                    {% if datos.get('policy_number_modified') == 'si' %}
+                    <div class="form-row" style="background-color: #fff3cd; color: #856404; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #ffeeba;">
+                        <div class="form-group" style="width: 100%;">
+                            <label style="font-weight: bold;"><i class="fas fa-exclamation-triangle"></i> ¡Atención! Póliza Anterior para Renovación:</label>
+                            <input type="text" value="{{ datos.old_policy_number | default('No especificado', true) }}" readonly style="font-weight: bold; background-color: #fff3cd; border: none;">
+                            <p style="margin-top: 0.5rem;">Este es el número de póliza que se buscará en Vencimientos para marcar como 'Renovado'.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="form-row">
+                        
+                        <div class="form-group"><label>Aseguradora:</label><input type="text" value="{{ datos.aseguradora | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Ramo:</label><input type="text" value="{{ datos.ramo | default('', true) }}" readonly></div>
+                    </div>
+                   
+                    <div class="form-row">
+                        <div class="form-group"><label>Fecha Inicio Vigencia:</label><input type="text" value="{{ datos.fecha_inicio | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Fecha Fin Vigencia:</label><input type="text" value="{{ datos.fecha_fin | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Fecha Límite Pago:</label><input type="text" value="{{ datos.fecha_limite_pago | default('', true) }}" readonly></div>
+                         
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>
+                        <div class="legend-icon"><i class="fas fa-chart-line"></i></div>
+                        Información de Venta y Comisiones (No Editable)
+                    </legend>
+                    <div class="form-row">
+                        <div class="form-group"><label>Tipo Moneda:</label><input type="text" value="{{ datos.tipo_moneda | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Prima Neta:</label><input type="text" id="prima_neta_display" value="{{ datos.prima_neta | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>% Comisión:</label><input type="text" id="porcentaje_comision_valor_display" value="{{ datos.porcentaje_comision_valor | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Comision$:</label><input type="text" id="comision_calculada" readonly></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Vendedor:</label><input type="text" value="{{ datos.vendedor | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>% Participación Vendedor:</label><input type="text" id="porcentaje_vendedor_display" value="{{ datos.porcentaje_vendedor | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>ComisionTPP:</label><input type="text" id="comision_tpp" readonly></div>
+                        <div class="form-group"><label>ComisionUIB:</label><input type="text" id="uib" readonly></div>
+                    </div>
+                </fieldset>
+                
+                <fieldset>
+                    <legend>
+                        <div class="legend-icon"><i class="fas fa-credit-card"></i></div>
+                        Informacion del pago (No Editable)
+                    </legend>
+                    <div class="form-row">
+                        <div class="form-group"><label>Periodicidad de Pago:</label><input type="text" id="periodicidad_pago_display" value="{{ datos.periodicidad_pago | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Forma de Pago:</label><input type="text" id="forma_pago_display" value="{{ datos.forma_pago | default('', true) }}" readonly></div>
+                        <div class="form-group" id="numero_cuotas_group" style="display: none;">
+                            <label># de Cuotas:</label>
+                            <input type="text" id="numero_cuotas" value="{{ datos.numero_cuotas | default('', true) }}" readonly>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>
+                        <div class="legend-icon"><i class="fas fa-sticky-note"></i></div>
+                        Observaciones (No Editable)
+                    </legend>
+                    <div class="form-group">
+                        <label for="observacionesText">Observaciones Generales:</label> {# Changed id to avoid conflict with name #}
+                        <textarea id="observacionesText" name="observaciones_display" rows="3" readonly>{{ datos.observaciones | default('', true) }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="riesgos_adicionalesText">Riesgos Adicionales:</label> {# Changed id to avoid conflict with name #}
+                        <textarea id="riesgos_adicionalesText" name="riesgos_adicionales_display" rows="3" readonly>{{ datos.riesgos_adicionales | default('', true) }}</textarea>
+                    </div>
+                </fieldset>
+                
+                <fieldset>
+                    <legend><i class="fas fa-file-signature"></i> Número de Remisión Manual</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="numero_remision_manual"><i class="fas fa-hashtag"></i> Número Remisión Manual</label>
+                            <input type="text" name="numero_remision_manual" id="numero_remision_manual" value="{{ datos.get('numero_remision_manual', '') }}" placeholder="Ingrese el número de remisión manual" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-save"></i>
+                        Guardar Número Remisión
+                    </button>
+                </div>
+                <div class="form-actions">
+                    <a href="{{ url_for('control') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver al Control
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Lógica de Visibilidad para # de Cuotas ---
+            function toggleCuotasField() {
+                const periodicidad = "{{ datos.periodicidad_pago | default('', true) }}";
+                const formaPago = "{{ datos.forma_pago | default('', true) }}";
+                const cuotasGroup = document.getElementById('numero_cuotas_group');
+                const formasPagoValidas = ['Fraccionado', 'Acuerdo de pago', 'Financiado'];
+
+                if (periodicidad === 'Mensual' && formasPagoValidas.includes(formaPago)) {
+                    cuotasGroup.style.display = 'block';
+                } else {
+                    cuotasGroup.style.display = 'none';
+                }
+            }
+
+            // --- Lógica de Cálculo de Comisiones ---
+            function calcularComisiones() {
+                const primaNeta = parseFloat("{{ datos.prima_neta | default('0', true) }}".replace(/\$|\./g, '')) || 0;
+                const porcComision = parseFloat("{{ datos.porcentaje_comision_valor | default('0', true) }}".replace(',', '.')) || 0;
+                const porcParticipacionVendedor = parseFloat("{{ datos.porcentaje_vendedor | default('0', true) }}".replace(',', '.')) || 0;
+
+                const comisionCalculadaInput = document.getElementById('comision_calculada');
+                const comisionTppInput = document.getElementById('comision_tpp');
+                const participacionUibInput = document.getElementById('uib');
+
+                const comisionCalculada = primaNeta * (porcComision / 100);
+                comisionCalculadaInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+
+                comisionTppInput.value = '';
+                participacionUibInput.value = '';
+
+                if (porcParticipacionVendedor >= 100) {
+                    participacionUibInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+                } else if (porcParticipacionVendedor > 0) {
+                    const comisionTpp = comisionCalculada * (porcParticipacionVendedor / 100);
+                    comisionTppInput.value = '$' + Math.round(comisionTpp).toLocaleString('es-CO');
+                    
+                    const comisionUib = comisionCalculada - comisionTpp;
+                    participacionUibInput.value = '$' + Math.round(comisionUib).toLocaleString('es-CO');
+                } else {
+                    participacionUibInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+                }
+            }
+
+            // Ejecutar al cargar la página
+            toggleCuotasField();
+            calcularComisiones();
+        });
+    </script>
+</body>
+</html>
