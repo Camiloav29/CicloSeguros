@@ -1,41 +1,8 @@
 {
-  "logo_path": "logos/Motociclista_con_Benelli_en_blanco_y_negro.png",
+  "logo_path": "logos/WhatsApp_Image_2025-09-04_at_2.32.01_PM.jpeg",
   "listas": {
-    "ramos": [
-      "AP - ACCIDENTES PERSONALES",
-      "ARL - RIESGOS LABORALES",
-      "ARR - ARRENDAMIENTO",
-      "ASIS - ASISTENCIA MEDICA",
-      "AU - AUTOMOVILES",
-      "AVIACION",
-      "CASCO - CASCO",
-      "COP - COPROPIEDAD",
-      "CU - CUMPLIMIENTO",
-      "CY - CYBER",
-      "D&O - DIRECTORES Y ADMINISTRADORES",
-      "DL - DISPOSICIONES LEGALES",
-      "EX - EXEQUIAS",
-      "HO - HOGAR",
-      "IRF - INFIDELIDAD Y RIESGOS FINANCIEROS",
-      "MN - MANEJO",
-      "MYE - MAQUINARIA Y EQUIPO",
-      "PYME - PYME",
-      "RC CO - RESPONSABILIDAD CIVIL COMBUSTIBLE",
-      "RC CU - RESPONSABILIDAD CIVIL CUMPLIMIENTO",
-      "RC SP - RESPONSABILIDAD CIVIL SERVIDORES PUBLICOS",
-      "RC-AMBIENTAL",
-      "RCE - RESPONSABILIDAD CIVIL EXTRACONTRACTUAL",
-      "RCP - RESPONSABILIDAD CIVIL PROFESIONAL",
-      "SA - SALUD",
-      "SERIEDAD DE OFERTA",
-      "SOAT - SOAT",
-      "TR - TRANSPORTES MERCANCIAS",
-      "TR CM - TODO RIESGO CONSTRUCCION Y MONTAJE",
-      "TR V - TRANSPORTE DE VALORES",
-      "TRDM - TODO RIESGO DAÑO MATERIAL",
-      "VD - VIDA DEUDORES",
-      "VG - VIDA GRUPO",
-      "VI - VIDA INDIVIDUAL"
-    ]
-  }
+    "ramos": []
+  },
+  "nombre_empresa": "CAMNAZ",
+  "prefijo_consecutivo": "CAM"
 }
