@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import uuid
+import json
 
 def limpiar_valor_moneda(valor_str):
     """
@@ -56,9 +57,31 @@ app.config['SECRET_KEY'] = 'dev_super_secret_key_12345_replace_in_production'
 # Rutas BASE_DIR debe estar al nivel de donde corre app.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'archivos_subidos')
+CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 CONSECUTIVO_FILE = os.path.join(BASE_DIR, 'consecutivo.txt')
 EXCEL_FILE = os.path.join(BASE_DIR, 'remisiones.xlsx')
 CLIENT_FOLDERS_BASE_DIR = os.path.join(BASE_DIR, 'CLIENTES_CARPETAS')
+
+# --- Funciones de Configuración ---
+def load_config():
+    """Carga la configuración desde config.json."""
+    try:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Devuelve una configuración por defecto si el archivo no existe o está corrupto
+        return {
+            "logo_path": "static/UIBH_logo_WHITE2-300x78-1.png",
+            "listas": {
+                "ramos": []
+            }
+        }
+
+def save_config(data):
+    """Guarda la configuración en config.json."""
+    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
 CARTERA_DATA_DIR_NAME = 'DATOS_CARTERA' # Folder name
 CARTERA_DATA_DIR = os.path.join(BASE_DIR, CARTERA_DATA_DIR_NAME)
 CARTERA_PROCESADA_FILENAME = 'cartera_procesada.xlsx'
@@ -182,17 +205,6 @@ OPCIONES_VENDEDOR_REMISIONES = [
 ]
 OPCIONES_FORMA_PAGO = ["Acuerdo de pago", "Contado", "Financiado", "Fraccionado"]
 OPCIONES_PERIODICIDAD_PAGO = ["Anual", "Mensual", "Trimestral"]
-OPCIONES_RAMO_FORMULARIO = [
-    "AP - ACCIDENTES PERSONALES", "ARL - RIESGOS LABORALES", "ARR - ARRENDAMIENTO", "ASIS - ASISTENCIA MEDICA",
-    "AU - AUTOMOVILES", "AVIACION", "CASCO - CASCO", "COP - COPROPIEDAD", "CU - CUMPLIMIENTO",
-    "CY - CYBER", "D&O - DIRECTORES Y ADMINISTRADORES", "DL - DISPOSICIONES LEGALES", "EX - EXEQUIAS",
-    "HO - HOGAR", "IRF - INFIDELIDAD Y RIESGOS FINANCIEROS", "MN - MANEJO", "MYE - MAQUINARIA Y EQUIPO",
-    "PYME - PYME", "RC CO - RESPONSABILIDAD CIVIL COMBUSTIBLE", "RC CU - RESPONSABILIDAD CIVIL CUMPLIMIENTO",
-    "RC SP - RESPONSABILIDAD CIVIL SERVIDORES PUBLICOS", "RC-AMBIENTAL", "RCE - RESPONSABILIDAD CIVIL EXTRACONTRACTUAL",
-    "RCP - RESPONSABILIDAD CIVIL PROFESIONAL", "SA - SALUD", "SERIEDAD DE OFERTA", "SOAT - SOAT",
-    "TR - TRANSPORTES MERCANCIAS", "TR CM - TODO RIESGO CONSTRUCCION Y MONTAJE", "TR V - TRANSPORTE DE VALORES",
-    "TRDM - TODO RIESGO DAÑO MATERIAL", "VD - VIDA DEUDORES", "VG - VIDA GRUPO", "VI - VIDA INDIVIDUAL"
-]
 OPCIONES_ANALISTA = ["Lina Castro", "Valentina Aguilera", "Jairo", "Jose", "William"]
 
 # This is the definitive column order for remisiones.xlsx
@@ -233,6 +245,7 @@ os.makedirs(CLIENT_FOLDERS_BASE_DIR, exist_ok=True) # For client folders
 os.makedirs(CARTERA_DATA_DIR, exist_ok=True) # For cartera data
 os.makedirs(VENCIMIENTOS_DATA_DIR, exist_ok=True) # For vencimientos data
 os.makedirs(PROSPECTOS_DATA_DIR, exist_ok=True) # For prospectos data
+os.makedirs(os.path.join(BASE_DIR, 'static', 'logos'), exist_ok=True) # For custom logos
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['CLIENT_FOLDERS_BASE_DIR'] = CLIENT_FOLDERS_BASE_DIR
 app.config['CARTERA_DATA_DIR'] = CARTERA_DATA_DIR
@@ -329,7 +342,94 @@ def cargar_remisiones():
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    config = load_config()
+    return render_template('index.html', logo_path=config.get('logo_path'))
+
+# --- Rutas del Panel de Configuraciones ---
+@app.route('/configuraciones', methods=['GET', 'POST'])
+def panel_configuraciones():
+    config = load_config()
+    if request.method == 'POST':
+        # --- Manejo de la subida del logo ---
+        if 'logo_upload' in request.files:
+            logo_file = request.files['logo_upload']
+            if logo_file.filename != '':
+                filename = secure_filename(logo_file.filename)
+                # La ruta de guardado debe ser relativa al directorio 'static'
+                # pero la ruta para guardar el archivo en el sistema debe ser absoluta.
+                relative_save_path = os.path.join('logos', filename)
+                absolute_save_path = os.path.join(BASE_DIR, 'static', relative_save_path)
+
+                logo_file.save(absolute_save_path)
+
+                # Actualizar config.json con la ruta relativa
+                config['logo_path'] = f"logos/{filename}" # Guardar como 'logos/filename.png'
+                save_config(config)
+                flash('Logo actualizado exitosamente.', 'success')
+                return redirect(url_for('panel_configuraciones'))
+
+    # Para GET o si el POST no fue de logo, se renderiza la página
+    return render_template('configuraciones.html', config=config)
+
+@app.route('/configuraciones/listas/<list_name>', methods=['GET', 'POST'])
+def gestionar_lista(list_name):
+    config = load_config()
+    # Asegurarse de que la lista exista en la configuración
+    if list_name not in config.get('listas', {}):
+        flash(f"La lista '{list_name}' no es configurable.", 'danger')
+        return redirect(url_for('panel_configuraciones'))
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        item_name = request.form.get('item_name', '').strip()
+
+        if action == 'add' and item_name:
+            if item_name not in config['listas'][list_name]:
+                config['listas'][list_name].append(item_name)
+                save_config(config)
+                flash(f'Ítem "{item_name}" añadido a {list_name}.', 'success')
+            else:
+                flash(f'El ítem "{item_name}" ya existe en la lista.', 'warning')
+
+        elif action == 'delete' and item_name:
+            if item_name in config['listas'][list_name]:
+                config['listas'][list_name].remove(item_name)
+                save_config(config)
+                flash(f'Ítem "{item_name}" eliminado de {list_name}.', 'success')
+            else:
+                flash(f'No se encontró el ítem "{item_name}" para eliminar.', 'warning')
+
+        elif action == 'edit':
+            original_name = request.form.get('original_item_name')
+            new_name = request.form.get('new_item_name', '').strip()
+            if original_name and new_name:
+                try:
+                    # Encontrar el índice y actualizar
+                    index = config['listas'][list_name].index(original_name)
+                    config['listas'][list_name][index] = new_name
+                    save_config(config)
+                    flash(f'Ítem "{original_name}" actualizado a "{new_name}".', 'success')
+                except ValueError:
+                    flash(f'No se encontró el ítem original "{original_name}" para editar.', 'warning')
+            else:
+                flash('Faltaron datos para la edición.', 'danger')
+
+        return redirect(url_for('gestionar_lista', list_name=list_name))
+
+    if request.method == 'GET':
+        # La lógica de eliminación se ha movido al POST
+        pass
+
+    # El nombre para mostrar puede ser más amigable que el nombre de la variable
+    display_name_map = {
+        'ramos': 'Ramos'
+    }
+    display_name = display_name_map.get(list_name, list_name.capitalize())
+
+    return render_template('gestion_lista.html',
+                           list_name=list_name,
+                           display_name=display_name,
+                           items=config['listas'][list_name])
 
 @app.route('/carga_maestra', methods=['GET'])
 def mostrar_formulario_carga_maestra():
@@ -797,11 +897,14 @@ def ejecutar_crear_carpeta():
 @app.route('/prospectos/crear', methods=['GET', 'POST'])
 def crear_prospecto():
     if request.method == 'GET':
+        config = load_config()
+        ramos_dinamicos = config.get('listas', {}).get('ramos', [])
+
         return render_template('prospectos_crear.html',
                                opciones_responsable_tecnico=OPCIONES_RESPONSABLE_TECNICO,
                                opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
                                opciones_estado=OPCIONES_ESTADO_PROSPECTO,
-                               opciones_ramo=OPCIONES_RAMO_FORMULARIO,
+                               opciones_ramo=ramos_dinamicos,
                                opciones_aseguradora=OPCIONES_ASEGURADORA,
                                opciones_vendedor=OPCIONES_VENDEDOR_REMISIONES)
 

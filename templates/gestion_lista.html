@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar {{ display_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <style>
+        .config-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .config-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 1rem;
+        }
+        .config-header h1 {
+            font-size: 2rem;
+            color: #333;
+        }
+        .table-container {
+            margin-top: 2rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .actions a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .actions a.delete, .btn-link.delete {
+            color: #dc3545;
+            text-decoration: none;
+        }
+        .btn-link {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+            vertical-align: baseline;
+        }
+        .form-add-item {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        .form-add-item h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .btn-save {
+            background-color: #28a745;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-save:hover {
+            background-color: #218838;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .btn-link.edit { color: #007bff; }
+        .btn-save-edit, .btn-cancel-edit {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        .btn-save-edit { color: #28a745; }
+        .btn-cancel-edit { color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="config-container">
+        <div class="config-header">
+            <h1><i class="fas fa-list-alt"></i> Gestionar {{ display_name }}</h1>
+        </div>
+
+        <!-- Formulario para añadir nuevo item -->
+        <div class="form-add-item">
+            <h3>Añadir Nuevo Ítem</h3>
+            <form action="{{ url_for('gestionar_lista', list_name=list_name) }}" method="post">
+                <input type="hidden" name="action" value="add">
+                <div class="form-group">
+                    <input type="text" name="item_name" placeholder="Nombre del nuevo ítem" required>
+                </div>
+                <button type="submit" class="btn-save">Añadir</button>
+            </form>
+        </div>
+
+        <!-- Tabla de items existentes -->
+        <div class="table-container">
+            <h3>Ítems Actuales</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>
+                            <span id="item-{{ loop.index }}">{{ item }}</span>
+                            <form id="edit-form-{{ loop.index }}" action="{{ url_for('gestionar_lista', list_name=list_name) }}" method="post" style="display: none;">
+                                <input type="hidden" name="action" value="edit">
+                                <input type="hidden" name="original_item_name" value="{{ item }}">
+                                <input type="text" name="new_item_name" value="{{ item }}" required>
+                                <button type="submit" class="btn-save-edit"><i class="fas fa-save"></i></button>
+                                <button type="button" onclick="toggleEdit({{ loop.index }})" class="btn-cancel-edit"><i class="fas fa-times"></i></button>
+                            </form>
+                        </td>
+                        <td class="actions">
+                            <button type="button" onclick="toggleEdit({{ loop.index }})" class="btn-link edit"><i class="fas fa-edit"></i> Editar</button>
+                            <form action="{{ url_for('gestionar_lista', list_name=list_name) }}" method="post" style="display: inline;">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="item_name" value="{{ item }}">
+                                <button type="submit" class="btn-link delete" onclick="return confirm('¿Estás seguro de que quieres eliminar este ítem?');"><i class="fas fa-trash"></i> Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2">No hay ítems en esta lista.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <a href="{{ url_for('panel_configuraciones') }}" class="back-link"><i class="fas fa-arrow-left"></i> Volver al Panel de Configuraciones</a>
+    </div>
+
+    <script>
+        function toggleEdit(index) {
+            const itemSpan = document.getElementById('item-' + index);
+            const editForm = document.getElementById('edit-form-' + index);
+
+            if (itemSpan.style.display === 'none') {
+                // Si el formulario está visible, lo ocultamos y mostramos el texto
+                itemSpan.style.display = 'inline';
+                editForm.style.display = 'none';
+            } else {
+                // Si el texto está visible, lo ocultamos y mostramos el formulario
+                itemSpan.style.display = 'none';
+                editForm.style.display = 'inline-block'; // O 'block' según el layout
+            }
+        }
+    </script>
+</body>
+</html>

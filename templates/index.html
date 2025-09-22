@@ -11,7 +11,7 @@
 <body>
     <div class="dashboard-container">
         <header class="dashboard-header">
-             <img src="{{ url_for('static', filename='MASTER UIB logo with CREST_CMYK 2024.png') }}" alt="UIB Logo" id="logo_dashboard">
+             <img src="{{ url_for('static', filename=logo_path) }}" alt="UIB Logo" id="logo_dashboard">
             <h1>Panel de Control Principal</h1>
             <p>Bienvenido al sistema de gestión de UIB Corredores de Seguros.</p>
         </header>
@@ -71,6 +71,10 @@
              <a href="{{ url_for('mostrar_formulario_carga_maestra') }}" class="nav-button nav-button-maestro">
                 <i class="fas fa-upload fa-2x"></i>
                 <span>Carga Maestra</span>
+            </a>
+            <a href="{{ url_for('panel_configuraciones') }}" class="nav-button btn-config">
+                <i class="fas fa-tools fa-2x"></i>
+                <span>Configuraciones</span>
             </a>
         </nav>
 
