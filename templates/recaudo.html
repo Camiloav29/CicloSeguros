@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de produccion - UIB</title>
+    <title>Panel de produccion - {{ nombre_empresa }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/recaudo_styles.css">
@@ -62,7 +62,7 @@
                     <div class="table-responsive">
                         <table class="vencimientos-table">
                             <thead>
-                                <tr><th>Consecutivo</th><th>Tomador</th><th>Ramo</th><th>Fecha Registro</th><th>Valor UIB</th></tr>
+                                <tr><th>Consecutivo</th><th>Tomador</th><th>Ramo</th><th>Fecha Registro</th><th>Valor Intermediario</th></tr>
                             </thead>
                             <tbody>
                                 {% for item in renovaciones_data %}
@@ -87,7 +87,7 @@
                     <div class="table-responsive">
                        <table class="vencimientos-table">
                             <thead>
-                                <tr><th>Consecutivo</th><th>Tomador</th><th>Ramo</th><th>Fecha Registro</th><th>Valor UIB</th></tr>
+                                <tr><th>Consecutivo</th><th>Tomador</th><th>Ramo</th><th>Fecha Registro</th><th>Valor Intermediario</th></tr>
                             </thead>
                             <tbody>
                                 {% for item in prospectos_data %}
@@ -112,7 +112,7 @@
                     <div class="table-responsive">
                         <table class="vencimientos-table">
                             <thead>
-                                <tr><th>Consecutivo</th><th>Tomador</th><th>Ramo</th><th>Fecha Registro</th><th>Valor UIB</th></tr>
+                                <tr><th>Consecutivo</th><th>Tomador</th><th>Ramo</th><th>Fecha Registro</th><th>Valor Intermediario</th></tr>
                             </thead>
                             <tbody>
                                 {% for item in modificaciones_data %}
@@ -207,7 +207,7 @@
             data: {
                 labels: chartData.labels,
                 datasets: [{
-                    label: 'Comisión UIB por Ramo',
+                label: 'Comisión por Ramo',
                     data: chartData.data,
                     backgroundColor: 'rgba(54, 162, 235, 0.6)',
                     borderColor: 'rgba(54, 162, 235, 1)',

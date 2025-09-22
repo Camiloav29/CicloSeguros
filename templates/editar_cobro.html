@@ -77,6 +77,7 @@
     <script>
         // Store cobro data from Flask into a JS variable
         const cobroData = {{ cobro | tojson }};
+        const nombreEmpresa = "{{ nombre_empresa | e }}";
 
         // Get modal and other elements
         const modal = document.getElementById("cartaModal");
@@ -149,7 +150,7 @@
                 <p>Ciudad</p>
             </td>
             <td class="logo-cell">
-                <p><strong>UIB Corredores de Seguros S.A.</strong></p>
+                <p><strong>${nombreEmpresa}</strong></p>
                 <p>Cra.7 # 71-21 Of.601, Torre B</p>
                 <p>Bogotá D.C., Colombia</p>
                 <p>+57 (601) 326 7100</p>
@@ -163,7 +164,7 @@
         <p><strong>Ref.: ${formData.ref_asunto}</strong></p>
         <hr>
         <p>Apreciados señores:</p>
-        <p>Agradecemos la confianza depositada en <strong>UIB Corredores de Seguros S.A.</strong> y nos complace hacerles entrega del presente cobro, correspondiente a la póliza suscrita con <strong>${cobroData.Aseguradora}</strong>, cuya vigencia se extiende desde las 00:00 horas del <strong>${formData.fecha_inicio_cobro}</strong> hasta las 00:00 horas del <strong>${formData.fecha_fin_cobro}</strong>, según el siguiente detalle:</p>
+        <p>Agradecemos la confianza depositada en <strong>${nombreEmpresa}</strong> y nos complace hacerles entrega del presente cobro, correspondiente a la póliza suscrita con <strong>${cobroData.Aseguradora}</strong>, cuya vigencia se extiende desde las 00:00 horas del <strong>${formData.fecha_inicio_cobro}</strong> hasta las 00:00 horas del <strong>${formData.fecha_fin_cobro}</strong>, según el siguiente detalle:</p>
         <table class="policy-table">
             <thead>
                 <tr><th>Póliza No.</th><th>Descripción</th><th>Valor por pagar</th></tr>
@@ -182,7 +183,7 @@
         <p>Adjuntamos el recibo de pago correspondiente, los cuales deberá ser cancelado a más tardar el día <strong>${formData.fecha_de_pago}</strong>. Una vez efectuado el pago, les agradecemos notificarlo al correo electrónico sbarrios@uiblatam.com.</p>
         <p>${formData.link_de_pago ? `<a href="${formData.link_de_pago}">${formData.link_de_pago}</a>` : ''}</p>
         <hr>
-        <p>Finalmente, reiteramos que nuestro principal compromiso es ofrecer un servicio de excelencia y atención personalizada. Bajo esta filosofía y con el respaldo de nuestro equipo humano, UIB CORREDORES DE SEGUROS S.A. continúa brindando a sus clientes asesoría permanente, generando la confianza y tranquilidad necesarias para delegar en nuestra organización el manejo integral de sus programas de seguros.</p>
+        <p>Finalmente, reiteramos que nuestro principal compromiso es ofrecer un servicio de excelencia y atención personalizada. Bajo esta filosofía y con el respaldo de nuestro equipo humano, ${nombreEmpresa} continúa brindando a sus clientes asesoría permanente, generando la confianza y tranquilidad necesarias para delegar en nuestra organización el manejo integral de sus programas de seguros.</p>
         <p>Cordialmente,</p>
     </div>
     <div class="copy-button">

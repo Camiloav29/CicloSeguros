@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Registro de Cartera - UIB</title>
+    <title>Editar Registro de Cartera - {{ nombre_empresa }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/cartera_editar_registro.css">
@@ -48,12 +48,12 @@
                     <div class="form-row">
                         <div class="form-group"><label>Prima Neta:</label><input type="text" value="{{ registro['PRIMA NETA'] | default('', true) }}" readonly></div>
                         <div class="form-group"><label>Comisión Total:</label><input type="text" value="{{ registro['COMISIÓN'] | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>% Comisión UIB (Original):</label><input type="text" value="{{ registro['PORCENTAJE DE COMISIÓN'] | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>% Comisión Intermediario (Original):</label><input type="text" value="{{ registro['PORCENTAJE DE COMISIÓN'] | default('', true) }}" readonly></div>
                     </div>
                     <div class="form-row">
                         <div class="form-group"><label>Retención:</label><input type="text" value="{{ registro.Retencion_Calc | default('', true) }}" readonly></div>
                         <div class="form-group"><label>Reteica:</label><input type="text" value="{{ registro.Reteica_Calc | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Valor Comisión UIB Neto:</label><input type="text" value="{{ registro.Valor_Comision_UIB_Neto_Calc | default('', true) }}" readonly></div>
+                        <div class="form-group"><label>Valor Comisión Neto Intermediario:</label><input type="text" value="{{ registro.Valor_Comision_UIB_Neto_Calc | default('', true) }}" readonly></div>
                     </div>
                      <div class="form-row">
                         <div class="form-group"><label>Intermediario:</label><input type="text" value="{{ registro.Intermediario_Original | default('', true) }}" readonly></div>
