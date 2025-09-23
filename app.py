@@ -336,11 +336,47 @@ def panel_configuraciones():
             config['nombre_empresa'] = request.form.get('nombre_empresa', '').strip()
             config['prefijo_consecutivo'] = request.form.get('prefijo_consecutivo', '').strip()
             save_config(config)
-            flash('Información general actualizada exitosamente.', 'success')
+            return jsonify({'success': True, 'message': 'Información general actualizada exitosamente.'})
 
-        return redirect(url_for('panel_configuraciones'))
+        # Si no es un POST que manejemos con JSON, puede que algo más lo necesite.
+        # Por ahora, asumimos que todos los POST a esta ruta serán asíncronos.
+        # Considerar un fallback si es necesario.
+        return jsonify({'success': False, 'message': 'Acción no reconocida.'})
+
+    # El mapa de nombres para mostrar debe estar disponible aquí también
+    display_name_map = {
+        'ramos': 'Ramos',
+        'aseguradoras': 'Aseguradoras',
+        'vendedores': 'Vendedores',
+        'responsables_tecnicos': 'Responsables Técnicos',
+        'responsables_comerciales': 'Responsables Comerciales',
+        'estados_prospecto': 'Estados de Prospecto',
+        'analistas': 'Analistas',
+        'responsables_vencimientos': 'Responsables de Vencimientos',
+        'estados_vencimientos': 'Estados de Vencimientos',
+        'tipos_moneda': 'Tipos de Moneda',
+        'formas_pago': 'Formas de Pago',
+        'periodicidades_pago': 'Periodicidades de Pago',
+        'categorias_grupo': 'Categorías de Grupo',
+        'tipos_movimiento': 'Tipos de Movimiento',
+        'tipos_archivo_adjunto': 'Tipos de Archivo Adjunto',
+        'tipos_plantilla_correspondencia': 'Tipos de Plantilla de Correspondencia'
+    }
+    config['display_name_map'] = display_name_map
 
     return render_template('configuraciones.html', config=config)
+
+# --- Rutas para servir parciales de configuración (para carga dinámica) ---
+@app.route('/configuraciones/partials/general')
+def partial_general():
+    config = load_config()
+    return render_template('config_partials/general.html', config=config)
+
+@app.route('/configuraciones/partials/logo')
+def partial_logo():
+    config = load_config()
+    return render_template('config_partials/logo.html', config=config)
+
 
 @app.route('/configuraciones/listas/<list_name>', methods=['GET', 'POST'])
 def gestionar_lista(list_name):
@@ -358,34 +394,33 @@ def gestionar_lista(list_name):
             if item_name not in config['listas'][list_name]:
                 config['listas'][list_name].append(item_name)
                 save_config(config)
-                flash(f'Ítem "{item_name}" añadido a {list_name}.', 'success')
+                return jsonify({'success': True, 'message': f'Ítem "{item_name}" añadido a {list_name}.'})
             else:
-                flash(f'El ítem "{item_name}" ya existe en la lista.', 'warning')
+                return jsonify({'success': False, 'message': f'El ítem "{item_name}" ya existe en la lista.'})
 
         elif action == 'delete' and item_name:
             if item_name in config['listas'][list_name]:
                 config['listas'][list_name].remove(item_name)
                 save_config(config)
-                flash(f'Ítem "{item_name}" eliminado de {list_name}.', 'success')
+                return jsonify({'success': True, 'message': f'Ítem "{item_name}" eliminado de {list_name}.'})
             else:
-                flash(f'No se encontró el ítem "{item_name}" para eliminar.', 'warning')
+                return jsonify({'success': False, 'message': f'No se encontró el ítem "{item_name}" para eliminar.'})
 
         elif action == 'edit':
             original_name = request.form.get('original_item_name')
             new_name = request.form.get('new_item_name', '').strip()
             if original_name and new_name:
                 try:
-                    # Encontrar el índice y actualizar
                     index = config['listas'][list_name].index(original_name)
                     config['listas'][list_name][index] = new_name
                     save_config(config)
-                    flash(f'Ítem "{original_name}" actualizado a "{new_name}".', 'success')
+                    return jsonify({'success': True, 'message': f'Ítem "{original_name}" actualizado a "{new_name}".'})
                 except ValueError:
-                    flash(f'No se encontró el ítem original "{original_name}" para editar.', 'warning')
+                    return jsonify({'success': False, 'message': f'No se encontró el ítem original "{original_name}" para editar.'})
             else:
-                flash('Faltaron datos para la edición.', 'danger')
+                return jsonify({'success': False, 'message': 'Faltaron datos para la edición.'})
 
-        return redirect(url_for('gestionar_lista', list_name=list_name))
+        return jsonify({'success': False, 'message': 'Acción no reconocida.'})
 
     if request.method == 'GET':
         # La lógica de eliminación se ha movido al POST

@@ -3,161 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Configuraciones</title>
+    <title>Panel de Configuraciones - {{ config.get('nombre_empresa') }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Usando un CSS existente para consistencia, se puede crear uno nuevo si es necesario -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
-    <style>
-        .config-container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .config-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 1rem;
-        }
-        .config-header h1 {
-            font-size: 2rem;
-            color: #333;
-        }
-        .config-section {
-            margin-bottom: 2.5rem;
-        }
-        .config-section h2 {
-            font-size: 1.5rem;
-            color: #444;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 0.5rem;
-        }
-        .logo-preview {
-            display: block;
-            max-width: 250px;
-            max-height: 100px;
-            margin-bottom: 1rem;
-            border: 1px solid #ddd;
-            padding: 0.5rem;
-            border-radius: 4px;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        .form-group input[type="file"] {
-            display: block;
-        }
-        .btn-save {
-            background-color: #007bff;
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        .btn-save:hover {
-            background-color: #0056b3;
-        }
-        .data-list a {
-            display: block;
-            padding: 0.75rem 1rem;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            text-decoration: none;
-            color: #333;
-            margin-bottom: 0.5rem;
-            transition: background-color 0.2s;
-        }
-        .data-list a:hover {
-            background-color: #e9ecef;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 2rem;
-            text-decoration: none;
-            color: #007bff;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='configuraciones_panel.css') }}">
 </head>
 <body>
-    <div class="config-container">
-        <div class="config-header">
-            <h1><i class="fas fa-tools"></i> Panel de Configuraciones</h1>
-        </div>
-
-        <!-- Sección de Información General -->
-        <div class="config-section">
-            <h2>Información General</h2>
-            <form action="{{ url_for('panel_configuraciones') }}" method="post">
-                <input type="hidden" name="form_section" value="general">
-                <div class="form-group">
-                    <label for="nombre_empresa">Nombre de la Empresa</label>
-                    <input type="text" id="nombre_empresa" name="nombre_empresa" value="{{ config.get('nombre_empresa', '') }}" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="prefijo_consecutivo">Prefijo para Consecutivos (ej. UIB)</label>
-                    <input type="text" id="prefijo_consecutivo" name="prefijo_consecutivo" value="{{ config.get('prefijo_consecutivo', '') }}" class="form-control">
-                </div>
-                <button type="submit" class="btn-save">Guardar Información General</button>
-            </form>
-        </div>
-
-        <!-- Sección de Apariencia y Marca -->
-        <div class="config-section">
-            <h2>Apariencia y Marca</h2>
-            <form action="{{ url_for('panel_configuraciones') }}" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="form_section" value="logo">
-                <div class="form-group">
-                    <label for="logo">Logo Actual</label>
-                    <img src="{{ url_for('static', filename=config['logo_path']) }}" alt="Logo Actual" class="logo-preview">
-                </div>
-                <div class="form-group">
-                    <label for="logo_upload">Cambiar Logo (subir nuevo archivo)</label>
-                    <input type="file" name="logo_upload" id="logo_upload" accept="image/png, image/jpeg, image/jpg">
-                </div>
-                <button type="submit" class="btn-save">Guardar Logo</button>
-            </form>
-        </div>
-
-        <!-- Sección de Gestión de Datos -->
-        <div class="config-section">
-            <h2>Gestión de Datos</h2>
-            <div class="data-list">
-                <a href="{{ url_for('gestionar_lista', list_name='ramos') }}">Gestionar Ramos</a>
-                <a href="{{ url_for('gestionar_lista', list_name='aseguradoras') }}">Gestionar Aseguradoras</a>
-                <a href="{{ url_for('gestionar_lista', list_name='vendedores') }}">Gestionar Vendedores (Cedentes)</a>
-                <a href="{{ url_for('gestionar_lista', list_name='responsables_tecnicos') }}">Gestionar Responsables Técnicos</a>
-                <a href="{{ url_for('gestionar_lista', list_name='responsables_comerciales') }}">Gestionar Responsables Comerciales</a>
-                <a href="{{ url_for('gestionar_lista', list_name='estados_prospecto') }}">Gestionar Estados de Prospecto</a>
-                <a href="{{ url_for('gestionar_lista', list_name='analistas') }}">Gestionar Analistas</a>
-                <a href="{{ url_for('gestionar_lista', list_name='responsables_vencimientos') }}">Gestionar Responsables de Vencimientos</a>
-                <a href="{{ url_for('gestionar_lista', list_name='estados_vencimientos') }}">Gestionar Estados de Vencimientos</a>
-                <a href="{{ url_for('gestionar_lista', list_name='tipos_moneda') }}">Gestionar Tipos de Moneda</a>
-                <a href="{{ url_for('gestionar_lista', list_name='formas_pago') }}">Gestionar Formas de Pago</a>
-                <a href="{{ url_for('gestionar_lista', list_name='periodicidades_pago') }}">Gestionar Periodicidades de Pago</a>
-                <a href="{{ url_for('gestionar_lista', list_name='categorias_grupo') }}">Gestionar Categorías de Grupo</a>
-                <a href="{{ url_for('gestionar_lista', list_name='tipos_movimiento') }}">Gestionar Tipos de Movimiento</a>
-                <a href="{{ url_for('gestionar_lista', list_name='tipos_archivo_adjunto') }}">Gestionar Tipos de Archivo Adjunto</a>
-                <a href="{{ url_for('gestionar_lista', list_name='tipos_plantilla_correspondencia') }}">Gestionar Tipos de Plantilla de Correspondencia</a>
+    <div class="config-wrapper">
+        <!-- Sidebar -->
+        <aside class="config-sidebar">
+            <div class="sidebar-header">
+                <h2>Configuración</h2>
+                <p>{{ config.get('nombre_empresa') }}</p>
             </div>
-        </div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link active" data-target="general">
+                        <i class="fas fa-info-circle"></i> Información General
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="logo">
+                        <i class="fas fa-image"></i> Apariencia y Marca
+                    </a>
+                </li>
+                <li>
+                    <div class="accordion-header">
+                        <span><i class="fas fa-list"></i> Listas de Datos</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <input type="text" id="list-search" placeholder="Buscar lista..." style="width: 85%; margin: 0.5rem 1.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        {% for list_name, items in config.get('listas', {}).items() %}
+                            <a href="#" class="nav-link" data-target="lista-{{ list_name }}">{{ config.get('display_name_map', {}).get(list_name, list_name.replace('_', ' ')|capitalize) }}</a>
+                        {% endfor %}
+                    </div>
+                </li>
+            </ul>
+        </aside>
 
-        <a href="{{ url_for('index') }}" class="back-link"><i class="fas fa-arrow-left"></i> Volver al Dashboard</a>
+        <!-- Main Content -->
+        <main class="config-main" id="config-content-area">
+            <!-- El contenido se cargará aquí dinámicamente -->
+            <div class="content-card">
+                <h2>Bienvenido al Panel de Configuraciones</h2>
+                <p>Seleccione una opción del menú de la izquierda para comenzar a editar.</p>
+            </div>
+        </main>
     </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.querySelector('.config-sidebar');
+        const contentArea = document.getElementById('config-content-area');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const accordionHeader = document.querySelector('.accordion-header');
+        const accordionContent = document.querySelector('.accordion-content');
+        const listSearch = document.getElementById('list-search');
+
+        // Function to load content dynamically
+        function loadContent(target) {
+            let url;
+            if (target.startsWith('lista-')) {
+                const listName = target.replace('lista-', '');
+                url = `/configuraciones/listas/${listName}`;
+            } else {
+                url = `/configuraciones/partials/${target}`;
+            }
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    contentArea.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading content:', error);
+                    contentArea.innerHTML = '<div class="content-card"><h2>Error</h2><p>No se pudo cargar el contenido. Por favor, intente de nuevo.</p></div>';
+                });
+        }
+
+        // Handle sidebar navigation clicks
+        sidebar.addEventListener('click', function(e) {
+            const link = e.target.closest('.nav-link');
+            if (link) {
+                e.preventDefault();
+
+                // Update active class
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                const target = link.dataset.target;
+                loadContent(target);
+            }
+        });
+
+        // Accordion functionality
+        accordionHeader.addEventListener('click', function() {
+            this.classList.toggle('open');
+            const icon = this.querySelector('.fa-chevron-down');
+            icon.style.transform = this.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+
+            if (accordionContent.style.maxHeight) {
+                accordionContent.style.maxHeight = null;
+            } else {
+                accordionContent.style.maxHeight = accordionContent.scrollHeight + "px";
+            }
+        });
+
+        // Search functionality for lists
+        listSearch.addEventListener('keyup', function() {
+            const filter = listSearch.value.toLowerCase();
+            const links = accordionContent.querySelectorAll('a');
+            links.forEach(link => {
+                const text = link.textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    link.style.display = '';
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+        });
+
+        // Load initial content (General tab)
+        loadContent('general');
+
+        // --- Toast Notification Logic ---
+        const toastContainer = document.getElementById('toast-container');
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => { toast.classList.add('show'); }, 100); // Fade in
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => { toast.remove(); }, 300); // Remove from DOM after fade out
+            }, 4000);
+        }
+
+        // --- Asynchronous Form Submission ---
+        contentArea.addEventListener('submit', function(e) {
+            const form = e.target.closest('form');
+            if (form) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const url = form.action;
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        // If the form was for a list, reload the list content to show the change
+                        const listName = new URL(url).pathname.split('/').pop();
+                        const activeLink = document.querySelector('.nav-link.active');
+                        if (activeLink && activeLink.dataset.target.startsWith('lista-')) {
+                            loadContent(activeLink.dataset.target);
+                        }
+                    } else {
+                        showToast(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Form submission error:', error);
+                    showToast('Error de conexión al guardar.', 'error');
+                });
+            }
+        });
+    });
+    </script>
 </body>
 </html>
