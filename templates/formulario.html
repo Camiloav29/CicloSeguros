@@ -105,9 +105,9 @@
                             <label for="categorias_grupo"><i class="fas fa-tags"></i> Categorías / Grupo</label>
                             <select name="categorias_grupo" id="categorias_grupo">
                                 <option value="">Seleccione un grupo...</option>
-                                <option value="Grupo Cartagena">Grupo Cartagena</option>
-                                <option value="Grupo Tenco">Grupo Tenco</option>
-                                <option value="Otro">Otro</option>
+                                {% for opt in opciones_categorias_grupo %}
+                                <option value="{{ opt }}">{{ opt }}</option>
+                                {% endfor %}
                             </select>
                             <input type="text" name="categorias_grupo_otro" id="categorias_grupo_otro" placeholder="Especifique otro grupo" style="display:none; margin-top: 1rem;">
                         </div>
@@ -227,8 +227,9 @@
                         <div class="form-group" id="tipo_movimiento_group" style="display: none;">
                             <label for="tipo_movimiento"><i class="fas fa-exchange-alt"></i> Tipo de Movimiento</label>
                             <select id="tipo_movimiento" name="tipo_movimiento">
-                                <option value="Cobro mensual">Cobro mensual</option>
-                                <option value="Pago mensual">Pago mensual</option>
+                                {% for opt in opciones_tipos_movimiento %}
+                                <option value="{{ opt }}">{{ opt }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -277,10 +278,9 @@
                                 </label>
                             </div>
                             <select name="tipo_archivo[]">
-                                <option value="Recibo">RECIBO</option>
-                                <option value="Poliza">PÓLIZA</option>
-                                <option value="Clausulado">CLAUSULADO</option>
-                                <option value="Otro">Otro</option>
+                                {% for opt in opciones_tipos_archivo %}
+                                <option value="{{ opt }}">{{ opt.upper() }}</option>
+                                {% endfor %}
                             </select>
                             <input type="text" name="otro_tipo_nombre[]" class="otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none; width: 100%; margin-top: 0.5rem; padding: 0.9rem; border: 2px solid var(--border-color); border-radius: 12px;">
                         </div>
@@ -324,6 +324,7 @@
     </div>
 
     <script>
+        const opcionesTiposArchivoJS = {{ opciones_tipos_archivo | tojson }};
         let fileCounter = 1;
 
         function handleTipoArchivoChange(selectElement) {
@@ -348,6 +349,12 @@
             const container = document.getElementById('file-container');
             const nuevo = document.createElement('div');
             nuevo.className = 'archivo-group';
+
+            let optionsHTML = '';
+            opcionesTiposArchivoJS.forEach(opt => {
+                optionsHTML += `<option value="${opt}">${opt.toUpperCase()}</option>`;
+            });
+
             nuevo.innerHTML = `
                 <div class="file-input-wrapper">
                     <input type="file" name="archivos[]" id="file-${fileCounter}" required>
@@ -357,10 +364,7 @@
                     </label>
                 </div>
                 <select name="tipo_archivo[]">
-                    <option value="Recibo">Recibo</option>
-                    <option value="Poliza">Póliza</option>
-                    <option value="Clausulado">Clausulado</option>
-                    <option value="Otro">Otro</option>
+                    ${optionsHTML}
                 </select>
                 <input type="text" name="otro_tipo_nombre[]" class="otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none; width: 100%; margin-top: 0.5rem; padding: 0.9rem; border: 2px solid var(--border-color); border-radius: 12px;">
                 <button type="button" class="btn" onclick="eliminarArchivo(this)" style="background: var(--error-color); padding: 0.75rem;">
