@@ -95,6 +95,84 @@
       "PEDRO CARREÑO",
       "UIB CORREDORES DE SEGUROS S.A.",
       "WILLIAM ALBERTO SANCHEZ RUIZ"
+    ],
+    "responsables_tecnicos": [
+      "Luisa",
+      "Valentina",
+      "Jairo",
+      "Jose",
+      "William"
+    ],
+    "responsables_comerciales": [
+      "Jose",
+      "Valentina",
+      "Jairo",
+      "Pedro",
+      "William",
+      "Camila"
+    ],
+    "estados_prospecto": [
+      "Activo",
+      "En gestión",
+      "Cotización",
+      "Pdte respuesta",
+      "Ganado",
+      "Perdido"
+    ],
+    "analistas": [
+      "Lina Castro",
+      "Valentina Aguilera",
+      "Jairo",
+      "Jose",
+      "William"
+    ],
+    "responsables_vencimientos": [
+      "Lina Castro",
+      "Valentina",
+      "Jairo",
+      "William",
+      "Jose"
+    ],
+    "estados_vencimientos": [
+      "Pendiente Seguimiento",
+      "En Proceso",
+      "Renovado",
+      "No Renovado",
+      "Vencido"
+    ],
+    "tipos_moneda": [
+      "COP",
+      "USD"
+    ],
+    "formas_pago": [
+      "Acuerdo de pago",
+      "Contado",
+      "Financiado",
+      "Fraccionado"
+    ],
+    "periodicidades_pago": [
+      "Anual",
+      "Mensual",
+      "Trimestral"
+    ],
+    "categorias_grupo": [
+      "Grupo Cartagena",
+      "Grupo Tenco",
+      "Otro"
+    ],
+    "tipos_movimiento": [
+      "Cobro mensual",
+      "Pago mensual"
+    ],
+    "tipos_archivo_adjunto": [
+      "Recibo",
+      "Póliza",
+      "Clausulado",
+      "Otro"
+    ],
+    "tipos_plantilla_correspondencia": [
+      "nuevo_negocio",
+      "renovacion"
     ]
   }
 }

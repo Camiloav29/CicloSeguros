@@ -123,10 +123,6 @@ PROSPECTOS_DATA_DIR_NAME = 'DATOS_PROSPECTOS'
 PROSPECTOS_DATA_DIR = os.path.join(BASE_DIR, PROSPECTOS_DATA_DIR_NAME)
 PROSPECTOS_FILENAME = 'prospectos.xlsx'
 
-OPCIONES_RESPONSABLE_TECNICO = ['Luisa', 'Valentina', 'Jairo', 'Jose', 'William']
-OPCIONES_RESPONSABLE_COMERCIAL = ['Jose', 'Valentina', 'Jairo', 'Pedro', 'William', 'Camila']
-OPCIONES_ESTADO_PROSPECTO = ['Activo', 'En gestión', 'Cotización', 'Pdte respuesta', 'Ganado', 'Perdido']
-
 # Define the final column order for the prospectos.xlsx file
 ORDEN_COLUMNAS_PROSPECTOS = [
     'ID_PROSPECTO',
@@ -158,9 +154,6 @@ COLUMNAS_ADICIONALES_VENCIMIENTOS = [
     'Remision_Asociada' # Nueva columna
 ]
 
-OPCIONES_RESPONSABLE_VENCIMIENTOS = ['Lina Castro', 'Valentina', 'Jairo', 'William', 'Jose']
-OPCIONES_ESTADO_VENCIMIENTOS = ['Pendiente Seguimiento', 'En Proceso', 'Renovado', 'No Renovado', 'Vencido']
-
 ORDEN_COLUMNAS_VENCIMIENTOS = [
     'ID_VENCIMIENTO', 'FECHA FIN', 'Fecha_inicio_seguimiento',
     'NÚMERO PÓLIZA', 'NOMBRES CLIENTE', 'ASEGURADORA', 'RAMO PRINCIPAL',
@@ -178,10 +171,6 @@ ORDEN_COLUMNAS_COBROS = [
 ]
 
 # --- Remisiones Formulario Constants ---
-OPCIONES_TIPO_MONEDA = ["COP", "USD"]
-OPCIONES_FORMA_PAGO = ["Acuerdo de pago", "Contado", "Financiado", "Fraccionado"]
-OPCIONES_PERIODICIDAD_PAGO = ["Anual", "Mensual", "Trimestral"]
-OPCIONES_ANALISTA = ["Lina Castro", "Valentina Aguilera", "Jairo", "Jose", "William"]
 
 # This is the definitive column order for remisiones.xlsx
 # It includes all fields from the form, including calculated ones.
@@ -406,7 +395,20 @@ def gestionar_lista(list_name):
     display_name_map = {
         'ramos': 'Ramos',
         'aseguradoras': 'Aseguradoras',
-        'vendedores': 'Vendedores'
+        'vendedores': 'Vendedores',
+        'responsables_tecnicos': 'Responsables Técnicos',
+        'responsables_comerciales': 'Responsables Comerciales',
+        'estados_prospecto': 'Estados de Prospecto',
+        'analistas': 'Analistas',
+        'responsables_vencimientos': 'Responsables de Vencimientos',
+        'estados_vencimientos': 'Estados de Vencimientos',
+        'tipos_moneda': 'Tipos de Moneda',
+        'formas_pago': 'Formas de Pago',
+        'periodicidades_pago': 'Periodicidades de Pago',
+        'categorias_grupo': 'Categorías de Grupo',
+        'tipos_movimiento': 'Tipos de Movimiento',
+        'tipos_archivo_adjunto': 'Tipos de Archivo Adjunto',
+        'tipos_plantilla_correspondencia': 'Tipos de Plantilla de Correspondencia'
     }
     display_name = display_name_map.get(list_name, list_name.capitalize())
 
@@ -435,11 +437,14 @@ def formulario_remision():
     return render_template('formulario.html',
                            opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
                            opciones_ramo=config.get('listas', {}).get('ramos', []),
-                           opciones_tipo_moneda=OPCIONES_TIPO_MONEDA,
+                           opciones_tipo_moneda=config.get('listas', {}).get('tipos_moneda', []),
                            opciones_vendedor=config.get('listas', {}).get('vendedores', []),
-                           opciones_forma_pago=OPCIONES_FORMA_PAGO,
-                           opciones_periodicidad_pago=OPCIONES_PERIODICIDAD_PAGO,
-                           opciones_analista=OPCIONES_ANALISTA,
+                           opciones_forma_pago=config.get('listas', {}).get('formas_pago', []),
+                           opciones_periodicidad_pago=config.get('listas', {}).get('periodicidades_pago', []),
+                           opciones_analista=config.get('listas', {}).get('analistas', []),
+                           opciones_categorias_grupo=config.get('listas', {}).get('categorias_grupo', []),
+                           opciones_tipos_movimiento=config.get('listas', {}).get('tipos_movimiento', []),
+                           opciones_tipos_archivo=config.get('listas', {}).get('tipos_archivo_adjunto', []),
                            prospecto=prospecto_data,
                            nombre_empresa=config.get('nombre_empresa')
                           )
@@ -624,6 +629,7 @@ def registrar():
 
 @app.route('/control')
 def control():
+    config = load_config()
     remisiones_data = cargar_remisiones()
     remisiones_ordenadas = sorted(remisiones_data, key=lambda r: str(r.get('consecutivo', '')), reverse=True)
     primeras_10_remisiones = remisiones_ordenadas[:10]
@@ -648,7 +654,9 @@ def control():
             if campo not in r:
                 r[campo] = 'N/A'
         remisiones_list.append(r)
-    return render_template('control.html', remisiones=remisiones_list)
+    return render_template('control.html',
+                           remisiones=remisiones_list,
+                           opciones_plantilla=config.get('listas', {}).get('tipos_plantilla_correspondencia', []))
 
 @app.route('/marcar_creado', methods=['POST'])
 def marcar_creado():
@@ -887,12 +895,15 @@ def ejecutar_crear_carpeta():
 def crear_prospecto():
     config = load_config()
     if request.method == 'GET':
-        ramos_dinamicos = config.get('listas', {}).get('ramos', [])
+        listas = config.get('listas', {})
+        ramos_dinamicos = listas.get('ramos', [])
+        responsables_tecnicos = listas.get('responsables_tecnicos', [])
+        responsables_comerciales = listas.get('responsables_comerciales', [])
 
         return render_template('prospectos_crear.html',
-                               opciones_responsable_tecnico=OPCIONES_RESPONSABLE_TECNICO,
-                               opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
-                               opciones_estado=OPCIONES_ESTADO_PROSPECTO,
+                               opciones_responsable_tecnico=responsables_tecnicos,
+                               opciones_responsable_comercial=responsables_comerciales,
+                               opciones_estado=listas.get('estados_prospecto', []),
                                opciones_ramo=ramos_dinamicos,
                                opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
                                opciones_vendedor=config.get('listas', {}).get('vendedores', []),
@@ -988,14 +999,15 @@ def prospectos_vista():
         flash(f'Error al cargar los prospectos: {str(e)}', 'danger')
         prospectos_data = []
 
+    listas = config.get('listas', {})
     return render_template('prospectos_vista.html',
                            prospectos=prospectos_data,
-                           opciones_responsable_tecnico=OPCIONES_RESPONSABLE_TECNICO,
-                           opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
-                           opciones_estado=OPCIONES_ESTADO_PROSPECTO,
+                           opciones_responsable_tecnico=listas.get('responsables_tecnicos', []),
+                           opciones_responsable_comercial=listas.get('responsables_comerciales', []),
+                           opciones_estado=listas.get('estados_prospecto', []),
                            kpi_recaudo_mes=kpi_recaudo_mes,
-                            kpi_top_ramos=kpi_top_ramos,
-                            nombre_empresa=config.get('nombre_empresa'))
+                           kpi_top_ramos=kpi_top_ramos,
+                           nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/prospectos/editar/<prospecto_id>')
 def prospecto_editar(prospecto_id):
@@ -1012,14 +1024,15 @@ def prospecto_editar(prospecto_id):
         flash('Prospecto no encontrado.', 'danger')
         return redirect(url_for('prospectos_vista'))
 
+    listas = config.get('listas', {})
     return render_template('prospectos_editar.html',
                            prospecto=prospecto_data[0],
-                           opciones_responsable_tecnico=OPCIONES_RESPONSABLE_TECNICO,
-                           opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
-                           opciones_estado=OPCIONES_ESTADO_PROSPECTO,
-                           opciones_ramo=config.get('listas', {}).get('ramos', []),
-                            opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
-                            nombre_empresa=config.get('nombre_empresa'))
+                           opciones_responsable_tecnico=listas.get('responsables_tecnicos', []),
+                           opciones_responsable_comercial=listas.get('responsables_comerciales', []),
+                           opciones_estado=listas.get('estados_prospecto', []),
+                           opciones_ramo=listas.get('ramos', []),
+                           opciones_aseguradora=listas.get('aseguradoras', []),
+                           nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/prospectos/guardar_edicion', methods=['POST'])
 def prospecto_guardar_edicion():
@@ -1647,10 +1660,10 @@ def visualizar_vencimientos():
                                 registros=lista_registros,
                                 kpis=kpis,
                                 ramos_kpis=ramos_kpis,
-                                opciones_responsable_js=OPCIONES_RESPONSABLE_VENCIMIENTOS,
-                                opciones_estado_js=OPCIONES_ESTADO_VENCIMIENTOS,
-                                search_term=search_term
-                               )
+                                opciones_responsable_js=config.get('listas', {}).get('responsables_vencimientos', []),
+                                opciones_estado_js=config.get('listas', {}).get('estados_vencimientos', []),
+                                search_term=search_term,
+                                nombre_empresa=config.get('nombre_empresa'))
     except Exception as e:
         print(f"Error crítico al visualizar el reporte de vencimientos: {type(e).__name__} - {e}")
         flash(f'Ocurrió un error crítico al intentar mostrar el reporte de vencimientos: {str(e)}', 'danger')
