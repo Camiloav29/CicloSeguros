@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Principal - UIB</title>
+    <title>Dashboard Principal - {{ nombre_empresa }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
@@ -11,9 +11,9 @@
 <body>
     <div class="dashboard-container">
         <header class="dashboard-header">
-             <img src="{{ url_for('static', filename='MASTER UIB logo with CREST_CMYK 2024.png') }}" alt="UIB Logo" id="logo_dashboard">
+             <img src="{{ url_for('static', filename=logo_path) }}" alt="Logo de la Empresa" id="logo_dashboard">
             <h1>Panel de Control Principal</h1>
-            <p>Bienvenido al sistema de gestión de UIB Corredores de Seguros.</p>
+            <p>Bienvenido al sistema de gestión de {{ nombre_empresa }}.</p>
         </header>
 
         <!-- Flash Messages -->
@@ -72,10 +72,14 @@
                 <i class="fas fa-upload fa-2x"></i>
                 <span>Carga Maestra</span>
             </a>
+            <a href="{{ url_for('panel_configuraciones') }}" class="nav-button btn-config">
+                <i class="fas fa-tools fa-2x"></i>
+                <span>Configuraciones</span>
+            </a>
         </nav>
 
         <footer class="dashboard-footer">
-            <p>&copy; 2024 UIB Corredores de Seguros S.A. Todos los derechos reservados.</p>
+            <p>&copy; 2024 {{ nombre_empresa }}. Todos los derechos reservados.</p>
         </footer>
     </div>
 </body>

@@ -26,7 +26,7 @@
                 <p>Ciudad</p>
             </td>
             <td class="logo-cell">
-                <p><strong>UIB Corredores de Seguros S.A.</strong></p>
+                <p><strong>{{ nombre_empresa }}</strong></p>
                 <p>Cra.7 # 71-21 Of.601, Torre B</p>
                 <p>Bogotá D.C., Colombia</p>
                 <p>+57 (601) 326 7100</p>
@@ -41,7 +41,7 @@
         <p><strong>Ref.: {{ ref_asunto }}</strong></p>
         <hr>
         <p>Apreciados señores:</p>
-        <p>Agradecemos la confianza depositada en UIB CORREDORES DE SEGUROS S.A. y nos complace formalizar el inicio de nuestra relación como sus corredores de seguros, haciéndoles entrega de las pólizas suscritas con <strong>{{ aseguradora }}</strong>, con vigencia desde las 00:00 horas del <strong>{{ fecha_inicio }}</strong> hasta las 00:00 horas del <strong>{{ fecha_terminacion }}</strong>, según el siguiente detalle:</p>
+        <p>Agradecemos la confianza depositada en {{ nombre_empresa }} y nos complace formalizar el inicio de nuestra relación como sus corredores de seguros, haciéndoles entrega de las pólizas suscritas con <strong>{{ aseguradora }}</strong>, con vigencia desde las 00:00 horas del <strong>{{ fecha_inicio }}</strong> hasta las 00:00 horas del <strong>{{ fecha_terminacion }}</strong>, según el siguiente detalle:</p>
 
         <table class="policy-table">
             <thead>
@@ -66,7 +66,7 @@
         <p>Adjuntamos el recibo de pago correspondiente, los cuales deberá ser cancelado a más tardar el día <strong>{{ fecha_de_pago }}</strong>. Una vez efectuado el pago, les agradecemos notificarlo al correo electrónico sbarrios@uiblatam.com.</p>
         <p><a href="{{ link_de_pago }}">{{ link_de_pago }}</a></p>
         <hr>
-        <p>Finalmente, reiteramos que nuestro principal compromiso es ofrecer un servicio de excelencia y atención personalizada. Bajo esta filosofía y con el respaldo de nuestro equipo humano, UIB CORREDORES DE SEGUROS S.A. continúa brindando a sus clientes asesoría permanente, generando la confianza y tranquilidad necesarias para delegar en nuestra organización el manejo integral de sus programas de seguros.</p>
+        <p>Finalmente, reiteramos que nuestro principal compromiso es ofrecer un servicio de excelencia y atención personalizada. Bajo esta filosofía y con el respaldo de nuestro equipo humano, {{ nombre_empresa }} continúa brindando a sus clientes asesoría permanente, generando la confianza y tranquilidad necesarias para delegar en nuestra organización el manejo integral de sus programas de seguros.</p>
         <p>Cordialmente,</p>
     </div>
 

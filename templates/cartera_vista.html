@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vista de Cartera - UIB</title>
+    <title>Vista de Cartera - {{ nombre_empresa }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/static/cartera_vista.css">
@@ -77,11 +77,11 @@
                         <th>NOMBRES CLIENTE</th>
                         <th>PRIMA NETA</th>
                         <th>COMISIÓN</th>
-                        <th>% COMISIÓN UIB</th>
+                        <th>% COMISIÓN INTERMEDIARIO</th>
                         <th>Intermediario</th>
                         <th>Retención ($)</th>
                         <th>Reteica ($)</th>
-                        <th>Vlr. Comisión UIB Neto ($)</th>
+                        <th>Vlr. Comisión Neto ($)</th>
                         <th>% Com. Intermediario</th>
                         <th>Vlr. Comisión Intermediario ($)</th>
                         <th>Clasificación</th>
@@ -102,11 +102,11 @@
                                 <td data-label="NOMBRES CLIENTE">{{ remision['NOMBRES CLIENTE']|default('', true) }}</td>
                                 <td data-label="PRIMA NETA">{{ remision['PRIMA NETA']|default('', true) }}</td>
                                 <td data-label="COMISIÓN">{{ remision['COMISIÓN']|default('', true) }}</td>
-                                <td data-label="% COMISIÓN UIB">{{ remision['PORCENTAJE DE COMISIÓN']|default('', true) }}</td>
+                                <td data-label="% COMISIÓN INTERMEDIARIO">{{ remision['PORCENTAJE DE COMISIÓN']|default('', true) }}</td>
                                 <td data-label="Intermediario">{{ remision['VENDEDOR']|default('', true) }}</td>
                                 <td data-label="Retención ($)">{{ remision['Retencion_Calc']|default('', true) }}</td>
                                 <td data-label="Reteica ($)">{{ remision['Reteica_Calc']|default('', true) }}</td>
-                                <td data-label="Vlr. Comisión UIB Neto ($)">{{ remision['Valor_Comision_UIB_Neto_Calc']|default('', true) }}</td>
+                                <td data-label="Vlr. Comisión Neto ($)">{{ remision['Valor_Comision_UIB_Neto_Calc']|default('', true) }}</td>
                                 <td data-label="% Com. Intermediario">{{ remision['Porc_Com_Intermediario_Original']|default('', true) }}</td>
                                 <td data-label="Vlr. Comisión Intermediario ($)">{{ remision['Valor_Comision_Intermediario_Calc']|default('', true) }}</td>
                                 <td data-label="Clasificación">{{ remision['Clasificacion_Manual']|default('', true) }}</td>

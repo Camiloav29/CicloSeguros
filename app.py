@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import uuid
+import json
 
 def limpiar_valor_moneda(valor_str):
     """
@@ -56,9 +57,31 @@ app.config['SECRET_KEY'] = 'dev_super_secret_key_12345_replace_in_production'
 # Rutas BASE_DIR debe estar al nivel de donde corre app.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'archivos_subidos')
+CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 CONSECUTIVO_FILE = os.path.join(BASE_DIR, 'consecutivo.txt')
 EXCEL_FILE = os.path.join(BASE_DIR, 'remisiones.xlsx')
 CLIENT_FOLDERS_BASE_DIR = os.path.join(BASE_DIR, 'CLIENTES_CARPETAS')
+
+# --- Funciones de Configuración ---
+def load_config():
+    """Carga la configuración desde config.json."""
+    try:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Devuelve una configuración por defecto si el archivo no existe o está corrupto
+        return {
+            "logo_path": "static/UIBH_logo_WHITE2-300x78-1.png",
+            "listas": {
+                "ramos": []
+            }
+        }
+
+def save_config(data):
+    """Guarda la configuración en config.json."""
+    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
 CARTERA_DATA_DIR_NAME = 'DATOS_CARTERA' # Folder name
 CARTERA_DATA_DIR = os.path.join(BASE_DIR, CARTERA_DATA_DIR_NAME)
 CARTERA_PROCESADA_FILENAME = 'cartera_procesada.xlsx'
@@ -155,44 +178,9 @@ ORDEN_COLUMNAS_COBROS = [
 ]
 
 # --- Remisiones Formulario Constants ---
-OPCIONES_ASEGURADORA = [
-    "ALLIANZ SEGUROS DE VIDA S.A.", "ALLIANZ SEGUROS S.A.", "ASEGURADORA SOLIDARIA DE COLOMBIA LTDA.",
-    "ASSIST CARD DE COLOMBIA S.A.S.", "AXA COLPATRIA SEGUROS DE VIDA S.A.", "AXA COLPATRIA SEGUROS S.A.",
-    "BBVA SEGUROS COLOMBIA S.A.", "BERKLEY INTERNACIONAL SEGUROS COLOMBIA S.A.",
-    "CAJA DE COMPENSACION FAMILIAR COMPENSAR- COMPLEMENTARIO", "CESCE SEGUREXPO DE COLOMBIA SA",
-    "CHUBB SEGUROS COLOMBIA S.A.", "CIA ASEGURADORA DE FIANZAS S.A", "COLMENA SEGUROS DE VIDA S.A.",
-    "COMPAÑIA DE SEGUROS BOLIVAR S.A.", "COMPAÑÍA MUNDIAL DE SEGUROS S.A.", "HDI SEGUROS S.A",
-    "JMALUCELLI TRAVELERS SEGUROS S.A", "LA EQUIDAD SEGUROS GENERALES", "LA PREVISORA S.A.",
-    "LIBERTY SEGUROS DE VIDA S.A.", "LIBERTY SEGUROS S.A.", "LLOYDS OF LONDON",
-    "MAPFRE COLOMBIA VIDA SEGUROS S.A", "MAPFRE SEGUROS GENERALES DE COLOMBIA S.A.",
-    "MAPFRE SERVICIOS EXEQUIALES S.A.S.", "METLIFE COLOMBIA SEGUROS DE VIDA S.A.",
-    "NACIONAL DE SEGUROS S.A.", "PAN AMERICAN LIFE DE COLOMBIA COMPAÑÍA DE SEGUROS S.A.",
-    "POSITIVA COMPAÑIA DE SEGUROS S.A.", "QUÁLITAS COMPAÑÍA DE SEGUROS COLOMBIA S.A.",
-    "SBS SEGUROS COLOMBIA S.A.", "SEGURO DE VIDA SURAMERICANA S.A", "SEGUROS COMERCIALES BOLIVAR S.A.",
-    "SEGUROS DE VIDA DEL ESTADO S.A.", "SEGUROS DEL ESTADO S.A.", "SEGUROS GENERALES SURAMERICANA S.A.",
-    "ZURICH COLOMBIA SEGUROS S.A."
-]
 OPCIONES_TIPO_MONEDA = ["COP", "USD"]
-OPCIONES_VENDEDOR_REMISIONES = [
-    "ANDRES DAES", "DULTON CONSULTANTS LTDA", "ESCALA CAPITAL SAS", "GOYA CONSULTORES SAS",
-    "GOYA CONSULTORES SAS, UIB CORREDORES DE SEGUROS S.A.", "INVERSIONES ARCANGEL SAN RAFAEL SAS",
-    "JAIRO ANDRES JAIMES JAIMES", "JOSE DAVID CARREÑO", "JOSE GREGORIO MONTAÑA MASMELA",
-    "JULIAN ENRIQUE BETANCOURT", "LOS 5 T SAS", "LYDA PARDO", "NESTOR RAUL ROJAS",
-    "PEDRO CARREÑO", "UIB CORREDORES DE SEGUROS S.A.", "WILLIAM ALBERTO SANCHEZ RUIZ"
-]
 OPCIONES_FORMA_PAGO = ["Acuerdo de pago", "Contado", "Financiado", "Fraccionado"]
 OPCIONES_PERIODICIDAD_PAGO = ["Anual", "Mensual", "Trimestral"]
-OPCIONES_RAMO_FORMULARIO = [
-    "AP - ACCIDENTES PERSONALES", "ARL - RIESGOS LABORALES", "ARR - ARRENDAMIENTO", "ASIS - ASISTENCIA MEDICA",
-    "AU - AUTOMOVILES", "AVIACION", "CASCO - CASCO", "COP - COPROPIEDAD", "CU - CUMPLIMIENTO",
-    "CY - CYBER", "D&O - DIRECTORES Y ADMINISTRADORES", "DL - DISPOSICIONES LEGALES", "EX - EXEQUIAS",
-    "HO - HOGAR", "IRF - INFIDELIDAD Y RIESGOS FINANCIEROS", "MN - MANEJO", "MYE - MAQUINARIA Y EQUIPO",
-    "PYME - PYME", "RC CO - RESPONSABILIDAD CIVIL COMBUSTIBLE", "RC CU - RESPONSABILIDAD CIVIL CUMPLIMIENTO",
-    "RC SP - RESPONSABILIDAD CIVIL SERVIDORES PUBLICOS", "RC-AMBIENTAL", "RCE - RESPONSABILIDAD CIVIL EXTRACONTRACTUAL",
-    "RCP - RESPONSABILIDAD CIVIL PROFESIONAL", "SA - SALUD", "SERIEDAD DE OFERTA", "SOAT - SOAT",
-    "TR - TRANSPORTES MERCANCIAS", "TR CM - TODO RIESGO CONSTRUCCION Y MONTAJE", "TR V - TRANSPORTE DE VALORES",
-    "TRDM - TODO RIESGO DAÑO MATERIAL", "VD - VIDA DEUDORES", "VG - VIDA GRUPO", "VI - VIDA INDIVIDUAL"
-]
 OPCIONES_ANALISTA = ["Lina Castro", "Valentina Aguilera", "Jairo", "Jose", "William"]
 
 # This is the definitive column order for remisiones.xlsx
@@ -233,6 +221,7 @@ os.makedirs(CLIENT_FOLDERS_BASE_DIR, exist_ok=True) # For client folders
 os.makedirs(CARTERA_DATA_DIR, exist_ok=True) # For cartera data
 os.makedirs(VENCIMIENTOS_DATA_DIR, exist_ok=True) # For vencimientos data
 os.makedirs(PROSPECTOS_DATA_DIR, exist_ok=True) # For prospectos data
+os.makedirs(os.path.join(BASE_DIR, 'static', 'logos'), exist_ok=True) # For custom logos
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['CLIENT_FOLDERS_BASE_DIR'] = CLIENT_FOLDERS_BASE_DIR
 app.config['CARTERA_DATA_DIR'] = CARTERA_DATA_DIR
@@ -255,8 +244,10 @@ def obtener_consecutivo():
             except ValueError:
                 num = 1 # Default to 1 if file is empty or corrupt
 
+    config = load_config()
+    prefijo = config.get('prefijo_consecutivo', 'APP') # 'APP' como fallback
     year_short = datetime.now().strftime('%y')
-    consecutivo_actual = f"UIB-{year_short}-{num:05d}"
+    consecutivo_actual = f"{prefijo}-{year_short}-{num:05d}"
 
     nuevo_num = num + 1
     with open(CONSECUTIVO_FILE, 'w') as f:
@@ -329,7 +320,100 @@ def cargar_remisiones():
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    config = load_config()
+    return render_template('index.html',
+                           logo_path=config.get('logo_path'),
+                           nombre_empresa=config.get('nombre_empresa'))
+
+# --- Rutas del Panel de Configuraciones ---
+@app.route('/configuraciones', methods=['GET', 'POST'])
+def panel_configuraciones():
+    config = load_config()
+    if request.method == 'POST':
+        form_section = request.form.get('form_section')
+
+        if form_section == 'logo' and 'logo_upload' in request.files:
+            logo_file = request.files['logo_upload']
+            if logo_file.filename != '':
+                filename = secure_filename(logo_file.filename)
+                relative_save_path = os.path.join('logos', filename)
+                absolute_save_path = os.path.join(BASE_DIR, 'static', relative_save_path)
+                logo_file.save(absolute_save_path)
+                config['logo_path'] = f"logos/{filename}"
+                save_config(config)
+                flash('Logo actualizado exitosamente.', 'success')
+
+        elif form_section == 'general':
+            config['nombre_empresa'] = request.form.get('nombre_empresa', '').strip()
+            config['prefijo_consecutivo'] = request.form.get('prefijo_consecutivo', '').strip()
+            save_config(config)
+            flash('Información general actualizada exitosamente.', 'success')
+
+        return redirect(url_for('panel_configuraciones'))
+
+    return render_template('configuraciones.html', config=config)
+
+@app.route('/configuraciones/listas/<list_name>', methods=['GET', 'POST'])
+def gestionar_lista(list_name):
+    config = load_config()
+    # Asegurarse de que la lista exista en la configuración
+    if list_name not in config.get('listas', {}):
+        flash(f"La lista '{list_name}' no es configurable.", 'danger')
+        return redirect(url_for('panel_configuraciones'))
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        item_name = request.form.get('item_name', '').strip()
+
+        if action == 'add' and item_name:
+            if item_name not in config['listas'][list_name]:
+                config['listas'][list_name].append(item_name)
+                save_config(config)
+                flash(f'Ítem "{item_name}" añadido a {list_name}.', 'success')
+            else:
+                flash(f'El ítem "{item_name}" ya existe en la lista.', 'warning')
+
+        elif action == 'delete' and item_name:
+            if item_name in config['listas'][list_name]:
+                config['listas'][list_name].remove(item_name)
+                save_config(config)
+                flash(f'Ítem "{item_name}" eliminado de {list_name}.', 'success')
+            else:
+                flash(f'No se encontró el ítem "{item_name}" para eliminar.', 'warning')
+
+        elif action == 'edit':
+            original_name = request.form.get('original_item_name')
+            new_name = request.form.get('new_item_name', '').strip()
+            if original_name and new_name:
+                try:
+                    # Encontrar el índice y actualizar
+                    index = config['listas'][list_name].index(original_name)
+                    config['listas'][list_name][index] = new_name
+                    save_config(config)
+                    flash(f'Ítem "{original_name}" actualizado a "{new_name}".', 'success')
+                except ValueError:
+                    flash(f'No se encontró el ítem original "{original_name}" para editar.', 'warning')
+            else:
+                flash('Faltaron datos para la edición.', 'danger')
+
+        return redirect(url_for('gestionar_lista', list_name=list_name))
+
+    if request.method == 'GET':
+        # La lógica de eliminación se ha movido al POST
+        pass
+
+    # El nombre para mostrar puede ser más amigable que el nombre de la variable
+    display_name_map = {
+        'ramos': 'Ramos',
+        'aseguradoras': 'Aseguradoras',
+        'vendedores': 'Vendedores'
+    }
+    display_name = display_name_map.get(list_name, list_name.capitalize())
+
+    return render_template('gestion_lista.html',
+                           list_name=list_name,
+                           display_name=display_name,
+                           items=config['listas'][list_name])
 
 @app.route('/carga_maestra', methods=['GET'])
 def mostrar_formulario_carga_maestra():
@@ -337,6 +421,7 @@ def mostrar_formulario_carga_maestra():
 
 @app.route('/remision/nueva', methods=['GET'])
 def formulario_remision():
+    config = load_config()
     # Obtener datos del prospecto desde la URL para autocompletar
     prospecto_data = {
         'tomador': request.args.get('tomador', ''),
@@ -348,14 +433,15 @@ def formulario_remision():
 
     # These global lists should be defined at the top of app.py
     return render_template('formulario.html',
-                           opciones_aseguradora=OPCIONES_ASEGURADORA,
-                           opciones_ramo=OPCIONES_RAMO_FORMULARIO,
+                           opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
+                           opciones_ramo=config.get('listas', {}).get('ramos', []),
                            opciones_tipo_moneda=OPCIONES_TIPO_MONEDA,
-                           opciones_vendedor=OPCIONES_VENDEDOR_REMISIONES,
+                           opciones_vendedor=config.get('listas', {}).get('vendedores', []),
                            opciones_forma_pago=OPCIONES_FORMA_PAGO,
                            opciones_periodicidad_pago=OPCIONES_PERIODICIDAD_PAGO,
                            opciones_analista=OPCIONES_ANALISTA,
-                           prospecto=prospecto_data
+                           prospecto=prospecto_data,
+                           nombre_empresa=config.get('nombre_empresa')
                           )
 
 @app.route('/registrar', methods=['POST'])
@@ -738,8 +824,11 @@ def guardar_numero_remision():
 
 @app.route('/cliente/formulario_crear_carpeta', methods=['GET'])
 def mostrar_formulario_crear_carpeta():
+    config = load_config()
     ano_actual = datetime.now().strftime('%Y')
-    return render_template('crear_carpeta_cliente.html', ano_actual=ano_actual)
+    return render_template('crear_carpeta_cliente.html',
+                           ano_actual=ano_actual,
+                           nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/cliente/ejecutar_crear_carpeta', methods=['POST'])
 def ejecutar_crear_carpeta():
@@ -796,14 +885,18 @@ def ejecutar_crear_carpeta():
 
 @app.route('/prospectos/crear', methods=['GET', 'POST'])
 def crear_prospecto():
+    config = load_config()
     if request.method == 'GET':
+        ramos_dinamicos = config.get('listas', {}).get('ramos', [])
+
         return render_template('prospectos_crear.html',
                                opciones_responsable_tecnico=OPCIONES_RESPONSABLE_TECNICO,
                                opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
                                opciones_estado=OPCIONES_ESTADO_PROSPECTO,
-                               opciones_ramo=OPCIONES_RAMO_FORMULARIO,
-                               opciones_aseguradora=OPCIONES_ASEGURADORA,
-                               opciones_vendedor=OPCIONES_VENDEDOR_REMISIONES)
+                               opciones_ramo=ramos_dinamicos,
+                               opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
+                               opciones_vendedor=config.get('listas', {}).get('vendedores', []),
+                               nombre_empresa=config.get('nombre_empresa'))
 
     if request.method == 'POST':
         try:
@@ -848,6 +941,7 @@ def crear_prospecto():
 
 @app.route('/prospectos/visualizar', methods=['GET'])
 def prospectos_vista():
+    config = load_config()
     try:
         PROSPECTOS_FILE = app.config['PROSPECTOS_FILE_PATH']
         kpi_recaudo_mes = 0
@@ -900,10 +994,12 @@ def prospectos_vista():
                            opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
                            opciones_estado=OPCIONES_ESTADO_PROSPECTO,
                            kpi_recaudo_mes=kpi_recaudo_mes,
-                           kpi_top_ramos=kpi_top_ramos)
+                            kpi_top_ramos=kpi_top_ramos,
+                            nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/prospectos/editar/<prospecto_id>')
 def prospecto_editar(prospecto_id):
+    config = load_config()
     PROSPECTOS_FILE = app.config['PROSPECTOS_FILE_PATH']
     if not os.path.exists(PROSPECTOS_FILE):
         flash('El archivo de prospectos no existe.', 'danger')
@@ -921,8 +1017,9 @@ def prospecto_editar(prospecto_id):
                            opciones_responsable_tecnico=OPCIONES_RESPONSABLE_TECNICO,
                            opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
                            opciones_estado=OPCIONES_ESTADO_PROSPECTO,
-                           opciones_ramo=OPCIONES_RAMO_FORMULARIO,
-                           opciones_aseguradora=OPCIONES_ASEGURADORA)
+                           opciones_ramo=config.get('listas', {}).get('ramos', []),
+                            opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
+                            nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/prospectos/guardar_edicion', methods=['POST'])
 def prospecto_guardar_edicion():
@@ -1033,6 +1130,7 @@ def format_date_in_spanish(date_str):
 
 @app.route('/correspondencia/vista_previa')
 def correspondencia_vista_previa():
+    config = load_config()
     try:
         datos = request.args.to_dict()
         consecutivo = datos.get('consecutivo')
@@ -1078,7 +1176,8 @@ def correspondencia_vista_previa():
             'valor_a_pagar': contexto.get('valor_a_pagar'),
             'garantias': contexto.get('garantias'),
             'fecha_de_pago': format_date_in_spanish(contexto.get('fecha_limite_pago')),
-            'link_de_pago': contexto.get('link_de_pago')
+            'link_de_pago': contexto.get('link_de_pago'),
+            'nombre_empresa': config.get('nombre_empresa')
         }
 
         return render_template(f'correspondencia/{tipo_plantilla}.html', **contexto_plantilla)
@@ -1134,6 +1233,7 @@ def siniestros_registrar():
 
 @app.route('/cartera/visualizar', methods=['GET'])
 def visualizar_cartera():
+    config = load_config()
     ruta_archivo_procesado = app.config['CARTERA_PROCESADA_FILE_PATH']
 
     if not os.path.exists(ruta_archivo_procesado):
@@ -1234,7 +1334,8 @@ def visualizar_cartera():
                                aseguradoras_disponibles_filtro=aseguradoras_disponibles,
                                mes_seleccionado_actual_int=mes_seleccionado_int,
                                ano_seleccionado_actual_int=ano_seleccionado_int,
-                               aseguradora_seleccionada_actual=aseguradora_seleccionada_actual)
+                               aseguradora_seleccionada_actual=aseguradora_seleccionada_actual,
+                               nombre_empresa=config.get('nombre_empresa'))
 
     except Exception as e:
         print(f"Error al visualizar el reporte de cartera: {e}")
@@ -1243,6 +1344,7 @@ def visualizar_cartera():
 
 @app.route('/cartera/editar/<int:id_registro>', methods=['GET'])
 def mostrar_formulario_editar_cartera(id_registro):
+    config = load_config()
     ruta_archivo_procesado = app.config['CARTERA_PROCESADA_FILE_PATH']
     if not os.path.exists(ruta_archivo_procesado):
         flash('Archivo de cartera procesada no encontrado. Por favor, cargue un reporte primero.', 'danger')
@@ -1259,7 +1361,9 @@ def mostrar_formulario_editar_cartera(id_registro):
 
         registro_dict = registro_para_editar_df.iloc[0].fillna('').to_dict()
 
-        return render_template('cartera_editar_registro.html', registro=registro_dict)
+        return render_template('cartera_editar_registro.html',
+                               registro=registro_dict,
+                               nombre_empresa=config.get('nombre_empresa'))
 
     except Exception as e:
         print(f"Error al cargar registro de cartera para editar: {e}")
@@ -1786,6 +1890,7 @@ def procesar_reporte_maestro():
 
 @app.route('/recaudo')
 def recaudo():
+    config = load_config()
     # Initialize all variables
     total_renovaciones, total_prospectos, total_modificaciones, total_general, total_tpp = 0, 0, 0, 0, 0
     renovaciones_data, prospectos_data, modificaciones_data, tpp_data = [], [], [], []
@@ -1850,10 +1955,12 @@ def recaudo():
                            total_general=total_general,
                            total_tpp=total_tpp,
                            tpp_data=tpp_data,
-                           chart_data=chart_data)
+                           chart_data=chart_data,
+                           nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/visualizar_sarlaft', methods=['GET'])
 def visualizar_sarlaft():
+    config = load_config()
     search_query = request.args.get('search_query', '').strip().lower()
     client_folders_path = app.config['CLIENT_FOLDERS_BASE_DIR']
     found_folders = []
@@ -1864,7 +1971,10 @@ def visualizar_sarlaft():
                 if search_query in folder_name.lower():
                     found_folders.append(folder_name)
 
-    return render_template('visualizar_sarlaft.html', folders=found_folders, search_query=search_query)
+    return render_template('visualizar_sarlaft.html',
+                           folders=found_folders,
+                           search_query=search_query,
+                           nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/visualizar_sarlaft/<folder_name>')
 def visualizar_sarlaft_docs(folder_name):
@@ -1894,6 +2004,7 @@ def serve_sarlaft_doc(folder_name, year, doc_name):
 
 @app.route('/cobros/editar/<id_cobro>')
 def editar_cobro(id_cobro):
+    config = load_config()
     cobro_data = None
     if os.path.exists(COBROS_FILE):
         try:
@@ -1907,7 +2018,9 @@ def editar_cobro(id_cobro):
             flash(f'Error al leer el archivo de cobros: {e}', 'danger')
             return redirect(url_for('panel_cobros'))
 
-    return render_template('editar_cobro.html', cobro=cobro_data[0] if cobro_data else None)
+    return render_template('editar_cobro.html',
+                           cobro=cobro_data[0] if cobro_data else None,
+                           nombre_empresa=config.get('nombre_empresa'))
 
 @app.route('/cobros')
 def panel_cobros():
