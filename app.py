@@ -434,7 +434,7 @@ def formulario_remision():
     # These global lists should be defined at the top of app.py
     return render_template('formulario.html',
                            opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
-                           opciones_ramo=OPCIONES_RAMO_FORMULARIO,
+                           opciones_ramo=config.get('listas', {}).get('ramos', []),
                            opciones_tipo_moneda=OPCIONES_TIPO_MONEDA,
                            opciones_vendedor=config.get('listas', {}).get('vendedores', []),
                            opciones_forma_pago=OPCIONES_FORMA_PAGO,
@@ -1017,7 +1017,7 @@ def prospecto_editar(prospecto_id):
                            opciones_responsable_tecnico=OPCIONES_RESPONSABLE_TECNICO,
                            opciones_responsable_comercial=OPCIONES_RESPONSABLE_COMERCIAL,
                            opciones_estado=OPCIONES_ESTADO_PROSPECTO,
-                           opciones_ramo=OPCIONES_RAMO_FORMULARIO,
+                           opciones_ramo=config.get('listas', {}).get('ramos', []),
                             opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
                             nombre_empresa=config.get('nombre_empresa'))
 
