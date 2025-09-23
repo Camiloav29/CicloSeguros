@@ -377,6 +377,22 @@ def partial_logo():
     config = load_config()
     return render_template('config_partials/logo.html', config=config)
 
+@app.route('/configuraciones/partials/listas_hub')
+def partial_listas_hub():
+    config = load_config()
+    # Need to pass the display name map to the hub as well
+    display_name_map = {
+        'ramos': 'Ramos', 'aseguradoras': 'Aseguradoras', 'vendedores': 'Vendedores',
+        'responsables_tecnicos': 'Responsables Técnicos', 'responsables_comerciales': 'Responsables Comerciales',
+        'estados_prospecto': 'Estados de Prospecto', 'analistas': 'Analistas',
+        'responsables_vencimientos': 'Responsables de Vencimientos', 'estados_vencimientos': 'Estados de Vencimientos',
+        'tipos_moneda': 'Tipos de Moneda', 'formas_pago': 'Formas de Pago', 'periodicidades_pago': 'Periodicidades de Pago',
+        'categorias_grupo': 'Categorías de Grupo', 'tipos_movimiento': 'Tipos de Movimiento',
+        'tipos_archivo_adjunto': 'Tipos de Archivo Adjunto', 'tipos_plantilla_correspondencia': 'Tipos de Plantilla de Correspondencia'
+    }
+    config['display_name_map'] = display_name_map
+    return render_template('config_partials/listas_hub.html', config=config)
+
 
 @app.route('/configuraciones/listas/<list_name>', methods=['GET', 'POST'])
 def gestionar_lista(list_name):

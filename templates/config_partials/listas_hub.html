@@ -1,0 +1,41 @@
+{% set icon_map = {
+    'ramos': 'fas fa-tags',
+    'aseguradoras': 'fas fa-shield-alt',
+    'vendedores': 'fas fa-user-tie',
+    'responsables_tecnicos': 'fas fa-user-cog',
+    'responsables_comerciales': 'fas fa-user-briefcase',
+    'estados_prospecto': 'fas fa-tasks',
+    'analistas': 'fas fa-user-edit',
+    'responsables_vencimientos': 'fas fa-user-clock',
+    'estados_vencimientos': 'fas fa-calendar-check',
+    'tipos_moneda': 'fas fa-coins',
+    'formas_pago': 'fas fa-credit-card',
+    'periodicidades_pago': 'fas fa-redo',
+    'categorias_grupo': 'fas fa-users',
+    'tipos_movimiento': 'fas fa-exchange-alt',
+    'tipos_archivo_adjunto': 'fas fa-paperclip',
+    'tipos_plantilla_correspondencia': 'fas fa-envelope-open-text',
+    'default': 'fas fa-list-ul'
+} %}
+
+<div class="content-card">
+    <h2><i class="fas fa-list"></i> Gestión de Listas de Datos</h2>
+    <p>Seleccione una lista para ver, añadir, editar o eliminar sus elementos.</p>
+
+    <div class="card-grid">
+        {% for list_name, items in config.get('listas', {}).items() %}
+        <div class="data-card">
+            <div class="card-icon">
+                <i class="{{ icon_map.get(list_name, icon_map.default) }}"></i>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">{{ config.get('display_name_map', {}).get(list_name, list_name.replace('_', ' ')|capitalize) }}</h3>
+                <p class="card-text">{{ items|length }} elementos</p>
+            </div>
+            <div class="card-footer">
+                <a href="#" class="btn btn-primary btn-sm nav-link" data-target="lista-{{ list_name }}">Gestionar</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

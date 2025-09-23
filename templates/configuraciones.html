@@ -33,16 +33,9 @@
                     </a>
                 </li>
                 <li>
-                    <div class="accordion-header">
-                        <span><i class="fas fa-list"></i> Listas de Datos</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="accordion-content">
-                        <input type="text" id="list-search" placeholder="Buscar lista..." style="width: 85%; margin: 0.5rem 1.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                        {% for list_name, items in config.get('listas', {}).items() %}
-                            <a href="#" class="nav-link" data-target="lista-{{ list_name }}">{{ config.get('display_name_map', {}).get(list_name, list_name.replace('_', ' ')|capitalize) }}</a>
-                        {% endfor %}
-                    </div>
+                    <a href="#" class="nav-link" data-target="listas-hub">
+                        <i class="fas fa-list"></i> Listas de Datos
+                    </a>
                 </li>
             </ul>
         </aside>
