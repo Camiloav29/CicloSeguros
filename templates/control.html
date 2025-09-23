@@ -104,8 +104,9 @@
                 <div class="form-group">
                     <label for="tipo_plantilla">Tipo de Plantilla</label>
                     <select id="tipo_plantilla" name="tipo_plantilla">
-                        <option value="nuevo_negocio">Nuevo Negocio</option>
-                        <option value="renovacion">Renovación</option>
+                        {% for opt in opciones_plantilla %}
+                        <option value="{{ opt }}">{{ opt.replace('_', ' ')|capitalize }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
