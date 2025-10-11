@@ -1,0 +1,21 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard de Administración</h1>
+    </div>
+    <div class="card-body">
+        <p>¡Bienvenido al panel de administración de Seguros UIB!</p>
+        <p>Desde aquí puedes gestionar las listas desplegables utilizadas en los formularios de la aplicación.</p>
+        <p>Utilice el menú de la izquierda para navegar:</p>
+        <ul>
+            <li><strong><i class="fas fa-list-alt"></i> Gestionar Listas:</strong> Le permite ver, editar y guardar las opciones de las listas como Aseguradoras, Ramos y Vendedores.</li>
+            <li><strong><i class="fas fa-arrow-left"></i> Volver a la App:</strong> Regresa a la página principal de la aplicación.</li>
+            <li><strong><i class="fas fa-sign-out-alt"></i> Cerrar Sesión:</strong> Finaliza su sesión de administrador de forma segura.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

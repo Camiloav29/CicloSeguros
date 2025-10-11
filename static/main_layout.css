@@ -1,0 +1,132 @@
+/* static/main_layout.css */
+
+:root {
+    --primary-color: #005faa;
+    --primary-dark: #004a8c;
+    --primary-light: #327fc2;
+    --secondary-color: #f8fafc;
+    --accent-color: #04a0d9;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --purple-accent: #750f4f;
+    --dark-blue: #23496d;
+    --success-color: #84c44c;
+    --warning-color: #f57c21;
+    --error-color: #de2a2b;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f0f2f5; /* Un fondo gris muy claro para el area fuera del contenedor */
+    color: var(--text-primary);
+}
+
+.main-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: var(--dark-blue); /* Usamos el azul oscuro corporativo */
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebar-header {
+    padding: 1.25rem;
+    text-align: center;
+    background-color: rgba(0,0,0,0.2);
+}
+
+.sidebar-header img {
+    max-width: 80%;
+    height: auto;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link .fa-fw {
+    margin-right: 12px;
+    width: 20px; /* Ancho fijo para alineación */
+    text-align: center;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-left-color: var(--accent-color);
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+    border-left-color: var(--accent-color);
+}
+
+.sidebar .nav-item.mt-auto {
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
+    background-color: #ffffff;
+}
+
+/* Customizing Bootstrap components with corporate colors */
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+/* Customizing flash messages (alerts) */
+.alert-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: #fff;
+}
+.alert-danger {
+    background-color: var(--error-color);
+    border-color: var(--error-color);
+    color: #fff;
+}
+.alert-warning {
+    background-color: var(--warning-color);
+    border-color: var(--warning-color);
+    color: #fff;
+}
+.alert-info {
+    background-color: var(--primary-light);
+    border-color: var(--primary-light);
+    color: #fff;
+}
+
+/* Ensure btn-close is visible on dark alerts */
+.alert .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+mb-0 {
+    color: #ffffff
+}

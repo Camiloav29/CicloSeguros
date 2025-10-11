@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_file
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import uuid
-import json
+import config_manager
+from admin.routes import admin_bp
 
 def limpiar_valor_moneda(valor_str):
     """
@@ -52,36 +55,38 @@ def get_year_from_date(date_str):
             return None
 
 app = Flask(__name__) # Ensure app instance is created
-app.config['SECRET_KEY'] = 'dev_super_secret_key_12345_replace_in_production'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'dev_super_secret_key_12345_replace_in_production')
+
+# --- Login Manager Configuration ---
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' # The name of the view to redirect to when login is required.
+login_manager.login_message = "Por favor, inicie sesión para acceder a esta página."
+login_manager.login_message_category = "info"
+
+# --- User Model and In-Memory Store ---
+class User(UserMixin):
+    def __init__(self, id, username, password_hash):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
+
+# In-memory user database
+users = {
+    "1": User(id="1", username="admin", password_hash=generate_password_hash("1234"))
+}
+
+@login_manager.user_loader
+def load_user(user_id):
+    return users.get(user_id)
 
 # Rutas BASE_DIR debe estar al nivel de donde corre app.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'archivos_subidos')
-CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 CONSECUTIVO_FILE = os.path.join(BASE_DIR, 'consecutivo.txt')
 EXCEL_FILE = os.path.join(BASE_DIR, 'remisiones.xlsx')
 CLIENT_FOLDERS_BASE_DIR = os.path.join(BASE_DIR, 'CLIENTES_CARPETAS')
-
-# --- Funciones de Configuración ---
-def load_config():
-    """Carga la configuración desde config.json."""
-    try:
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        # Devuelve una configuración por defecto si el archivo no existe o está corrupto
-        return {
-            "logo_path": "static/UIBH_logo_WHITE2-300x78-1.png",
-            "listas": {
-                "ramos": []
-            }
-        }
-
-def save_config(data):
-    """Guarda la configuración en config.json."""
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
+VENDEDOR_FOLDERS_BASE_DIR = os.path.join(BASE_DIR, 'VENDEDORES_CARPETAS')
 CARTERA_DATA_DIR_NAME = 'DATOS_CARTERA' # Folder name
 CARTERA_DATA_DIR = os.path.join(BASE_DIR, CARTERA_DATA_DIR_NAME)
 CARTERA_PROCESADA_FILENAME = 'cartera_procesada.xlsx'
@@ -123,6 +128,10 @@ PROSPECTOS_DATA_DIR_NAME = 'DATOS_PROSPECTOS'
 PROSPECTOS_DATA_DIR = os.path.join(BASE_DIR, PROSPECTOS_DATA_DIR_NAME)
 PROSPECTOS_FILENAME = 'prospectos.xlsx'
 
+OPCIONES_RESPONSABLE_TECNICO = ['Luisa', 'Valentina', 'Jairo', 'Jose', 'William']
+OPCIONES_RESPONSABLE_COMERCIAL = ['Jose', 'Valentina', 'Jairo', 'Pedro', 'William', 'Camila']
+OPCIONES_ESTADO_PROSPECTO = ['Activo', 'En gestión', 'Cotización', 'Pdte respuesta', 'Ganado', 'Perdido']
+
 # Define the final column order for the prospectos.xlsx file
 ORDEN_COLUMNAS_PROSPECTOS = [
     'ID_PROSPECTO',
@@ -154,6 +163,8 @@ COLUMNAS_ADICIONALES_VENCIMIENTOS = [
     'Remision_Asociada' # Nueva columna
 ]
 
+
+
 ORDEN_COLUMNAS_VENCIMIENTOS = [
     'ID_VENCIMIENTO', 'FECHA FIN', 'Fecha_inicio_seguimiento',
     'NÚMERO PÓLIZA', 'NOMBRES CLIENTE', 'ASEGURADORA', 'RAMO PRINCIPAL',
@@ -167,10 +178,9 @@ COBROS_FILE = os.path.join(BASE_DIR, COBROS_FILENAME)
 ORDEN_COLUMNAS_COBROS = [
     'ID_COBRO', 'CONSECUTIVO_REMISION', 'Tomador', 'NIT_CC', 'Aseguradora', 'Ramo',
     'N_Poliza', 'N_Cuota', 'Total_Cuotas', 'Fecha_Vencimiento_Cuota',
-    'Fecha_Inicio_Vigencia', 'Fecha_Fin_Vigencia', 'Estado', 'Tipo_Movimiento'
+    'Fecha_Inicio_Vigencia', 'Fecha_Fin_Vigencia', 'Estado', 'Tipo_Movimiento',
+    'Periodicidad'
 ]
-
-# --- Remisiones Formulario Constants ---
 
 # This is the definitive column order for remisiones.xlsx
 # It includes all fields from the form, including calculated ones.
@@ -207,18 +217,22 @@ ORDEN_COLUMNAS_EXCEL_REMISIONES = [
 # Configurar carpeta de carga
 os.makedirs(UPLOAD_FOLDER, exist_ok=True) # For remision attachments
 os.makedirs(CLIENT_FOLDERS_BASE_DIR, exist_ok=True) # For client folders
+os.makedirs(VENDEDOR_FOLDERS_BASE_DIR, exist_ok=True) # For vendor folders
 os.makedirs(CARTERA_DATA_DIR, exist_ok=True) # For cartera data
 os.makedirs(VENCIMIENTOS_DATA_DIR, exist_ok=True) # For vencimientos data
 os.makedirs(PROSPECTOS_DATA_DIR, exist_ok=True) # For prospectos data
-os.makedirs(os.path.join(BASE_DIR, 'static', 'logos'), exist_ok=True) # For custom logos
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['CLIENT_FOLDERS_BASE_DIR'] = CLIENT_FOLDERS_BASE_DIR
+app.config['VENDEDOR_FOLDERS_BASE_DIR'] = VENDEDOR_FOLDERS_BASE_DIR
 app.config['CARTERA_DATA_DIR'] = CARTERA_DATA_DIR
 app.config['CARTERA_PROCESADA_FILE_PATH'] = os.path.join(CARTERA_DATA_DIR, CARTERA_PROCESADA_FILENAME)
 app.config['VENCIMIENTOS_DATA_DIR'] = VENCIMIENTOS_DATA_DIR
 app.config['VENCIMIENTOS_PROCESADA_FILE_PATH'] = os.path.join(VENCIMIENTOS_DATA_DIR, VENCIMIENTOS_PROCESADOS_FILENAME)
 app.config['PROSPECTOS_DATA_DIR'] = PROSPECTOS_DATA_DIR
 app.config['PROSPECTOS_FILE_PATH'] = os.path.join(PROSPECTOS_DATA_DIR, PROSPECTOS_FILENAME)
+
+# Registrar el Blueprint de administración
+app.register_blueprint(admin_bp)
 
 # Obtener el consecutivo
 def obtener_consecutivo():
@@ -233,10 +247,8 @@ def obtener_consecutivo():
             except ValueError:
                 num = 1 # Default to 1 if file is empty or corrupt
 
-    config = load_config()
-    prefijo = config.get('prefijo_consecutivo', 'APP') # 'APP' como fallback
     year_short = datetime.now().strftime('%y')
-    consecutivo_actual = f"{prefijo}-{year_short}-{num:05d}"
+    consecutivo_actual = f"UIB-{year_short}-{num:05d}"
 
     nuevo_num = num + 1
     with open(CONSECUTIVO_FILE, 'w') as f:
@@ -307,174 +319,150 @@ def cargar_remisiones():
             return []
     return []
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        # Find user by username
+        user = None
+        for u in users.values():
+            if u.username == username:
+                user = u
+                break
+        
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            flash('Inicio de sesión exitoso.', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Nombre de usuario o contraseña incorrectos.', 'danger')
+            
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Ha cerrado sesión exitosamente.', 'info')
+    return redirect(url_for('login'))
+
 @app.route('/', methods=['GET'])
+@login_required
 def index():
-    config = load_config()
-    return render_template('index.html',
-                           logo_path=config.get('logo_path'),
-                           nombre_empresa=config.get('nombre_empresa'))
-
-# --- Rutas del Panel de Configuraciones ---
-@app.route('/configuraciones', methods=['GET', 'POST'])
-def panel_configuraciones():
-    config = load_config()
-    if request.method == 'POST':
-        form_section = request.form.get('form_section')
-
-        if form_section == 'logo' and 'logo_upload' in request.files:
-            logo_file = request.files['logo_upload']
-            if logo_file.filename != '':
-                filename = secure_filename(logo_file.filename)
-                relative_save_path = os.path.join('logos', filename)
-                absolute_save_path = os.path.join(BASE_DIR, 'static', relative_save_path)
-                logo_file.save(absolute_save_path)
-                config['logo_path'] = f"logos/{filename}"
-                save_config(config)
-                flash('Logo actualizado exitosamente.', 'success')
-
-        elif form_section == 'general':
-            config['nombre_empresa'] = request.form.get('nombre_empresa', '').strip()
-            config['prefijo_consecutivo'] = request.form.get('prefijo_consecutivo', '').strip()
-            save_config(config)
-            return jsonify({'success': True, 'message': 'Información general actualizada exitosamente.'})
-
-        # Si no es un POST que manejemos con JSON, puede que algo más lo necesite.
-        # Por ahora, asumimos que todos los POST a esta ruta serán asíncronos.
-        # Considerar un fallback si es necesario.
-        return jsonify({'success': False, 'message': 'Acción no reconocida.'})
-
-    # El mapa de nombres para mostrar debe estar disponible aquí también
-    display_name_map = {
-        'ramos': 'Ramos',
-        'aseguradoras': 'Aseguradoras',
-        'vendedores': 'Vendedores',
-        'responsables_tecnicos': 'Responsables Técnicos',
-        'responsables_comerciales': 'Responsables Comerciales',
-        'estados_prospecto': 'Estados de Prospecto',
-        'analistas': 'Analistas',
-        'responsables_vencimientos': 'Responsables de Vencimientos',
-        'estados_vencimientos': 'Estados de Vencimientos',
-        'tipos_moneda': 'Tipos de Moneda',
-        'formas_pago': 'Formas de Pago',
-        'periodicidades_pago': 'Periodicidades de Pago',
-        'categorias_grupo': 'Categorías de Grupo',
-        'tipos_movimiento': 'Tipos de Movimiento',
-        'tipos_archivo_adjunto': 'Tipos de Archivo Adjunto',
-        'tipos_plantilla_correspondencia': 'Tipos de Plantilla de Correspondencia'
+    # --- Initialize data structures ---
+    kpis = {
+        'vencimientos_15_dias': 0,
+        'cobros_pendientes_mes': 0, 'prospectos_en_gestion': 0,
+        'produccion_mes': 0, 'remisiones_pendientes': 0
     }
-    config['display_name_map'] = display_name_map
+    produccion_por_ramo_chart = {'labels': [], 'data': []}
+    prospectos_por_estado_chart = {'labels': [], 'data': []}
+    remisiones_recientes = []
+    hoy = datetime.now()
 
-    return render_template('configuraciones.html', config=config)
+    # --- 1. Vencimientos KPIs ---
+    ruta_vencimientos = app.config.get('VENCIMIENTOS_PROCESADA_FILE_PATH')
+    if ruta_vencimientos and os.path.exists(ruta_vencimientos):
+        try:
+            df_venc = pd.read_excel(ruta_vencimientos)
+            df_venc['FECHA FIN_dt'] = pd.to_datetime(df_venc['FECHA FIN'], errors='coerce')
+            df_venc.dropna(subset=['FECHA FIN_dt'], inplace=True)
+            df_venc['Dias_Para_Vencer'] = (df_venc['FECHA FIN_dt'] - hoy).dt.days
 
-# --- Rutas para servir parciales de configuración (para carga dinámica) ---
-@app.route('/configuraciones/partials/general')
-def partial_general():
-    config = load_config()
-    return render_template('config_partials/general.html', config=config)
+            # Aplicar el mismo filtro de ventana de 100 días que en el panel de vencimientos
+            df_filtrado_venc = df_venc[df_venc['Dias_Para_Vencer'].between(-100, 100)]
+            
+            # Filtrar por pólizas que no están en estado final
+            df_venc_activas = df_filtrado_venc[~df_filtrado_venc['Estado'].astype(str).str.lower().isin(['renovado', 'no renovado'])]
 
-@app.route('/configuraciones/partials/logo')
-def partial_logo():
-    config = load_config()
-    return render_template('config_partials/logo.html', config=config)
+            # Excluir ramos especiales para alinear con el panel de vencimientos
+            ramos_a_excluir = ['CUMPLIMIENTO', 'SERIEDAD DE OFERTA']
+            df_venc_kpi = df_venc_activas[~df_venc_activas['RAMO PRINCIPAL'].isin(ramos_a_excluir)]
 
-@app.route('/configuraciones/partials/listas_hub')
-def partial_listas_hub():
-    config = load_config()
-    # Need to pass the display name map to the hub as well
-    display_name_map = {
-        'ramos': 'Ramos', 'aseguradoras': 'Aseguradoras', 'vendedores': 'Vendedores',
-        'responsables_tecnicos': 'Responsables Técnicos', 'responsables_comerciales': 'Responsables Comerciales',
-        'estados_prospecto': 'Estados de Prospecto', 'analistas': 'Analistas',
-        'responsables_vencimientos': 'Responsables de Vencimientos', 'estados_vencimientos': 'Estados de Vencimientos',
-        'tipos_moneda': 'Tipos de Moneda', 'formas_pago': 'Formas de Pago', 'periodicidades_pago': 'Periodicidades de Pago',
-        'categorias_grupo': 'Categorías de Grupo', 'tipos_movimiento': 'Tipos de Movimiento',
-        'tipos_archivo_adjunto': 'Tipos de Archivo Adjunto', 'tipos_plantilla_correspondencia': 'Tipos de Plantilla de Correspondencia'
-    }
-    config['display_name_map'] = display_name_map
-    return render_template('config_partials/listas_hub.html', config=config)
+            kpis['vencimientos_15_dias'] = len(df_venc_kpi[df_venc_kpi['Dias_Para_Vencer'].between(0, 15)])
+        except Exception as e:
+            print(f"Error al calcular KPIs de vencimientos: {e}")
 
+    # --- 2. Cobros Pendientes Mes KPI ---
+    if os.path.exists(COBROS_FILE):
+        try:
+            df_cobros = pd.read_excel(COBROS_FILE)
+            df_cobros['Fecha_Vencimiento_Cuota'] = pd.to_datetime(df_cobros['Fecha_Vencimiento_Cuota'], errors='coerce')
+            df_cobros.dropna(subset=['Fecha_Vencimiento_Cuota'], inplace=True)
 
-@app.route('/configuraciones/listas/<list_name>', methods=['GET', 'POST'])
-def gestionar_lista(list_name):
-    config = load_config()
-    # Asegurarse de que la lista exista en la configuración
-    if list_name not in config.get('listas', {}):
-        flash(f"La lista '{list_name}' no es configurable.", 'danger')
-        return redirect(url_for('panel_configuraciones'))
+            # Replicar lógica de compatibilidad de panel_cobros para alinear los KPIs
+            if 'Tipo_Movimiento' not in df_cobros.columns:
+                df_cobros['Tipo_Movimiento'] = 'Cobro'
+            df_cobros['Tipo_Movimiento'].fillna('Cobro', inplace=True)
 
-    if request.method == 'POST':
-        action = request.form.get('action')
-        item_name = request.form.get('item_name', '').strip()
+            cobros_pendientes_mes = df_cobros[
+                (df_cobros['Estado'] == 'Pendiente') &
+                (df_cobros['Tipo_Movimiento'].str.contains('Cobro', case=False, na=False)) &
+                (df_cobros['Fecha_Vencimiento_Cuota'].dt.month == hoy.month) &
+                (df_cobros['Fecha_Vencimiento_Cuota'].dt.year == hoy.year)
+            ]
+            kpis['cobros_pendientes_mes'] = len(cobros_pendientes_mes)
+        except Exception as e:
+            print(f"Error al calcular KPIs de cobros: {e}")
 
-        if action == 'add' and item_name:
-            if item_name not in config['listas'][list_name]:
-                config['listas'][list_name].append(item_name)
-                save_config(config)
-                return jsonify({'success': True, 'message': f'Ítem "{item_name}" añadido a {list_name}.'})
-            else:
-                return jsonify({'success': False, 'message': f'El ítem "{item_name}" ya existe en la lista.'})
+    # --- 3. Prospectos KPIs & Chart ---
+    prospectos_file_path = app.config.get('PROSPECTOS_FILE_PATH')
+    if prospectos_file_path and os.path.exists(prospectos_file_path):
+        try:
+            df_prospectos = pd.read_excel(prospectos_file_path)
+            kpis['prospectos_en_gestion'] = len(df_prospectos[df_prospectos['Estado'] == 'En gestión'])
+            
+            # Prospectos por estado chart data
+            estado_counts = df_prospectos['Estado'].value_counts()
+            prospectos_por_estado_chart['labels'] = estado_counts.index.tolist()
+            prospectos_por_estado_chart['data'] = estado_counts.values.tolist()
+        except Exception as e:
+            print(f"Error al calcular KPIs de prospectos: {e}")
 
-        elif action == 'delete' and item_name:
-            if item_name in config['listas'][list_name]:
-                config['listas'][list_name].remove(item_name)
-                save_config(config)
-                return jsonify({'success': True, 'message': f'Ítem "{item_name}" eliminado de {list_name}.'})
-            else:
-                return jsonify({'success': False, 'message': f'No se encontró el ítem "{item_name}" para eliminar.'})
+    # --- 4. Producción & Remisiones Recientes ---
+    if os.path.exists(EXCEL_FILE):
+        try:
+            df_remisiones = pd.read_excel(EXCEL_FILE)
+            df_remisiones['fecha_registro_dt'] = pd.to_datetime(df_remisiones['fecha_registro'], dayfirst=True, errors='coerce')
+            
+            # Producción del mes KPI y Chart
+            produccion_mes_df = df_remisiones[
+                (df_remisiones['estado'] == 'Creado') &
+                (df_remisiones['fecha_registro_dt'].dt.month == hoy.month) &
+                (df_remisiones['fecha_registro_dt'].dt.year == hoy.year)
+            ]
+            kpis['produccion_mes'] = produccion_mes_df['uib'].apply(limpiar_valor_moneda).sum()
+            
+            if not produccion_mes_df.empty:
+                ramos_data = produccion_mes_df.groupby('ramo')['uib'].sum().sort_values(ascending=False).head(10)
+                produccion_por_ramo_chart['labels'] = ramos_data.index.tolist()
+                produccion_por_ramo_chart['data'] = ramos_data.values.tolist()
 
-        elif action == 'edit':
-            original_name = request.form.get('original_item_name')
-            new_name = request.form.get('new_item_name', '').strip()
-            if original_name and new_name:
-                try:
-                    index = config['listas'][list_name].index(original_name)
-                    config['listas'][list_name][index] = new_name
-                    save_config(config)
-                    return jsonify({'success': True, 'message': f'Ítem "{original_name}" actualizado a "{new_name}".'})
-                except ValueError:
-                    return jsonify({'success': False, 'message': f'No se encontró el ítem original "{original_name}" para editar.'})
-            else:
-                return jsonify({'success': False, 'message': 'Faltaron datos para la edición.'})
+            # Remisiones recientes
+            remisiones_recientes_df = df_remisiones.sort_values(by='fecha_registro_dt', ascending=False).head(5)
+            remisiones_recientes = remisiones_recientes_df.to_dict(orient='records')
 
-        return jsonify({'success': False, 'message': 'Acción no reconocida.'})
+            # KPI de Remisiones Pendientes
+            kpis['remisiones_pendientes'] = len(df_remisiones[df_remisiones['estado'] == 'Pendiente'])
+        except Exception as e:
+            print(f"Error al calcular KPIs de producción y remisiones: {e}")
 
-    if request.method == 'GET':
-        # La lógica de eliminación se ha movido al POST
-        pass
-
-    # El nombre para mostrar puede ser más amigable que el nombre de la variable
-    display_name_map = {
-        'ramos': 'Ramos',
-        'aseguradoras': 'Aseguradoras',
-        'vendedores': 'Vendedores',
-        'responsables_tecnicos': 'Responsables Técnicos',
-        'responsables_comerciales': 'Responsables Comerciales',
-        'estados_prospecto': 'Estados de Prospecto',
-        'analistas': 'Analistas',
-        'responsables_vencimientos': 'Responsables de Vencimientos',
-        'estados_vencimientos': 'Estados de Vencimientos',
-        'tipos_moneda': 'Tipos de Moneda',
-        'formas_pago': 'Formas de Pago',
-        'periodicidades_pago': 'Periodicidades de Pago',
-        'categorias_grupo': 'Categorías de Grupo',
-        'tipos_movimiento': 'Tipos de Movimiento',
-        'tipos_archivo_adjunto': 'Tipos de Archivo Adjunto',
-        'tipos_plantilla_correspondencia': 'Tipos de Plantilla de Correspondencia'
-    }
-    display_name = display_name_map.get(list_name, list_name.capitalize())
-
-    return render_template('gestion_lista.html',
-                           list_name=list_name,
-                           display_name=display_name,
-                           items=config['listas'][list_name])
+    return render_template('index.html', 
+                           kpis=kpis,
+                           produccion_por_ramo_chart=produccion_por_ramo_chart,
+                           prospectos_por_estado_chart=prospectos_por_estado_chart,
+                           remisiones_recientes=remisiones_recientes)
 
 @app.route('/carga_maestra', methods=['GET'])
+@login_required
 def mostrar_formulario_carga_maestra():
     return render_template('carga_maestra.html')
 
 @app.route('/remision/nueva', methods=['GET'])
+@login_required
 def formulario_remision():
-    config = load_config()
     # Obtener datos del prospecto desde la URL para autocompletar
     prospecto_data = {
         'tomador': request.args.get('tomador', ''),
@@ -486,21 +474,18 @@ def formulario_remision():
 
     # These global lists should be defined at the top of app.py
     return render_template('formulario.html',
-                           opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
-                           opciones_ramo=config.get('listas', {}).get('ramos', []),
-                           opciones_tipo_moneda=config.get('listas', {}).get('tipos_moneda', []),
-                           opciones_vendedor=config.get('listas', {}).get('vendedores', []),
-                           opciones_forma_pago=config.get('listas', {}).get('formas_pago', []),
-                           opciones_periodicidad_pago=config.get('listas', {}).get('periodicidades_pago', []),
-                           opciones_analista=config.get('listas', {}).get('analistas', []),
-                           opciones_categorias_grupo=config.get('listas', {}).get('categorias_grupo', []),
-                           opciones_tipos_movimiento=config.get('listas', {}).get('tipos_movimiento', []),
-                           opciones_tipos_archivo=config.get('listas', {}).get('tipos_archivo_adjunto', []),
-                           prospecto=prospecto_data,
-                           nombre_empresa=config.get('nombre_empresa')
+                           opciones_aseguradora=config_manager.get_list('aseguradoras'),
+                           opciones_ramo=config_manager.get_list('ramos'),
+                           opciones_tipo_moneda=config_manager.get_list('tipo_moneda'),
+                           opciones_vendedor=config_manager.get_list('vendedores'),
+                           opciones_forma_pago=config_manager.get_list('forma_pago'),
+                           opciones_periodicidad_pago=config_manager.get_list('periodicidad_pago'),
+                           opciones_analista=config_manager.get_list('analistas'),
+                           prospecto=prospecto_data
                           )
 
 @app.route('/registrar', methods=['POST'])
+@login_required
 def registrar():
     try:
         datos_formulario = request.form.to_dict()
@@ -530,6 +515,10 @@ def registrar():
         for field in form_fields_to_collect:
             datos[field] = datos_formulario.get(field, '').strip()
 
+        # If co-corretaje is selected, the TPP seller is the one from the main 'vendedor' dropdown.
+        if datos.get('co_corretaje_opcion') == 'si':
+            datos['co_corretaje_nombre'] = datos.get('vendedor', '').strip()
+
         # Handle "Otro" for categorias_grupo
         if datos['categorias_grupo'] == 'Otro':
             datos['categorias_grupo'] = datos_formulario.get('categorias_grupo_otro', 'Otro').strip()
@@ -537,19 +526,21 @@ def registrar():
         # Clean numeric fields from form
         prima_neta = limpiar_valor_moneda(datos_formulario.get('prima_neta', '0'))
         porcentaje_comision = limpiar_valor_moneda(datos_formulario.get('porcentaje_comision_valor', '0'))
-        porcentaje_co_corretaje = limpiar_valor_moneda(datos_formulario.get('co_corretaje_porcentaje', '0'))
+        porcentaje_vendedor = limpiar_valor_moneda(datos_formulario.get('porcentaje_vendedor', '0'))
+        porcentaje_co_corretaje = limpiar_valor_moneda(datos_formulario.get('co_corretaje_porcentaje', '0')) # Keep for now, might be used elsewhere
 
-        # --- 2. Backend Calculations (Critical for data integrity) ---
+        # --- 2. Backend Calculations (Corrected Logic) ---
 
         # Calculate Comision$
         comision_dolar = (prima_neta * porcentaje_comision) / 100.0
 
-        # Calculate ComisionTPP
+        # Calculate ComisionTPP based on the seller's participation
         comision_tpp = 0
-        if datos.get('co_corretaje_opcion') == 'si':
-            comision_tpp = (comision_dolar * porcentaje_co_corretaje) / 100.0
+        # If the seller is UIB, their commission is not TPP.
+        if datos.get('vendedor') != 'UIB CORREDORES DE SEGUROS S.A.' and porcentaje_vendedor > 0 and datos.get('co_corretaje_opcion') == 'si':
+             comision_tpp = comision_dolar * (porcentaje_vendedor / 100.0)
 
-        # Calculate ComisionUIB (same as 'uib' field)
+        # Calculate ComisionUIB, which is the remainder
         comision_uib = comision_dolar - comision_tpp
 
         # --- 3. Populate 'datos' dictionary for saving ---
@@ -557,8 +548,10 @@ def registrar():
         # Add cleaned and calculated values to the main dictionary
         datos['prima_neta'] = prima_neta
         datos['porcentaje_comision_valor'] = porcentaje_comision
-        datos['Comision$'] = comision_dolar
+        datos['porcentaje_vendedor'] = porcentaje_vendedor
         datos['co_corretaje_porcentaje'] = porcentaje_co_corretaje
+        
+        datos['Comision$'] = comision_dolar
         datos['ComisionTPP'] = comision_tpp
         datos['ComisionUIB'] = comision_uib
         datos['uib'] = comision_uib # This is the final UIB value
@@ -635,16 +628,22 @@ def registrar():
 
         if guardar_remision(datos):
             # --- Lógica para generar cuotas de cobro ---
-            if datos.get('periodicidad_pago') == 'Mensual' and datos.get('forma_pago') != 'Contado':
+            periodicidad = datos.get('periodicidad_pago')
+            if datos.get('forma_pago') != 'Contado' and periodicidad in ['Mensual', 'Trimestral', 'Anual']:
                 try:
                     num_cuotas = int(datos.get('numero_cuotas', 0))
                     if num_cuotas > 0:
                         nuevos_cobros = []
-                        # Use YYYY-MM-DD format for parsing, which is what HTML date inputs provide
                         fecha_inicio_dt = datetime.strptime(datos.get('fecha_inicio'), '%Y-%m-%d')
+                        
+                        months_increment = 1 # Default para Mensual
+                        if periodicidad == 'Trimestral':
+                            months_increment = 3
+                        elif periodicidad == 'Anual':
+                            months_increment = 12
 
                         for i in range(num_cuotas):
-                            fecha_vencimiento = fecha_inicio_dt + relativedelta(months=i)
+                            fecha_vencimiento = fecha_inicio_dt + relativedelta(months=i * months_increment)
 
                             cobro = {
                                 'ID_COBRO': uuid.uuid4().hex[:10].upper(),
@@ -660,11 +659,13 @@ def registrar():
                                 'Fecha_Inicio_Vigencia': datos.get('fecha_inicio'),
                                 'Fecha_Fin_Vigencia': datos.get('fecha_fin'),
                                 'Estado': 'Pendiente',
-                                'Tipo_Movimiento': datos_formulario.get('tipo_movimiento', 'Cobro mensual')
+                                'Tipo_Movimiento': 'Cobro',
+                                'Periodicidad': periodicidad
                             }
                             nuevos_cobros.append(cobro)
 
-                        guardar_cobros(nuevos_cobros)
+                        if nuevos_cobros:
+                            guardar_cobros(nuevos_cobros)
                 except (ValueError, TypeError) as e:
                     print(f"Error al procesar cuotas de cobro para {datos.get('consecutivo')}: {e}")
 
@@ -679,37 +680,38 @@ def registrar():
         return jsonify({'success': False, 'message': f'Error interno del servidor: {e}'}), 500
 
 @app.route('/control')
+@login_required
 def control():
-    config = load_config()
     remisiones_data = cargar_remisiones()
     remisiones_ordenadas = sorted(remisiones_data, key=lambda r: str(r.get('consecutivo', '')), reverse=True)
     primeras_10_remisiones = remisiones_ordenadas[:10]
 
-    # Lista actualizada para incluir todos los campos relevantes, especialmente los financieros.
-    # Esto asegura que la plantilla 'control.html' reciba todos los datos necesarios.
     campos_esperados = [
         'consecutivo', 'fecha_recepcion', 'tomador', 'nit',
         'aseguradora', 'ramo', 'poliza',
         'fecha_inicio', 'fecha_fin', 'estado', 'numero_remision_manual',
         'archivos',
-        # Campos financieros clave que ahora se calculan y guardan
         'prima_neta',
         'Comision$',
         'ComisionTPP',
         'ComisionUIB',
-        'uib' # uib es el alias de ComisionUIB, pero lo incluimos por si se usa directamente
+        'uib'
     ]
     remisiones_list = []
     for r in primeras_10_remisiones:
         for campo in campos_esperados:
             if campo not in r:
                 r[campo] = 'N/A'
+        
+        # FIX: Ensure 'archivos' is a string to prevent .split() error on float (NaN)
+        if 'archivos' in r and not isinstance(r['archivos'], str):
+            r['archivos'] = ''
+
         remisiones_list.append(r)
-    return render_template('control.html',
-                           remisiones=remisiones_list,
-                           opciones_plantilla=config.get('listas', {}).get('tipos_plantilla_correspondencia', []))
+    return render_template('control.html', remisiones=remisiones_list)
 
 @app.route('/marcar_creado', methods=['POST'])
+@login_required
 def marcar_creado():
     consecutivo_a_marcar = request.form.get('consecutivo')
     remisiones_actuales = cargar_remisiones()
@@ -728,11 +730,13 @@ def marcar_creado():
     return redirect(url_for('control'))
 
 @app.route('/plantilla', methods=['POST'])
+@login_required
 def plantilla():
     datos_formulario = request.form.to_dict()
     return render_template('plantilla_confirmacion.html', datos=datos_formulario)
 
 @app.route('/resumen/<string:consecutivo_id>')
+@login_required
 def mostrar_resumen(consecutivo_id):
     remisiones = cargar_remisiones()
     remision_encontrada = None
@@ -746,6 +750,7 @@ def mostrar_resumen(consecutivo_id):
         return f"Error: Remisión con consecutivo {consecutivo_id} no encontrada. Verifique el número o contacte soporte.", 404
 
 @app.route('/editar_remision_numero/<string:consecutivo_id>', methods=['GET'])
+@login_required
 def editar_remision(consecutivo_id):
     remisiones = cargar_remisiones()
     remision_a_editar = None
@@ -767,6 +772,7 @@ def editar_remision(consecutivo_id):
         return f"Error: Remisión con consecutivo {consecutivo_id} no encontrada. Verifique el número o contacte soporte.", 404
 
 @app.route('/guardar_numero_remision', methods=['POST'])
+@login_required
 def guardar_numero_remision():
     consecutivo_a_actualizar = request.form.get('consecutivo')
     nuevo_numero_remision = request.form.get('numero_remision_manual', '').strip()
@@ -881,84 +887,91 @@ def guardar_numero_remision():
         return f"Error: No se encontró la remisión con consecutivo {consecutivo_a_actualizar} para actualizar. Es posible que haya sido eliminada.", 404
     return redirect(url_for('control'))
 
-@app.route('/cliente/formulario_crear_carpeta', methods=['GET'])
+@app.route('/formulario_crear_carpeta', methods=['GET'])
+@login_required
 def mostrar_formulario_crear_carpeta():
-    config = load_config()
     ano_actual = datetime.now().strftime('%Y')
-    return render_template('crear_carpeta_cliente.html',
-                           ano_actual=ano_actual,
-                           nombre_empresa=config.get('nombre_empresa'))
+    return render_template('crear_carpeta.html', ano_actual=ano_actual)
 
-@app.route('/cliente/ejecutar_crear_carpeta', methods=['POST'])
+@app.route('/ejecutar_crear_carpeta', methods=['POST'])
+@login_required
 def ejecutar_crear_carpeta():
-    nombre_cliente = request.form.get('nombre_cliente', 'SIN_NOMBRE').strip()
-    nit_o_cc_cliente = request.form.get('nit_o_cc_cliente', 'SIN_NIT').strip()
+    tipo_carpeta = request.form.get('tipo_carpeta')
+    nombre_entidad = request.form.get('nombre_entidad', 'SIN_NOMBRE').strip()
+    nit_entidad = request.form.get('nit_entidad', 'SIN_NIT').strip()
     ano_actual = datetime.now().strftime('%Y')
-    if not nombre_cliente or nombre_cliente == 'SIN_NOMBRE' or not nit_o_cc_cliente or nit_o_cc_cliente == 'SIN_NIT':
-        return jsonify({'success': False, 'message': 'El nombre del cliente y el NIT/CC son obligatorios.'}), 400
-    nombre_carpeta_base_cliente = f"{nombre_cliente}_{nit_o_cc_cliente}"
-    nombre_carpeta_cliente_seguro = secure_filename(nombre_carpeta_base_cliente)
-    if not nombre_carpeta_cliente_seguro:
-        return jsonify({'success': False, 'message': 'El nombre del cliente o NIT/CC generan un nombre de carpeta inválido. Por favor, verifique.'}), 400
-    ruta_cliente_completa = os.path.join(app.config['CLIENT_FOLDERS_BASE_DIR'], nombre_carpeta_cliente_seguro)
-    subcarpetas = [
-        os.path.join("SARLAFT", ano_actual), "POLIZAS", "DOCUMENTOS", "SINIESTROS"
-    ]
-    try:
-        if not os.path.exists(ruta_cliente_completa):
-            os.makedirs(ruta_cliente_completa)
-        for subcarpeta_rel in subcarpetas:
-            ruta_sub = os.path.join(ruta_cliente_completa, subcarpeta_rel)
-            os.makedirs(ruta_sub, exist_ok=True)
-        ruta_sarlaft_ano = os.path.join(ruta_cliente_completa, "SARLAFT", ano_actual)
-        os.makedirs(ruta_sarlaft_ano, exist_ok=True)
-        documentos_sarlaft_config = {
-            'doc_cedula': 'Cedula_Representante_legal', 'doc_sarlaft': 'Sarlaft_Cliente',
-            'doc_rut': 'RUT_Cliente', 'doc_declaracion': 'Declaracion_Renta', 'doc_camara': 'Camara_Comercio'
-            , 'estados_financieros': 'Estados_Financieros_Notas', 'consulta_cliente': 'Consulta_Cliente_Desqubra',
-        }
-        archivos_cargados_count = 0
-        for input_name, nombre_base_fijo in documentos_sarlaft_config.items():
-            archivo = request.files.get(input_name)
-            if archivo and archivo.filename:
-                try:
-                    nombre_original_del_archivo_subido = archivo.filename
-                    extension = os.path.splitext(nombre_original_del_archivo_subido)[1].lower()
+
+    if not nombre_entidad or nombre_entidad == 'SIN_NOMBRE' or not nit_entidad or nit_entidad == 'SIN_NIT':
+        return jsonify({'success': False, 'message': 'El nombre y el NIT/CC son obligatorios.'}), 400
+
+    nombre_carpeta_base = f"{nombre_entidad}_{nit_entidad}"
+    nombre_carpeta_seguro = secure_filename(nombre_carpeta_base)
+
+    if not nombre_carpeta_seguro:
+        return jsonify({'success': False, 'message': 'El nombre o NIT/CC generan un nombre de carpeta inválido.'}), 400
+
+    if tipo_carpeta == 'cliente':
+        ruta_base = app.config['CLIENT_FOLDERS_BASE_DIR']
+        ruta_completa = os.path.join(ruta_base, nombre_carpeta_seguro)
+        subcarpetas = [os.path.join("SARLAFT", ano_actual), "POLIZAS", "DOCUMENTOS", "SINIESTROS"]
+        try:
+            if not os.path.exists(ruta_completa):
+                os.makedirs(ruta_completa)
+            for subcarpeta_rel in subcarpetas:
+                os.makedirs(os.path.join(ruta_completa, subcarpeta_rel), exist_ok=True)
+
+            ruta_sarlaft_ano = os.path.join(ruta_completa, "SARLAFT", ano_actual)
+            documentos_sarlaft_config = {
+                'doc_cedula': 'Cedula_Representante_legal', 'doc_sarlaft': 'Sarlaft_Cliente',
+                'doc_rut': 'RUT_Cliente', 'doc_declaracion': 'Declaracion_Renta', 'doc_camara': 'Camara_Comercio',
+                'estados_financieros': 'Estados_Financieros_Notas', 'consulta_cliente': 'Consulta_Cliente_Desqubra',
+            }
+            archivos_cargados_count = 0
+            for input_name, nombre_base_fijo in documentos_sarlaft_config.items():
+                archivo = request.files.get(input_name)
+                if archivo and archivo.filename:
+                    extension = os.path.splitext(archivo.filename)[1].lower()
                     nombre_archivo_final = nombre_base_fijo + extension
-                    nombre_archivo_seguro = secure_filename(nombre_archivo_final)
-                    ruta_guardado = os.path.join(ruta_sarlaft_ano, nombre_archivo_seguro)
+                    ruta_guardado = os.path.join(ruta_sarlaft_ano, secure_filename(nombre_archivo_final))
                     archivo.save(ruta_guardado)
                     archivos_cargados_count += 1
-                except Exception as e_file:
-                    print(f"Error al guardar el archivo {input_name} ({archivo.filename}): {e_file}")
-        mensaje_exito = f'Estructura de carpetas para "{nombre_cliente}" creada/verificada exitosamente.'
-        if archivos_cargados_count > 0:
-            mensaje_exito += f' {archivos_cargados_count} documento(s) SARLAFT procesados.'
-        return jsonify({'success': True, 'message': mensaje_exito}), 200
-    except OSError as e:
-        print(f"Error al crear carpetas para {nombre_cliente}: {e}")
-        return jsonify({'success': False, 'message': f'Error al crear la estructura de carpetas: {e}'}), 500
-    except Exception as e:
-        print(f"Error inesperado al crear carpetas para {nombre_cliente}: {e}")
-        return jsonify({'success': False, 'message': f'Error inesperado al crear carpetas: {e}'}), 500
+            mensaje_exito = f'Estructura de carpetas para cliente "{nombre_entidad}" creada/verificada.'
+            if archivos_cargados_count > 0:
+                mensaje_exito += f' {archivos_cargados_count} documento(s) SARLAFT procesados.'
+            return jsonify({'success': True, 'message': mensaje_exito}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Error al crear carpetas de cliente: {e}'}), 500
+
+    elif tipo_carpeta == 'vendedor':
+        ruta_base = app.config['VENDEDOR_FOLDERS_BASE_DIR']
+        ruta_completa = os.path.join(ruta_base, nombre_carpeta_seguro)
+        try:
+            os.makedirs(ruta_completa, exist_ok=True)
+            archivos = request.files.getlist("documentos_vendedor[]")
+            archivos_cargados_count = 0
+            for archivo in archivos:
+                if archivo and archivo.filename:
+                    filename = secure_filename(archivo.filename)
+                    archivo.save(os.path.join(ruta_completa, filename))
+                    archivos_cargados_count += 1
+            mensaje_exito = f'Carpeta para vendedor "{nombre_entidad}" creada. {archivos_cargados_count} documento(s) subidos.'
+            return jsonify({'success': True, 'message': mensaje_exito}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Error al crear carpeta de vendedor: {e}'}), 500
+    else:
+        return jsonify({'success': False, 'message': 'Tipo de carpeta no válido.'}), 400
 
 @app.route('/prospectos/crear', methods=['GET', 'POST'])
+@login_required
 def crear_prospecto():
-    config = load_config()
     if request.method == 'GET':
-        listas = config.get('listas', {})
-        ramos_dinamicos = listas.get('ramos', [])
-        responsables_tecnicos = listas.get('responsables_tecnicos', [])
-        responsables_comerciales = listas.get('responsables_comerciales', [])
-
         return render_template('prospectos_crear.html',
-                               opciones_responsable_tecnico=responsables_tecnicos,
-                               opciones_responsable_comercial=responsables_comerciales,
-                               opciones_estado=listas.get('estados_prospecto', []),
-                               opciones_ramo=ramos_dinamicos,
-                               opciones_aseguradora=config.get('listas', {}).get('aseguradoras', []),
-                               opciones_vendedor=config.get('listas', {}).get('vendedores', []),
-                               nombre_empresa=config.get('nombre_empresa'))
+                               opciones_responsable_tecnico=config_manager.get_list('responsable_tecnico'),
+                               opciones_responsable_comercial=config_manager.get_list('responsable_comercial'),
+                               opciones_estado=config_manager.get_list('estado_prospecto'),
+                               opciones_ramo=config_manager.get_list('ramos'),
+                               opciones_aseguradora=config_manager.get_list('aseguradoras'),
+                               opciones_vendedor=config_manager.get_list('vendedores'))
 
     if request.method == 'POST':
         try:
@@ -1002,8 +1015,8 @@ def crear_prospecto():
             return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/prospectos/visualizar', methods=['GET'])
+@login_required
 def prospectos_vista():
-    config = load_config()
     try:
         PROSPECTOS_FILE = app.config['PROSPECTOS_FILE_PATH']
         kpi_recaudo_mes = 0
@@ -1050,19 +1063,17 @@ def prospectos_vista():
         flash(f'Error al cargar los prospectos: {str(e)}', 'danger')
         prospectos_data = []
 
-    listas = config.get('listas', {})
     return render_template('prospectos_vista.html',
                            prospectos=prospectos_data,
-                           opciones_responsable_tecnico=listas.get('responsables_tecnicos', []),
-                           opciones_responsable_comercial=listas.get('responsables_comerciales', []),
-                           opciones_estado=listas.get('estados_prospecto', []),
+                           opciones_responsable_tecnico=config_manager.get_list('responsable_tecnico'),
+                           opciones_responsable_comercial=config_manager.get_list('responsable_comercial'),
+                           opciones_estado=config_manager.get_list('estado_prospecto'),
                            kpi_recaudo_mes=kpi_recaudo_mes,
-                           kpi_top_ramos=kpi_top_ramos,
-                           nombre_empresa=config.get('nombre_empresa'))
+                           kpi_top_ramos=kpi_top_ramos)
 
 @app.route('/prospectos/editar/<prospecto_id>')
+@login_required
 def prospecto_editar(prospecto_id):
-    config = load_config()
     PROSPECTOS_FILE = app.config['PROSPECTOS_FILE_PATH']
     if not os.path.exists(PROSPECTOS_FILE):
         flash('El archivo de prospectos no existe.', 'danger')
@@ -1075,17 +1086,17 @@ def prospecto_editar(prospecto_id):
         flash('Prospecto no encontrado.', 'danger')
         return redirect(url_for('prospectos_vista'))
 
-    listas = config.get('listas', {})
     return render_template('prospectos_editar.html',
                            prospecto=prospecto_data[0],
-                           opciones_responsable_tecnico=listas.get('responsables_tecnicos', []),
-                           opciones_responsable_comercial=listas.get('responsables_comerciales', []),
-                           opciones_estado=listas.get('estados_prospecto', []),
-                           opciones_ramo=listas.get('ramos', []),
-                           opciones_aseguradora=listas.get('aseguradoras', []),
-                           nombre_empresa=config.get('nombre_empresa'))
+                           opciones_responsable_tecnico=config_manager.get_list('responsable_tecnico'),
+                           opciones_responsable_comercial=config_manager.get_list('responsable_comercial'),
+                           opciones_estado=config_manager.get_list('estado_prospecto'),
+                           opciones_ramo=config_manager.get_list('ramos'),
+                           opciones_aseguradora=config_manager.get_list('aseguradoras'),
+                           opciones_vendedor=config_manager.get_list('vendedores'))
 
 @app.route('/prospectos/guardar_edicion', methods=['POST'])
+@login_required
 def prospecto_guardar_edicion():
     try:
         datos = request.form.to_dict()
@@ -1128,6 +1139,7 @@ def prospecto_guardar_edicion():
     return redirect(url_for('prospectos_vista'))
 
 @app.route('/prospectos/actualizar_estado', methods=['POST'])
+@login_required
 def actualizar_estado_prospecto():
     try:
         data = request.get_json()
@@ -1193,8 +1205,8 @@ def format_date_in_spanish(date_str):
         return date_str # Return original if format is unexpected
 
 @app.route('/correspondencia/vista_previa')
+@login_required
 def correspondencia_vista_previa():
-    config = load_config()
     try:
         datos = request.args.to_dict()
         consecutivo = datos.get('consecutivo')
@@ -1240,8 +1252,7 @@ def correspondencia_vista_previa():
             'valor_a_pagar': contexto.get('valor_a_pagar'),
             'garantias': contexto.get('garantias'),
             'fecha_de_pago': format_date_in_spanish(contexto.get('fecha_limite_pago')),
-            'link_de_pago': contexto.get('link_de_pago'),
-            'nombre_empresa': config.get('nombre_empresa')
+            'link_de_pago': contexto.get('link_de_pago')
         }
 
         return render_template(f'correspondencia/{tipo_plantilla}.html', **contexto_plantilla)
@@ -1250,6 +1261,7 @@ def correspondencia_vista_previa():
         return f"Error al generar la vista previa: {e}", 500
 
 @app.route('/siniestros/registrar', methods=['GET', 'POST'])
+@login_required
 def siniestros_registrar():
     if request.method == 'GET':
         return render_template('siniestros_registrar.html')
@@ -1296,8 +1308,8 @@ def siniestros_registrar():
             return jsonify({'status': 'error', 'message': f'Error interno del servidor: {e}'}), 500
 
 @app.route('/cartera/visualizar', methods=['GET'])
+@login_required
 def visualizar_cartera():
-    config = load_config()
     ruta_archivo_procesado = app.config['CARTERA_PROCESADA_FILE_PATH']
 
     if not os.path.exists(ruta_archivo_procesado):
@@ -1398,8 +1410,7 @@ def visualizar_cartera():
                                aseguradoras_disponibles_filtro=aseguradoras_disponibles,
                                mes_seleccionado_actual_int=mes_seleccionado_int,
                                ano_seleccionado_actual_int=ano_seleccionado_int,
-                               aseguradora_seleccionada_actual=aseguradora_seleccionada_actual,
-                               nombre_empresa=config.get('nombre_empresa'))
+                               aseguradora_seleccionada_actual=aseguradora_seleccionada_actual)
 
     except Exception as e:
         print(f"Error al visualizar el reporte de cartera: {e}")
@@ -1407,8 +1418,8 @@ def visualizar_cartera():
         return redirect(url_for('mostrar_formulario_carga_maestra'))
 
 @app.route('/cartera/editar/<int:id_registro>', methods=['GET'])
+@login_required
 def mostrar_formulario_editar_cartera(id_registro):
-    config = load_config()
     ruta_archivo_procesado = app.config['CARTERA_PROCESADA_FILE_PATH']
     if not os.path.exists(ruta_archivo_procesado):
         flash('Archivo de cartera procesada no encontrado. Por favor, cargue un reporte primero.', 'danger')
@@ -1425,9 +1436,7 @@ def mostrar_formulario_editar_cartera(id_registro):
 
         registro_dict = registro_para_editar_df.iloc[0].fillna('').to_dict()
 
-        return render_template('cartera_editar_registro.html',
-                               registro=registro_dict,
-                               nombre_empresa=config.get('nombre_empresa'))
+        return render_template('cartera_editar_registro.html', registro=registro_dict)
 
     except Exception as e:
         print(f"Error al cargar registro de cartera para editar: {e}")
@@ -1435,6 +1444,7 @@ def mostrar_formulario_editar_cartera(id_registro):
         return redirect(url_for('visualizar_cartera'))
 
 @app.route('/cartera/guardar_edicion', methods=['POST'])
+@login_required
 def guardar_edicion_cartera():
     id_cartera_actualizar = request.form.get('id_cartera')
     if not id_cartera_actualizar:
@@ -1499,6 +1509,7 @@ def guardar_edicion_cartera():
     return redirect(url_for('visualizar_cartera'))
 
 @app.route('/cartera/aplicar_factura_lote', methods=['POST'])
+@login_required
 def aplicar_factura_lote():
     try:
         data = request.get_json()
@@ -1568,6 +1579,7 @@ def aplicar_factura_lote():
         return jsonify({'success': False, 'message': f'Ocurrió un error interno en el servidor al intentar aplicar la factura al lote. Por favor, contacte soporte.'}), 500
 
 @app.route('/cartera/descargar_reporte_final', methods=['GET'])
+@login_required
 def descargar_reporte_cartera_final():
     try:
         ruta_archivo = app.config['CARTERA_PROCESADA_FILE_PATH']
@@ -1590,6 +1602,7 @@ def descargar_reporte_cartera_final():
         return redirect(url_for('visualizar_cartera'))
 
 @app.route('/vencimientos/visualizar', methods=['GET'])
+@login_required
 def visualizar_vencimientos():
     ruta_archivo_vencimientos = app.config['VENCIMIENTOS_PROCESADA_FILE_PATH']
 
@@ -1619,15 +1632,16 @@ def visualizar_vencimientos():
         if search_term:
             df_filtrado = df_filtrado[df_filtrado['Tomador'].str.contains(search_term, case=False, na=False)]
 
-        # Excluir 'CUMPLIMIENTO' de los KPIs generales
-        df_sin_cumplimiento = df_filtrado[df_filtrado['RAMO PRINCIPAL'] != 'CUMPLIMIENTO']
+        # Excluir 'CUMPLIMIENTO' y 'SERIEDAD DE OFERTA' de los KPIs generales
+        ramos_a_excluir_kpi_general = ['CUMPLIMIENTO', 'SERIEDAD DE OFERTA']
+        df_para_kpis_generales = df_filtrado[~df_filtrado['RAMO PRINCIPAL'].isin(ramos_a_excluir_kpi_general)]
 
         # Calcular KPIs
         kpis = {
-            'vencer_15_dias': len(df_sin_cumplimiento[(df_sin_cumplimiento['Dias_Para_Vencer'] >= 0) & (df_sin_cumplimiento['Dias_Para_Vencer'] <= 15)]),
-            'vencer_30_dias': len(df_sin_cumplimiento[(df_sin_cumplimiento['Dias_Para_Vencer'] >= 0) & (df_sin_cumplimiento['Dias_Para_Vencer'] <= 30)]),
-            'vencer_60_dias': len(df_sin_cumplimiento[(df_sin_cumplimiento['Dias_Para_Vencer'] >= 0) & (df_sin_cumplimiento['Dias_Para_Vencer'] <= 60)]),
-            'vencidas': len(df_sin_cumplimiento[df_sin_cumplimiento['Dias_Para_Vencer'] < 0]),
+            'vencer_15_dias': len(df_para_kpis_generales[(df_para_kpis_generales['Dias_Para_Vencer'] >= 0) & (df_para_kpis_generales['Dias_Para_Vencer'] <= 15)]),
+            'vencer_30_dias': len(df_para_kpis_generales[(df_para_kpis_generales['Dias_Para_Vencer'] >= 0) & (df_para_kpis_generales['Dias_Para_Vencer'] <= 30)]),
+            'vencer_60_dias': len(df_para_kpis_generales[(df_para_kpis_generales['Dias_Para_Vencer'] >= 0) & (df_para_kpis_generales['Dias_Para_Vencer'] <= 60)]),
+            'vencidas': len(df_para_kpis_generales[df_para_kpis_generales['Dias_Para_Vencer'] < 0]),
             'cumplimiento': len(df_filtrado[(df_filtrado['RAMO PRINCIPAL'] == 'CUMPLIMIENTO') & (df_filtrado['Dias_Para_Vencer'] >= 0) & (df_filtrado['Dias_Para_Vencer'] <= 45)])
         }
 
@@ -1653,32 +1667,45 @@ def visualizar_vencimientos():
         ]
 
         def determinar_alerta(dias, estado_actual):
-            estado_actual_lower = str(estado_actual).lower() # Normalize estado for comparison
+            estado_actual_lower = str(estado_actual).lower()
 
+            # Final states with specific icons
             if estado_actual_lower == 'renovado':
-                return {'css_class': 'alerta-renovado', 'icon': 'fas fa-check-double', 'text': 'Renovado'}
+                return {'icon': 'fas fa-check-double', 'css_class': 'alerta-renovado', 'text': 'Renovado', 'is_critical': False}
             elif estado_actual_lower == 'no renovado':
-                return {'css_class': 'alerta-no-renovado', 'icon': 'fas fa-ban', 'text': 'No Renovado'}
+                return {'icon': 'fas fa-ban', 'css_class': 'alerta-no-renovado', 'text': 'No Renovado', 'is_critical': False}
 
             if pd.isna(dias):
-                return {'css_class': 'alerta-gris', 'icon': 'fas fa-question-circle', 'text': 'Fecha Fin Inválida'}
+                return {'icon': 'fas fa-question-circle', 'css_class': 'alerta-gris', 'text': 'Fecha Fin Inválida', 'is_critical': False}
 
             dias = int(dias)
+            
+            # Defaults
+            css_class = 'alerta-azul'
+            icon = 'fas fa-info-circle'
+            is_critical = False
 
-            if dias < 0 and estado_actual_lower in ['pendiente seguimiento', 'en proceso', '']:
-                return {'css_class': 'alerta-rojo', 'icon': 'fas fa-skull-crossbones', 'text': f'Vencido (Hace {-dias} días)'}
-
-            if estado_actual_lower == 'vencido':
-                return {'css_class': 'alerta-rojo', 'icon': 'fas fa-calendar-times', 'text': 'Vencido (Estado)'}
-
+            # Critical case
             if dias <= 5:
-                return {'css_class': 'alerta-rojo', 'icon': 'fas fa-skull-crossbones', 'text': f'Vencido (Hace {-dias} días)' if dias < 0 else f'Vence en {dias} días'}
-            elif 6 <= dias <= 20:
-                return {'css_class': 'alerta-amarillo', 'icon': 'fas fa-exclamation-triangle', 'text': f'Vence en {dias} días'}
-            elif 21 <= dias <= 30:
-                return {'css_class': 'alerta-verde', 'icon': 'fas fa-calendar-check', 'text': f'Vence en {dias} días'}
+                is_critical = True
+
+            # Semaphore logic for color AND icon
+            if dias <= 10:
+                css_class = 'alerta-rojo'
+                icon = 'fas fa-skull-crossbones'
+            elif dias <= 20: # 11-20 days
+                css_class = 'alerta-amarillo'
+                icon = 'fas fa-exclamation-triangle'
+            elif dias <= 30: # 21-30 days
+                css_class = 'alerta-verde'
+                icon = 'fas fa-calendar-check'
+
+            if dias < 0:
+                text = f'Vencido (Hace {-dias} días)'
             else:
-                return {'css_class': 'alerta-azul', 'icon': 'fas fa-info-circle', 'text': f'Vence en {dias} días'}
+                text = f'Vence en {dias} días'
+            
+            return {'icon': icon, 'css_class': css_class, 'text': text, 'is_critical': is_critical}
 
         if 'Estado' not in df_filtrado.columns:
             df_filtrado['Estado'] = ''
@@ -1689,10 +1716,10 @@ def visualizar_vencimientos():
         resultados_alerta = df_filtrado.apply(lambda row: determinar_alerta(row.get('Dias_Para_Vencer'), row.get('Estado')), axis=1)
 
         # Se asignan los resultados al DataFrame filtrado.
-        # Es crucial que 'resultados_alerta' tenga el mismo número de filas que 'df_filtrado'.
         df_filtrado['Indicador_Vencimiento_CSS_Class'] = [a['css_class'] for a in resultados_alerta]
         df_filtrado['Indicador_Vencimiento_Icon'] = [a['icon'] for a in resultados_alerta]
         df_filtrado['Indicador_Vencimiento_Text'] = [a['text'] for a in resultados_alerta]
+        df_filtrado['Indicador_Vencimiento_Is_Critical'] = [a['is_critical'] for a in resultados_alerta]
 
         df_display = df_filtrado.copy()
 
@@ -1711,16 +1738,17 @@ def visualizar_vencimientos():
                                 registros=lista_registros,
                                 kpis=kpis,
                                 ramos_kpis=ramos_kpis,
-                                opciones_responsable_js=config.get('listas', {}).get('responsables_vencimientos', []),
-                                opciones_estado_js=config.get('listas', {}).get('estados_vencimientos', []),
-                                search_term=search_term,
-                                nombre_empresa=config.get('nombre_empresa'))
+                                opciones_responsable_js=config_manager.get_list('responsable_vencimientos'),
+                                opciones_estado_js=config_manager.get_list('estado_vencimientos'),
+                                search_term=search_term
+                               )
     except Exception as e:
         print(f"Error crítico al visualizar el reporte de vencimientos: {type(e).__name__} - {e}")
         flash(f'Ocurrió un error crítico al intentar mostrar el reporte de vencimientos: {str(e)}', 'danger')
         return redirect(url_for('mostrar_formulario_carga_maestra'))
 
 @app.route('/vencimientos/actualizar_registro', methods=['POST'])
+@login_required
 def actualizar_registro_vencimiento():
     try:
         data = request.get_json()
@@ -1799,6 +1827,7 @@ def actualizar_registro_vencimiento():
         return jsonify({'success': False, 'message': f'Ocurrió un error interno en el servidor: {str(e)}'}), 500
 
 @app.route('/procesar_reporte_maestro', methods=['POST'])
+@login_required
 def procesar_reporte_maestro():
     # --- 1. File Upload Validation ---
     if 'archivo' not in request.files:
@@ -1953,21 +1982,30 @@ def procesar_reporte_maestro():
     return redirect(url_for('index')) # Final redirect
 
 @app.route('/recaudo')
+@login_required
 def recaudo():
-    config = load_config()
     # Initialize all variables
-    total_renovaciones, total_prospectos, total_modificaciones, total_general, total_tpp = 0, 0, 0, 0, 0
-    renovaciones_data, prospectos_data, modificaciones_data, tpp_data = [], [], [], []
+    total_renovaciones, total_prospectos, total_modificaciones, total_general = 0, 0, 0, 0
+    renovaciones_data, prospectos_data, modificaciones_data = [], [], []
+    tpp_por_vendedor = []
     chart_data = {'labels': [], 'data': []}
 
     remisiones = cargar_remisiones()
     if remisiones:
         df = pd.DataFrame(remisiones)
 
-        required_cols = ['renovacion', 'negocio_nuevo', 'modificacion', 'estado', 'fecha_registro', 'uib', 'ramo', 'co_corretaje_opcion', 'ComisionTPP']
-        if all(col in df.columns for col in required_cols):
+        # Define all columns that will be used
+        required_cols = [
+            'renovacion', 'negocio_nuevo', 'modificacion', 'estado', 'fecha_registro', 
+            'uib', 'ramo', 'ComisionUIB', 'co_corretaje_opcion', 'ComisionTPP', 'co_corretaje_nombre'
+        ]
+        
+        # Check if all required columns exist
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if not missing_cols:
             # Clean and prepare data
             df['uib'] = df['uib'].apply(limpiar_valor_moneda)
+            df['ComisionUIB'] = df['ComisionUIB'].apply(limpiar_valor_moneda)
             df['ComisionTPP'] = df['ComisionTPP'].apply(limpiar_valor_moneda)
             df['fecha_registro_dt'] = pd.to_datetime(df['fecha_registro'], dayfirst=True, errors='coerce')
             df.dropna(subset=['fecha_registro_dt'], inplace=True)
@@ -1980,34 +2018,50 @@ def recaudo():
                 (df['fecha_registro_dt'].dt.month == hoy.month) &
                 (df['fecha_registro_dt'].dt.year == hoy.year)
             )
-            df_mes_actual = df[base_filter]
+            df_mes_actual = df[base_filter].copy()
 
-            # --- Calculations for KPI cards ---
+            # --- Calculations for KPI cards (using ComisionUIB as per user feedback) ---
             df_renovaciones = df_mes_actual[df_mes_actual['renovacion'].astype(str).str.strip().str.lower() == 'si']
-            total_renovaciones = df_renovaciones['uib'].sum()
+            total_renovaciones = df_renovaciones['ComisionUIB'].sum()
             renovaciones_data = df_renovaciones.to_dict(orient='records')
 
             df_prospectos = df_mes_actual[df_mes_actual['negocio_nuevo'].astype(str).str.strip().str.lower() == 'si']
-            total_prospectos = df_prospectos['uib'].sum()
+            total_prospectos = df_prospectos['ComisionUIB'].sum()
             prospectos_data = df_prospectos.to_dict(orient='records')
 
             df_modificaciones = df_mes_actual[df_mes_actual['modificacion'].astype(str).str.strip().str.lower() == 'si']
-            total_modificaciones = df_modificaciones['uib'].sum()
+            total_modificaciones = df_modificaciones['ComisionUIB'].sum()
             modificaciones_data = df_modificaciones.to_dict(orient='records')
-
-            df_tpp = df_mes_actual[df_mes_actual['co_corretaje_opcion'].astype(str).str.strip().str.lower() == 'si']
-            total_tpp = df_tpp['ComisionTPP'].sum()
-            tpp_data = df_tpp.to_dict(orient='records')
 
             total_general = total_renovaciones + total_prospectos + total_modificaciones
 
-            # --- Chart Data Calculation ---
+            # --- TPP per Seller Calculation (Corrected Logic) ---
+            df_tpp = df_mes_actual[df_mes_actual['co_corretaje_opcion'].astype(str).str.strip().str.lower() == 'si'].copy()
+            if not df_tpp.empty:
+                # Fill NaN values, convert to string, and strip whitespace to handle empty/null seller names correctly.
+                df_tpp['co_corretaje_nombre'] = df_tpp['co_corretaje_nombre'].fillna('').astype(str).str.strip()
+                
+                # Replace any resulting empty strings with a descriptive placeholder.
+                df_tpp.loc[df_tpp['co_corretaje_nombre'] == '', 'co_corretaje_nombre'] = 'Vendedor no especificado'
+
+                comisiones_tpp_agrupadas = df_tpp.groupby('co_corretaje_nombre')['ComisionTPP'].sum().reset_index()
+                
+                # Filter out 'UIB' and sellers with zero commission
+                comisiones_tpp_filtradas = comisiones_tpp_agrupadas[
+                    (~comisiones_tpp_agrupadas['co_corretaje_nombre'].str.lower().str.strip().eq('uib')) &
+                    (comisiones_tpp_agrupadas['ComisionTPP'] > 0)
+                ]
+                
+                comisiones_tpp_filtradas = comisiones_tpp_filtradas.rename(columns={'co_corretaje_nombre': 'vendedor', 'ComisionTPP': 'comision'})
+                tpp_por_vendedor = comisiones_tpp_filtradas.to_dict(orient='records')
+
+            # --- Chart Data Calculation (using uib which is equivalent to ComisionUIB) ---
             if not df_mes_actual.empty:
                 ramos_data = df_mes_actual.groupby('ramo')['uib'].sum().sort_values(ascending=False).head(10)
                 chart_data['labels'] = ramos_data.index.tolist()
-                chart_data['data'] = ramos_data.values.tolist()
+                chart_data['data'] = [round(x) for x in ramos_data.values]
         else:
-            flash('Faltan columnas requeridas en remisiones.xlsx para calcular el recaudo.', 'warning')
+            flash(f'Faltan columnas requeridas en remisiones.xlsx para calcular el recaudo: {", ".join(missing_cols)}.', 'warning')
 
     return render_template('recaudo.html',
                            total_renovaciones=total_renovaciones,
@@ -2017,14 +2071,12 @@ def recaudo():
                            total_modificaciones=total_modificaciones,
                            modificaciones_data=modificaciones_data,
                            total_general=total_general,
-                           total_tpp=total_tpp,
-                           tpp_data=tpp_data,
-                           chart_data=chart_data,
-                           nombre_empresa=config.get('nombre_empresa'))
+                           tpp_por_vendedor=tpp_por_vendedor,
+                           produccion_por_ramo_chart=chart_data)
 
 @app.route('/visualizar_sarlaft', methods=['GET'])
+@login_required
 def visualizar_sarlaft():
-    config = load_config()
     search_query = request.args.get('search_query', '').strip().lower()
     client_folders_path = app.config['CLIENT_FOLDERS_BASE_DIR']
     found_folders = []
@@ -2035,12 +2087,10 @@ def visualizar_sarlaft():
                 if search_query in folder_name.lower():
                     found_folders.append(folder_name)
 
-    return render_template('visualizar_sarlaft.html',
-                           folders=found_folders,
-                           search_query=search_query,
-                           nombre_empresa=config.get('nombre_empresa'))
+    return render_template('visualizar_sarlaft.html', folders=found_folders, search_query=search_query)
 
 @app.route('/visualizar_sarlaft/<folder_name>')
+@login_required
 def visualizar_sarlaft_docs(folder_name):
     client_folder_path = os.path.join(app.config['CLIENT_FOLDERS_BASE_DIR'], folder_name)
     sarlaft_folder_path = os.path.join(client_folder_path, 'SARLAFT')
@@ -2059,6 +2109,7 @@ def visualizar_sarlaft_docs(folder_name):
     return render_template('visualizar_sarlaft_docs.html', folder_name=folder_name, found_docs=found_docs)
 
 @app.route('/serve_sarlaft_doc/<folder_name>/<year>/<doc_name>')
+@login_required
 def serve_sarlaft_doc(folder_name, year, doc_name):
     file_path = os.path.join(app.config['CLIENT_FOLDERS_BASE_DIR'], folder_name, 'SARLAFT', year, doc_name)
     if os.path.exists(file_path):
@@ -2067,8 +2118,8 @@ def serve_sarlaft_doc(folder_name, year, doc_name):
         return "Archivo no encontrado", 404
 
 @app.route('/cobros/editar/<id_cobro>')
+@login_required
 def editar_cobro(id_cobro):
-    config = load_config()
     cobro_data = None
     if os.path.exists(COBROS_FILE):
         try:
@@ -2082,44 +2133,114 @@ def editar_cobro(id_cobro):
             flash(f'Error al leer el archivo de cobros: {e}', 'danger')
             return redirect(url_for('panel_cobros'))
 
-    return render_template('editar_cobro.html',
-                           cobro=cobro_data[0] if cobro_data else None,
-                           nombre_empresa=config.get('nombre_empresa'))
+    return render_template('editar_cobro.html', cobro=cobro_data[0] if cobro_data else None)
 
 @app.route('/cobros')
+@login_required
 def panel_cobros():
-    cobros_list = []
-    pagos_list = []
-    if os.path.exists(COBROS_FILE):
-        try:
-            df = pd.read_excel(COBROS_FILE)
-            df['Fecha_Vencimiento_Cuota'] = pd.to_datetime(df['Fecha_Vencimiento_Cuota'], errors='coerce')
-            df.dropna(subset=['Fecha_Vencimiento_Cuota'], inplace=True)
+    try:
+        # --- 1. Carga y Preparación de Datos ---
+        if not os.path.exists(COBROS_FILE):
+            flash('No se encontró el archivo de cobros.', 'warning')
+            return render_template('cobros.html', 
+                                   cobros_data={'records': [], 'kpis': {}, 'pagination': None, 'selected_period': 'Mensual'},
+                                   pagos_data={'records': [], 'kpis': {}, 'pagination': None, 'selected_period': 'Mensual'},
+                                   opciones_periodicidad=[])
 
-            hoy = datetime.now()
-            df_filtrado = df[
-                (df['Fecha_Vencimiento_Cuota'].dt.month == hoy.month) &
-                (df['Fecha_Vencimiento_Cuota'].dt.year == hoy.year)
+        df = pd.read_excel(COBROS_FILE)
+        df['Fecha_Vencimiento_Cuota'] = pd.to_datetime(df['Fecha_Vencimiento_Cuota'], errors='coerce')
+        df.dropna(subset=['Fecha_Vencimiento_Cuota'], inplace=True)
+        
+        # --- Compatibilidad para registros antiguos ---
+        if 'Periodicidad' not in df.columns: df['Periodicidad'] = 'Mensual'
+        df['Periodicidad'].fillna('Mensual', inplace=True)
+        if 'Tipo_Movimiento' not in df.columns: df['Tipo_Movimiento'] = 'Cobro'
+        df['Tipo_Movimiento'].fillna('Cobro', inplace=True)
+
+        opciones_periodicidad = config_manager.get_list('periodicidad_pago')
+        hoy = datetime.now()
+
+        # --- 2. Separar DataFrames ---
+        df_cobros_raw = df[df['Tipo_Movimiento'].str.contains('Cobro', case=False, na=False)].copy()
+        df_pagos_raw = df[df['Tipo_Movimiento'].str.contains('Pago', case=False, na=False)].copy()
+
+        # --- 3. Función de procesamiento reutilizable ---
+        def process_section(df_raw, section_name_prefix):
+            kpis = {}
+            primer_dia_mes_actual = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+            # --- DataFrames para cada categoría de filtro ---
+            df_pendientes = df_raw[df_raw['Estado'] == 'Pendiente'].copy()
+            
+            # "Mensual": todos los pendientes del mes actual
+            df_mensual_actual = df_pendientes[
+                (df_pendientes['Fecha_Vencimiento_Cuota'].dt.month == hoy.month) & 
+                (df_pendientes['Fecha_Vencimiento_Cuota'].dt.year == hoy.year)
             ]
+            
+            # "Futuros": todos los pendientes a partir de hoy
+            df_futuro = df_pendientes[df_pendientes['Fecha_Vencimiento_Cuota'] >= hoy]
+            
+            # "Pasados": todos los pendientes antes del mes actual
+            df_pasados = df_pendientes[df_pendientes['Fecha_Vencimiento_Cuota'] < primer_dia_mes_actual]
 
-            # Handle missing Tipo_Movimiento column for backward compatibility
-            if 'Tipo_Movimiento' not in df_filtrado.columns:
-                df_filtrado['Tipo_Movimiento'] = 'Cobro' # Default old records to 'Cobro'
-            df_filtrado['Tipo_Movimiento'].fillna('Cobro', inplace=True)
+            # --- Lógica para KPIs ---
+            kpis['Mensual'] = len(df_mensual_actual)
+            kpis['Trimestral'] = len(df_futuro[df_futuro['Periodicidad'] == 'Trimestral'].drop_duplicates(subset=['Tomador', 'N_Poliza']))
+            kpis['Anual'] = len(df_futuro[df_futuro['Periodicidad'] == 'Anual'].drop_duplicates(subset=['Tomador', 'N_Poliza']))
+            kpis['Pendientes Mes Anterior'] = len(df_pasados)
 
-            # Split into two dataframes using contains for flexibility
-            df_cobros = df_filtrado[df_filtrado['Tipo_Movimiento'].str.contains('Cobro', case=False, na=False)].sort_values(by='Fecha_Vencimiento_Cuota')
-            df_pagos = df_filtrado[df_filtrado['Tipo_Movimiento'].str.contains('Pago', case=False, na=False)].sort_values(by='Fecha_Vencimiento_Cuota')
+            # --- Lógica para selección de tabla y paginación ---
+            periodicidad_seleccionada = request.args.get(f'periodicidad_{section_name_prefix}', 'Mensual')
+            page = request.args.get(f'page_{section_name_prefix}', 1, type=int)
+            per_page = 15
 
-            cobros_list = df_cobros.to_dict(orient='records')
-            pagos_list = df_pagos.to_dict(orient='records')
+            if periodicidad_seleccionada == 'Mensual':
+                registros_filtrados_df = df_mensual_actual
+            elif periodicidad_seleccionada == 'Pendientes Mes Anterior':
+                registros_filtrados_df = df_pasados
+            else: # Trimestral, Anual, etc.
+                df_futuro_filtrado = df_futuro[df_futuro['Periodicidad'] == periodicidad_seleccionada]
+                registros_filtrados_df = df_futuro_filtrado.sort_values('Fecha_Vencimiento_Cuota').drop_duplicates(subset=['Tomador', 'N_Poliza'], keep='first')
 
-        except Exception as e:
-            flash(f"Error al leer o procesar el archivo de cobros: {e}", "danger")
+            total_registros = len(registros_filtrados_df)
+            total_pages = (total_registros + per_page - 1) // per_page if per_page > 0 else 0
+            
+            start = (page - 1) * per_page
+            end = start + per_page
+            registros_paginados_df = registros_filtrados_df.iloc[start:end]
 
-    return render_template('cobros.html', cobros=cobros_list, pagos=pagos_list)
+            records_list = registros_paginados_df.sort_values(by='Fecha_Vencimiento_Cuota').to_dict(orient='records')
+
+            pagination_info = {
+                'page': page, 'total_pages': total_pages, 'total_registros': total_registros,
+                'has_prev': page > 1, 'has_next': page < total_pages,
+                'prev_num': page - 1, 'next_num': page + 1,
+                'param_prefix': section_name_prefix
+            }
+            
+            return {
+                'records': records_list, 'kpis': kpis, 'pagination': pagination_info,
+                'selected_period': periodicidad_seleccionada
+            }
+
+        # --- 4. Procesar ambas secciones ---
+        cobros_data = process_section(df_cobros_raw, 'cobros')
+        pagos_data = process_section(df_pagos_raw, 'pagos')
+
+    except Exception as e:
+        flash(f"Error al procesar el panel de cobros: {e}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for('index'))
+
+    return render_template('cobros.html', 
+                           cobros_data=cobros_data,
+                           pagos_data=pagos_data,
+                           opciones_periodicidad=opciones_periodicidad)
 
 @app.route('/marcar_cobrado/<id_cobro>', methods=['POST'])
+@login_required
 def marcar_cobrado(id_cobro):
     if os.path.exists(COBROS_FILE):
         try:

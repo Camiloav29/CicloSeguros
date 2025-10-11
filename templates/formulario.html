@@ -3,790 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario Registro de Remisiones - {{ nombre_empresa }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Formulario Registro de Remisiones - UIB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/formulario.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main_layout.css') }}">
+    <style>
+        .progress {
+            height: 10px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-file-contract"></i> Registro de Remisiones</h1>
-            <p>Sistema de gestión profesional - {{ nombre_empresa }}</p>
-        </div>
 
-        <div class="form-card">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
+<div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='UIBH_logo_WHITE2-300x78-1.png') }}" alt="UIB Logo">
+            </a>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('formulario_remision') }}"><i class="fas fa-file-alt fa-fw"></i> Nueva Remisión</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('control') }}"><i class="fas fa-cogs fa-fw"></i> Control de remisiones </a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('panel_cobros') }}"><i class="fas fa-hand-holding-usd fa-fw"></i> Cobros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_cartera') }}"><i class="fas fa-book fa-fw"></i> Cartera</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_vencimientos') }}"><i class="fas fa-calendar-times fa-fw"></i> Vencimientos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('prospectos_vista') }}"><i class="fas fa-users fa-fw"></i> Prospectos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('siniestros_registrar') }}"><i class="fas fa-car-crash fa-fw"></i> Siniestros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('recaudo') }}"><i class="fas fa-chart-line fa-fw"></i> Produccion</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_sarlaft') }}"><i class="fas fa-user-shield fa-fw"></i> SARLAFT</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_crear_carpeta') }}"><i class="fas fa-folder-plus fa-fw"></i> Crear Carpeta</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_carga_maestra') }}"><i class="fas fa-upload fa-fw"></i> Carga Maestra</a></li>
+            <li class="nav-item mt-auto"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt fa-fw"></i> Admin</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3"><i class="fas fa-file-contract me-2"></i>Registro de Remisiones</h1>
+                <p class="text-muted">Sistema de gestión profesional - UIB Corredor de Seguros</p>
             </div>
+            <div class="text-end">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+                <button type="submit" class="btn btn-primary" form="mainForm" id="guardarRemisionBtn"><i class="fas fa-save"></i> Guardar Remisión</button>
+            </div>
+        </header>
 
-            <form method="POST" action="/registrar" enctype="multipart/form-data" id="mainForm">
-                <!-- Datos Básicos -->
-                <fieldset>
-                    <legend>
-                        <div class="legend-icon"><i class="fas fa-info-circle"></i></div>
-                        Datos Básicos
-                    </legend>
-                    <div class="form-row">
-                        <div class="form-group form-group-checkbox">
-                            <input type="checkbox" name="renovacion" id="renovacion" value="si">
-                            <label for="renovacion"><i class="fas fa-redo"></i> Es Renovación</label>
-                        </div>
-                        <div class="form-group form-group-checkbox">
-                            <input type="checkbox" name="negocio_nuevo" id="negocio_nuevo" value="si">
-                            <label for="negocio_nuevo"><i class="fas fa-plus-circle"></i> Es Negocio Nuevo</label>
-                        </div>
-                        <div class="form-group form-group-checkbox">
-                            <input type="checkbox" name="renovable" id="renovable" value="si">
-                            <label for="renovable"><i class="fas fa-sync"></i> Es Renovable</label>
-                        </div>
-                        <div class="form-group form-group-checkbox">
-                            <input type="checkbox" name="modificacion" id="modificacion" value="si">
-                            <label for="modificacion"><i class="fas fa-edit"></i> Es Modificación</label>
-                        </div>
-                        <div class="form-group form-group-checkbox">
-                            <input type="checkbox" name="anexo" id="anexo" value="si">
-                            <label for="anexo"><i class="fas fa-edit"></i> Es Anexo</label>
-                        </div>
-                    </div>
-                    <!-- Section for policy number modification on renewal -->
-                    <div class="form-row" id="policy-modification-section" style="display: none; background-color: #f7f7f7; padding: 1rem; border-radius: 8px; margin-top: 1rem; flex-wrap: wrap;">
-                        <div class="form-group form-group-checkbox" style="width: 100%;">
-                            <input type="checkbox" name="policy_number_modified" id="policy_number_modified" value="si">
-                            <label for="policy_number_modified" style="font-weight: bold;"><i class="fas fa-question-circle"></i> ¿Se modificó el número de póliza en esta renovación?</label>
-                        </div>
-                        <div class="form-group" id="old-policy-number-section" style="display: none; width: 100%;">
-                            <label for="old_policy_number"><i class="fas fa-file-alt"></i> Número de Póliza Anterior</label>
-                            <input type="text" name="old_policy_number" id="old_policy_number" placeholder="Ingrese el número de póliza anterior que será actualizado a 'Renovado'">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="fecha_recepcion"><i class="fas fa-calendar"></i> Fecha de Recepción</label>
-                            <input type="date" name="fecha_recepcion" id="fecha_recepcion">
-                        </div>
-                        <div class="form-group">
-                            <label for="tomador"><i class="fas fa-user"></i> Tomador</label>
-                            <input type="text" name="tomador" id="tomador" placeholder="Nombre del tomador" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="nit"><i class="fas fa-id-card"></i> NIT / CC</label>
-                            <input type="text" name="nit" id="nit" placeholder="Número de identificación" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="aseguradora"><i class="fas fa-shield-alt"></i> Aseguradora</label>
-                            <select name="aseguradora" id="aseguradora" required>
-                                <option value="">Seleccione Aseguradora...</option>
-                                {% for opt in opciones_aseguradora %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="ramo"><i class="fas fa-tags"></i> Ramo</label>
-                            <select name="ramo" id="ramo" required>
-                                <option value="">Seleccione Ramo...</option>
-                                {% for opt in opciones_ramo %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="poliza"><i class="fas fa-file-alt"></i> N° Póliza</label>
-                            <input type="text" name="poliza" id="poliza" placeholder="Número de póliza" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="anexo"><i class="fas fa-paperclip"></i> Anexo / Certificado</label>
-                            <input type="text" name="anexo" id="anexo" placeholder="Número de anexo">
-                        </div>
-                        <div class="form-group">
-                            <label for="categorias_grupo"><i class="fas fa-tags"></i> Categorías / Grupo</label>
-                            <select name="categorias_grupo" id="categorias_grupo">
-                                <option value="">Seleccione un grupo...</option>
-                                {% for opt in opciones_categorias_grupo %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                            <input type="text" name="categorias_grupo_otro" id="categorias_grupo_otro" placeholder="Especifique otro grupo" style="display:none; margin-top: 1rem;">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="fecha_inicio"><i class="fas fa-calendar-play"></i> Fecha Inicio Vigencia</label>
-                            <input type="date" name="fecha_inicio" id="fecha_inicio" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="fecha_fin"><i class="fas fa-calendar-times"></i> Fecha Fin Vigencia</label>
-                            <input type="date" name="fecha_fin" id="fecha_fin" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="fecha_limite_pago"><i class="fas fa-exclamation-triangle"></i> Fecha Límite de Pago</label>
-                            <input type="date" name="fecha_limite_pago" id="fecha_limite_pago">
-                        </div>
-                    </div>
-                </fieldset>
-
-                <!-- Información de Venta -->
-                <fieldset>
-                    <legend>
-                        <div class="legend-icon"><i class="fas fa-chart-line"></i></div>
-                        Información de Venta y Comisiones
-                    </legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="tipo_moneda"><i class="fas fa-coins"></i> Tipo Moneda</label>
-                            <select name="tipo_moneda" id="tipo_moneda" required>
-                                <option value="">Seleccione Moneda...</option>
-                                {% for opt in opciones_tipo_moneda %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="prima_neta"><i class="fas fa-money-bill-wave"></i> Prima Neta</label>
-                            <input type="text" name="prima_neta" id="prima_neta" class="currency" placeholder="0,00" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="gastos_adicionales"><i class="fas fa-receipt"></i> Gastos Adicionales</label>
-                            <input type="text" name="gastos_adicionales" id="gastos_adicionales" class="currency" placeholder="0,00">
-                        </div>
-                        <div class="form-group">
-                            <label for="porcentaje_comision_valor"><i class="fas fa-percentage"></i> % Comisión</label>
-                            <input type="text" name="porcentaje_comision_valor" id="porcentaje_comision_valor" placeholder="0.00" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="comision_calculada"><i class="fas fa-dollar-sign"></i> Comision$</label>
-                            <input type="text" name="comision_calculada" id="comision_calculada" class="currency" placeholder="0,00" readonly>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="vendedor"><i class="fas fa-user-tie"></i> Vendedor</label>
-                             <select name="vendedor" id="vendedor" required>
-                                <option value="">Seleccione Vendedor...</option>
-                                {% for opt in opciones_vendedor %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="porcentaje_vendedor"><i class="fas fa-percentage"></i> % Participación Vendedor</label>
-                            <input type="text" name="porcentaje_vendedor" id="porcentaje_vendedor" placeholder="0.00">
-                        </div>
-                        <div class="form-group">
-                            <label for="comision_tpp"><i class="fas fa-hand-holding-usd"></i> ComisionTPP</label>
-                            <input type="text" name="comision_tpp" id="comision_tpp" class="currency" placeholder="0,00" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="uib"><i class="fas fa-building"></i> Comisión Intermediario</label>
-                            <input type="text" name="uib" id="uib" placeholder="0,00" class="currency" readonly>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="co_corretaje_opcion"><i class="fas fa-handshake"></i> Aplica Co-corretaje</label>
-                            <select name="co_corretaje_opcion" id="co_corretaje_opcion">
-                                <option value="no" selected>No</option>
-                                <option value="si">Sí</option>
-                            </select>
-                        </div>
-                    </div>
-                </fieldset>
-
-                <!-- Informacion del pago -->
-                <fieldset>
-                    <legend>
-                        <div class="legend-icon"><i class="fas fa-credit-card"></i></div>
-                        Informacion del pago
-                    </legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="periodicidad_pago"><i class="fas fa-repeat"></i> Periodicidad de Pago</label>
-                            <select name="periodicidad_pago" id="periodicidad_pago" required>
-                                <option value="">Seleccione Periodicidad...</option>
-                                {% for opt in opciones_periodicidad_pago %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="forma_pago"><i class="fas fa-credit-card"></i> Forma de Pago</label>
-                            <select name="forma_pago" id="forma_pago" required>
-                                <option value="">Seleccione Forma de Pago...</option>
-                                {% for opt in opciones_forma_pago %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group" id="numero_cuotas_group" style="display: none;">
-                            <label for="numero_cuotas"><i class="fas fa-list-ol"></i> # de Cuotas</label>
-                            <input type="number" id="numero_cuotas" name="numero_cuotas" min="0" max="12" step="1" placeholder="0-12">
-                        </div>
-                        <div class="form-group" id="tipo_movimiento_group" style="display: none;">
-                            <label for="tipo_movimiento"><i class="fas fa-exchange-alt"></i> Tipo de Movimiento</label>
-                            <select id="tipo_movimiento" name="tipo_movimiento">
-                                {% for opt in opciones_tipos_movimiento %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                </fieldset>
-
-                <!-- Valores y Observaciones --> 
-                <fieldset>
-                    <legend>
-                        <div class="legend-icon"><i class="far fa-file-alt"></i></div>
-                        Observaciones
-                    </legend>
-                    <div class="form-group">
-                        <label for="observaciones"><i class="fas fa-sticky-note"></i> Observaciones</label>
-                        <textarea name="observaciones" id="observaciones" rows="4" placeholder="Escriba aquí cualquier observación adicional..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="riesgos_adicionales"><i class="fas fa-exclamation-triangle"></i> Riesgos Adicionales</label>
-                        <textarea name="riesgos_adicionales" id="riesgos_adicionales" rows="3" placeholder="Describa riesgos adicionales..."></textarea>
-                    </div>
-                    <div class="form-group">
-                            <label for="analista_responsable"><i class="fas fa-user"></i> Analista Responsable </label>
-                            <select name="analista_responsable" id="analista_responsable" required>
-                                <option value="">Seleccione el Analista.</option>
-                                {% for opt in opciones_analista %}
-                                <option value="{{ opt }}">{{ opt }}</option>
-                                {% endfor %}
-                            </select>
-                    </div>
-
-
-                </fieldset>
-
-                <!-- Carga de archivos -->
-                <fieldset>
-                    <legend>
-                        <div class="legend-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        Cargar Archivos
-                    </legend>
-                    <div id="file-container">
-                        <div class="archivo-group">
-                            <div class="file-input-wrapper">
-                                <input type="file" name="archivos[]" id="file-1" required>
-                                <label for="file-1" class="file-input-label">
-                                    <i class="fas fa-upload"></i>
-                                    Seleccionar archivo
-                                </label>
-                            </div>
-                            <select name="tipo_archivo[]">
-                                {% for opt in opciones_tipos_archivo %}
-                                <option value="{{ opt }}">{{ opt.upper() }}</option>
-                                {% endfor %}
-                            </select>
-                            <input type="text" name="otro_tipo_nombre[]" class="otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none; width: 100%; margin-top: 0.5rem; padding: 0.9rem; border: 2px solid var(--border-color); border-radius: 12px;">
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-secondary btn-add" onclick="agregarArchivo()">
-                        <i class="fas fa-plus"></i>
-                        Añadir otro archivo
-                    </button>
-                </fieldset>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-submit">
-                        <i class="fas fa-save"></i>
-                        Guardar Remisión
-                    </button>
-                </div>
-                 <div class="form-actions" style="margin-top: 1rem;"> <!-- Adjusted margin for spacing -->
-                    <a href="{{ url_for('index') }}" class="btn btn-secondary" style="text-align: center;">
-                        <i class="fas fa-arrow-left"></i> Volver al Panel Principal
-                    </a>
-                    <a href="{{ url_for('control') }}" class="btn btn-secondary" style="text-align: center;">
-                        <i class="fas fa-list-alt"></i>
-                        Ver Remisiones Registradas
-                    </a>
-                </div>
-            </form>
+        <div class="progress mb-4">
+            <div class="progress-bar" id="progressFill" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
-    </div>
 
-    <div class="notification" id="notification">
-        <i class="fas fa-check-circle"></i>
-        Formulario enviado correctamente
-    </div>
-
-    <!-- Modal para Grupo Cartagena -->
-    <div id="cartagenaModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <p>Recuerda que este grupo tiene Co-corretaje, recuerda ingresar los valores y las comisiones correctas.</p>
-            <button id="modalAceptarBtn" class="btn">Aceptar</button>
-        </div>
-    </div>
-
-    <script>
-        const opcionesTiposArchivoJS = {{ opciones_tipos_archivo | tojson }};
-        let fileCounter = 1;
-
-        function handleTipoArchivoChange(selectElement) {
-            const archivoGroup = selectElement.closest('.archivo-group');
-            if (!archivoGroup) return; 
-            const otroNombreInput = archivoGroup.querySelector('.otro-tipo-nombre-input');
-            if (!otroNombreInput) return; 
-
-            if (selectElement.value === 'Otro') {
-                otroNombreInput.style.display = 'block';
-                otroNombreInput.required = true;
-            } else {
-                otroNombreInput.style.display = 'none';
-                otroNombreInput.value = ''; 
-                otroNombreInput.required = false;
-            }
-        }
-
-        // Agregar archivos dinámicamente
-        function agregarArchivo() {
-            fileCounter++;
-            const container = document.getElementById('file-container');
-            const nuevo = document.createElement('div');
-            nuevo.className = 'archivo-group';
-
-            let optionsHTML = '';
-            opcionesTiposArchivoJS.forEach(opt => {
-                optionsHTML += `<option value="${opt}">${opt.toUpperCase()}</option>`;
-            });
-
-            nuevo.innerHTML = `
-                <div class="file-input-wrapper">
-                    <input type="file" name="archivos[]" id="file-${fileCounter}" required>
-                    <label for="file-${fileCounter}" class="file-input-label">
-                        <i class="fas fa-upload"></i>
-                        Seleccionar archivo
-                    </label>
+        <div id="notification-container"></div>
+        
+        <form method="POST" action="/registrar" enctype="multipart/form-data" id="mainForm" class="card p-4">
+            <!-- Datos Básicos -->
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="fas fa-info-circle"></i> Datos Básicos</legend>
+                <div class="row mb-3">
+                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="renovacion" id="renovacion" value="si"><label class="form-check-label" for="renovacion"><i class="fas fa-redo"></i> Es Renovación</label></div></div>
+                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="negocio_nuevo" id="negocio_nuevo" value="si"><label class="form-check-label" for="negocio_nuevo"><i class="fas fa-plus-circle"></i> Es Negocio Nuevo</label></div></div>
+                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="renovable" id="renovable" value="si"><label class="form-check-label" for="renovable"><i class="fas fa-sync"></i> Es Renovable</label></div></div>
+                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="modificacion" id="modificacion" value="si"><label class="form-check-label" for="modificacion"><i class="fas fa-edit"></i> Es Modificación</label></div></div>
+                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="anexo_checkbox" id="anexo_checkbox" value="si"><label class="form-check-label" for="anexo_checkbox"><i class="fas fa-paperclip"></i> Es Anexo</label></div></div>
                 </div>
-                <select name="tipo_archivo[]">
-                    ${optionsHTML}
-                </select>
-                <input type="text" name="otro_tipo_nombre[]" class="otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none; width: 100%; margin-top: 0.5rem; padding: 0.9rem; border: 2px solid var(--border-color); border-radius: 12px;">
-                <button type="button" class="btn" onclick="eliminarArchivo(this)" style="background: var(--error-color); padding: 0.75rem;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            container.appendChild(nuevo);
-            
-            // Initialize the new select field's "Otro" input visibility
-            const newSelect = nuevo.querySelector('select[name="tipo_archivo[]"]');
-            if (newSelect) {
-                handleTipoArchivoChange(newSelect); // Assuming handleTipoArchivoChange is defined globally or in scope
-            }
-
-            // Añadir efecto de aparición
-            nuevo.style.opacity = '0';
-            nuevo.style.transform = 'translateY(20px)';
-            setTimeout(() => {
-                nuevo.style.transition = 'all 0.3s ease';
-                nuevo.style.opacity = '1';
-                nuevo.style.transform = 'translateY(0)';
-            }, 100);
-        }
-
-        function eliminarArchivo(button) {
-            const archivoGroup = button.parentElement;
-            archivoGroup.style.transition = 'all 0.3s ease';
-            archivoGroup.style.opacity = '0';
-            archivoGroup.style.transform = 'translateY(-20px)';
-            setTimeout(() => {
-                archivoGroup.remove();
-            }, 300);
-        }
-
-        // Formateo dinámico de campos monetarios mejorado
-        function formatCurrency(input) {
-            let value = input.value.replace(/[^0-9]/g, '');
-
-            if (!value) {
-                input.value = '';
-                return;
-            }
-
-            while (value.length < 3) {
-                value = '0' + value;
-            }
-
-            const intPart = value.slice(0, -2);
-            const decimalPart = value.slice(-2);
-            const formatted = '$' + parseInt(intPart).toLocaleString('es-CO') + ',' + decimalPart;
-
-            input.value = formatted;
-
-            setTimeout(() => {
-                input.setSelectionRange(input.value.length, input.value.length);
-            }, 0);
-        }
-
-        // Actualizar etiquetas de archivos
-        function updateFileLabel(input) {
-            const label = input.nextElementSibling;
-            if (input.files.length > 0) {
-                label.innerHTML = `<i class="fas fa-check-circle" style="color: var(--success-color);"></i> ${input.files[0].name}`;
-                label.style.background = 'rgba(16, 185, 129, 0.1)';
-                label.style.borderColor = 'var(--success-color)';
-            }
-        }
-
-        // Barra de progreso
-        function updateProgress() {
-            const form = document.getElementById('mainForm');
-            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
-            let filled = 0;
-
-            inputs.forEach(input => {
-                if (input.type === 'file') {
-                    if (input.files.length > 0) filled++;
-                } else if (input.value.trim() !== '') {
-                    filled++;
-                }
-            });
-
-            const progress = (filled / inputs.length) * 100;
-            document.getElementById('progressFill').style.width = `${progress}%`;
-        }
-
-        // Mostrar notificación
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification show ${type}`;
-
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize "Otro" input visibility for existing select fields
-            document.querySelectorAll('select[name="tipo_archivo[]"]').forEach(selectEl => {
-                handleTipoArchivoChange(selectEl);
-            });
-
-            // Event delegation for select changes
-            const fileContainer = document.getElementById('file-container');
-            if (fileContainer) {
-                fileContainer.addEventListener('change', function(event) {
-                    if (event.target.matches('select[name="tipo_archivo[]"]')) {
-                        handleTipoArchivoChange(event.target);
-                    }
-                });
-            }
-
-            // --- Logic for Policy Number Modification on Renewal ---
-            const renovacionCheckbox = document.getElementById('renovacion');
-            const policyModificationSection = document.getElementById('policy-modification-section');
-            const policyNumberModifiedCheckbox = document.getElementById('policy_number_modified');
-            const oldPolicyNumberSection = document.getElementById('old-policy-number-section');
-            const oldPolicyNumberInput = document.getElementById('old_policy_number');
-
-            if (renovacionCheckbox) {
-                renovacionCheckbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        policyModificationSection.style.display = 'flex'; // Use flex to align items
-                    } else {
-                        policyModificationSection.style.display = 'none';
-                        // Also hide and reset the inner fields when "Es Renovación" is unchecked
-                        policyNumberModifiedCheckbox.checked = false;
-                        oldPolicyNumberSection.style.display = 'none';
-                        oldPolicyNumberInput.value = '';
-                        oldPolicyNumberInput.required = false;
-                    }
-                });
-            }
-
-            if (policyNumberModifiedCheckbox) {
-                policyNumberModifiedCheckbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        oldPolicyNumberSection.style.display = 'block';
-                        oldPolicyNumberInput.required = true;
-                    } else {
-                        oldPolicyNumberSection.style.display = 'none';
-                        oldPolicyNumberInput.required = false;
-                        oldPolicyNumberInput.value = '';
-                    }
-                });
-            }
-
-            // --- Lógica de Cálculo y Formato de Moneda ---
-            const primaNetaInput = document.getElementById('prima_neta');
-            const porcComisionInput = document.getElementById('porcentaje_comision_valor');
-            const porcParticipacionVendedorInput = document.getElementById('porcentaje_vendedor');
-            const comisionCalculadaInput = document.getElementById('comision_calculada');
-            const comisionTppInput = document.getElementById('comision_tpp');
-            const participacionUibInput = document.getElementById('uib'); // Ahora es ComisionUIB
-
-            function calcularComisiones() {
-                // 1. Parsear valores
-                const primaNeta = parseFloat(primaNetaInput.value.replace(/\$|\./g, '')) || 0;
-                const porcComision = parseFloat(porcComisionInput.value.replace(',', '.')) || 0;
-                // CORRECCIÓN: Usar .replace(',', '.') para ser consistente
-                const porcParticipacionVendedor = parseFloat(porcParticipacionVendedorInput.value.replace(',', '.')) || 0;
                 
-                // DEBUG: Loggear valores parseados
-                console.log({
-                    primaNeta,
-                    porcComision,
-                    porcParticipacionVendedor
-                });
+                <div class="row mb-3" id="policy-modification-section" style="display: none;">
+                    <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="policy_number_modified" id="policy_number_modified" value="si"><label class="form-check-label" for="policy_number_modified">¿Se modificó el número de póliza en esta renovación?</label></div></div>
+                    <div class="col-12 mt-2" id="old-policy-number-section" style="display: none;"><label for="old_policy_number" class="form-label">Número de Póliza Anterior</label><input type="text" name="old_policy_number" id="old_policy_number" class="form-control" placeholder="Ingrese el número de póliza anterior"></div>
+                </div>
 
-                // 2. Calcular Comision$
-                const comisionCalculada = primaNeta * (porcComision / 100);
-                comisionCalculadaInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label for="fecha_recepcion" class="form-label">Fecha de Recepción</label><input type="date" name="fecha_recepcion" id="fecha_recepcion" class="form-control"></div>
+                    <div class="col-md-4 mb-3"><label for="tomador" class="form-label">Tomador</label><input type="text" name="tomador" id="tomador" class="form-control" placeholder="Nombre del tomador" required></div>
+                    <div class="col-md-4 mb-3"><label for="nit" class="form-label">NIT / CC</label><input type="text" name="nit" id="nit" class="form-control" placeholder="Número de identificación" required></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3"><label for="aseguradora" class="form-label">Aseguradora</label><select name="aseguradora" id="aseguradora" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_aseguradora %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 mb-3"><label for="ramo" class="form-label">Ramo</label><select name="ramo" id="ramo" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_ramo %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 mb-3"><label for="poliza" class="form-label">N° Póliza</label><input type="text" name="poliza" id="poliza" class="form-control" placeholder="Número de póliza" required></div>
+                    <div class="col-md-3 mb-3"><label for="anexo" class="form-label">Anexo / Certificado</label><input type="text" name="anexo" id="anexo" class="form-control" placeholder="Número de anexo"></div>
+                </div>
+                 <div class="row">
+                    <div class="col-md-6 mb-3"><label for="categorias_grupo" class="form-label">Categorías / Grupo</label><select name="categorias_grupo" id="categorias_grupo" class="form-select"><option value="">Seleccione un grupo...</option><option value="Grupo Cartagena">Grupo Cartagena</option><option value="Grupo Tenco">Grupo Tenco</option><option value="Otro">Otro</option></select><input type="text" name="categorias_grupo_otro" id="categorias_grupo_otro" class="form-control mt-2" placeholder="Especifique otro grupo" style="display:none;"></div>
+                    <div class="col-md-6 mb-3"><label for="analista_responsable" class="form-label">Analista Responsable</label><select name="analista_responsable" id="analista_responsable" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_analista %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label for="fecha_inicio" class="form-label">Fecha Inicio Vigencia</label><input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" required></div>
+                    <div class="col-md-4 mb-3"><label for="fecha_fin" class="form-label">Fecha Fin Vigencia</label><input type="date" name="fecha_fin" id="fecha_fin" class="form-control" required></div>
+                    <div class="col-md-4 mb-3"><label for="fecha_limite_pago" class="form-label">Fecha Límite de Pago</label><input type="date" name="fecha_limite_pago" id="fecha_limite_pago" class="form-control"></div>
+                </div>
+            </fieldset>
 
-                // 3. Lógica condicional
-                // Limpiar campos antes de recalcular
-                comisionTppInput.value = '';
-                participacionUibInput.value = '';
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="fas fa-chart-line"></i> Información de Venta y Comisiones</legend>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label for="tipo_moneda" class="form-label">Tipo Moneda</label><select name="tipo_moneda" id="tipo_moneda" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_tipo_moneda %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                    <div class="col-md-4 mb-3"><label for="prima_neta" class="form-label">Prima Neta</label><input type="text" name="prima_neta" id="prima_neta" class="form-control currency" placeholder="$0" required></div>
+                    <div class="col-md-4 mb-3"><label for="gastos_adicionales" class="form-label">Gastos Adicionales</label><input type="text" name="gastos_adicionales" id="gastos_adicionales" class="form-control currency" placeholder="$0"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3"><label for="porcentaje_comision_valor" class="form-label">% Comisión</label><input type="number" name="porcentaje_comision_valor" id="porcentaje_comision_valor" class="form-control" placeholder="0.00" step="0.01" required></div>
+                    <div class="col-md-3 mb-3"><label for="comision_calculada" class="form-label">Comisión $</label><input type="text" name="comision_calculada" id="comision_calculada" class="form-control currency" placeholder="$0" readonly></div>
+                    <div class="col-md-3 mb-3"><label for="vendedor" class="form-label">Vendedor</label><select name="vendedor" id="vendedor" class="form-select" required><option value="">Seleccione...</option>{% for vendedor in opciones_vendedor %}<option value="{{ vendedor.nombre }}" data-comision="{{ vendedor.comision }}">{{ vendedor.nombre }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 mb-3"><label for="porcentaje_vendedor" class="form-label">% Part. Vendedor</label><input type="number" name="porcentaje_vendedor" id="porcentaje_vendedor" class="form-control" placeholder="0.00" step="0.01"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label for="comision_tpp" class="form-label">Comisión TPP</label><input type="text" name="comision_tpp" id="comision_tpp" class="form-control currency" placeholder="$0" readonly></div>
+                    <div class="col-md-4 mb-3"><label for="uib" class="form-label">Comisión UIB</label><input type="text" name="uib" id="uib" class="form-control currency" placeholder="$0" readonly></div>
+                    <div class="col-md-4 mb-3"><label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label><select name="co_corretaje_opcion" id="co_corretaje_opcion" class="form-select"><option value="no" selected>No</option><option value="si">Sí</option></select></div>
+                </div>
+            </fieldset>
 
-                if (porcParticipacionVendedor >= 100) {
-                    // Caso: Vendedor toma 100% o más (se asume 100%)
-                    participacionUibInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
-                } else if (porcParticipacionVendedor > 0) {
-                    // Caso: Vendedor toma entre 0% y 100%
-                    const comisionTpp = comisionCalculada * (porcParticipacionVendedor / 100);
-                    comisionTppInput.value = '$' + Math.round(comisionTpp).toLocaleString('es-CO');
-                    
-                    const comisionUib = comisionCalculada - comisionTpp;
-                    participacionUibInput.value = '$' + Math.round(comisionUib).toLocaleString('es-CO');
-                } else {
-                    // Caso: Vendedor toma 0% o el campo está vacío/inválido
-                    participacionUibInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
-                }
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="fas fa-credit-card"></i> Información del Pago</legend>
+                <div class="row">
+                    <div class="col-md-3 mb-3"><label for="periodicidad_pago" class="form-label">Periodicidad de Pago</label><select name="periodicidad_pago" id="periodicidad_pago" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_periodicidad_pago %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 mb-3"><label for="forma_pago" class="form-label">Forma de Pago</label><select name="forma_pago" id="forma_pago" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_forma_pago %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 mb-3" id="numero_cuotas_group" style="display: none;"><label for="numero_cuotas" class="form-label"># de Cuotas</label><input type="number" id="numero_cuotas" name="numero_cuotas" class="form-control" min="0" max="12" step="1" placeholder="0-12"></div>
+                    <div class="col-md-3 mb-3" id="tipo_movimiento_group" style="display: none;"><label for="tipo_movimiento" class="form-label">Tipo de Movimiento</label><select id="tipo_movimiento" name="tipo_movimiento" class="form-select"><option value="Cobro mensual">Cobro mensual</option><option value="Pago mensual">Pago mensual</option></select></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="far fa-file-alt"></i> Observaciones</legend>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label for="observaciones" class="form-label">Observaciones</label><textarea name="observaciones" id="observaciones" class="form-control" rows="3" placeholder="Escriba aquí cualquier observación adicional..."></textarea></div>
+                    <div class="col-md-6 mb-3"><label for="riesgos_adicionales" class="form-label">Riesgos Adicionales</label><textarea name="riesgos_adicionales" id="riesgos_adicionales" class="form-control" rows="3" placeholder="Describa riesgos adicionales..."></textarea></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="fas fa-cloud-upload-alt"></i> Cargar Archivos</legend>
+                <div id="file-container">
+                    <div class="row align-items-center mb-2 archivo-group">
+                        <div class="col-md-5"><input type="file" name="archivos[]" class="form-control" required></div>
+                        <div class="col-md-5"><select name="tipo_archivo[]" class="form-select"><option value="Recibo">RECIBO</option><option value="Poliza">PÓLIZA</option><option value="Clausulado">CLAUSULADO</option><option value="Otro">Otro</option></select></div>
+                        <div class="col-md-2"></div>
+                        <div class="col-12 mt-2"><input type="text" name="otro_tipo_nombre[]" class="form-control otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none;"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="agregarArchivo()"><i class="fas fa-plus"></i> Añadir otro archivo</button>
+            </fieldset>
+        </form>
+        <footer class="pt-3 mt-4 text-muted border-top">&copy; 2024 UIB Corredores de Seguros S.A.</footer>
+    </div>
+</div>
+
+<!-- Modal para Grupo Cartagena -->
+<div class="modal fade" id="cartagenaModal" tabindex="-1" aria-labelledby="cartagenaModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cartagenaModalLabel">Aviso de Co-corretaje</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Recuerda que este grupo tiene Co-corretaje, por favor ingresa los valores y las comisiones correctas.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let fileCounter = 1;
+
+function handleTipoArchivoChange(selectElement) {
+    const archivoGroup = selectElement.closest('.archivo-group');
+    const otroNombreInput = archivoGroup.querySelector('.otro-tipo-nombre-input');
+    otroNombreInput.style.display = selectElement.value === 'Otro' ? 'block' : 'none';
+    otroNombreInput.required = selectElement.value === 'Otro';
+}
+
+function agregarArchivo() {
+    fileCounter++;
+    const container = document.getElementById('file-container');
+    const nuevo = document.createElement('div');
+    nuevo.className = 'row align-items-center mb-2 archivo-group';
+    nuevo.innerHTML = `
+        <div class="col-md-5"><input type="file" name="archivos[]" class="form-control" required></div>
+        <div class="col-md-5"><select name="tipo_archivo[]" class="form-select"><option value="Recibo">RECIBO</option><option value="Poliza">PÓLIZA</option><option value="Clausulado">CLAUSULADO</option><option value="Otro">Otro</option></select></div>
+        <div class="col-md-2"><button type="button" class="btn btn-danger btn-sm" onclick="eliminarArchivo(this)"><i class="fas fa-trash"></i></button></div>
+        <div class="col-12 mt-2"><input type="text" name="otro_tipo_nombre[]" class="form-control otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none;"></div>
+    `;
+    container.appendChild(nuevo);
+    nuevo.querySelector('select').addEventListener('change', (e) => handleTipoArchivoChange(e.target));
+}
+
+function eliminarArchivo(button) {
+    button.closest('.archivo-group').remove();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const allInputs = document.querySelectorAll('#mainForm input, #mainForm select, #mainForm textarea');
+    const progressFill = document.getElementById('progressFill');
+    const requiredInputs = document.querySelectorAll('#mainForm [required]');
+    const cartagenaModal = new bootstrap.Modal(document.getElementById('cartagenaModal'));
+
+    function updateProgress() {
+        let filledCount = 0;
+        requiredInputs.forEach(input => {
+            if ((input.type === 'file' && input.files.length > 0) || (input.type !== 'file' && input.value.trim() !== '')) {
+                filledCount++;
             }
-
-            // Añadir listeners para recalcular
-            [primaNetaInput, porcComisionInput, porcParticipacionVendedorInput].forEach(input => {
-                if(input) input.addEventListener('input', calcularComisiones);
-            });
-
-            // Formatear todos los campos de moneda como enteros
-            document.querySelectorAll('input.currency').forEach(input => {
-                const formatAsInteger = () => {
-                    let value = input.value.replace(/[^0-9]/g, '');
-                    if (value) {
-                        input.value = '$' + parseInt(value, 10).toLocaleString('es-CO');
-                    } else {
-                        input.value = '';
-                    }
-                };
-                
-                // Solo añadir listeners a los campos que no son de solo lectura
-                if (!input.readOnly) {
-                    input.addEventListener('input', formatAsInteger);
-                    input.addEventListener('blur', formatAsInteger);
-                }
-            });
-
-            // Actualizar etiquetas de archivos
-            document.addEventListener('change', function(e) {
-                if (e.target.type === 'file') {
-                    updateFileLabel(e.target);
-                    updateProgress();
-                }
-            });
-
-            // Actualizar progreso en tiempo real
-            const allInputs = document.querySelectorAll('input, select, textarea');
-            allInputs.forEach(input => {
-                input.addEventListener('input', updateProgress);
-                input.addEventListener('change', updateProgress);
-            });
-
-            // Validación del formulario
-            document.getElementById('mainForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                // Validar campos requeridos
-                const requiredFields = this.querySelectorAll('[required]');
-                let allValid = true;
-
-                requiredFields.forEach(field => {
-                    if (!field.value.trim() && field.type !== 'file') {
-                        allValid = false;
-                        field.style.borderColor = 'var(--error-color)';
-                        field.focus();
-                    } else if (field.type === 'file' && field.files.length === 0) {
-                        allValid = false;
-                        field.nextElementSibling.style.borderColor = 'var(--error-color)'; // Marcar el label del file input
-                    } else {
-                        field.style.borderColor = 'var(--border-color)';
-                        if (field.type === 'file') {
-                            field.nextElementSibling.style.borderColor = 'var(--border-color)';
-                        }
-                    }
-                });
-
-                if (!allValid) {
-                    showNotification('Por favor, complete todos los campos requeridos', 'error');
-                    return;
-                }
-
-                const submitBtn = this.querySelector('.btn-submit');
-                const originalText = submitBtn.innerHTML;
-
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-                submitBtn.disabled = true;
-                submitBtn.classList.add('loading');
-                
-                // Crear un objeto FormData para enviar los datos del formulario, incluyendo archivos
-                const formData = new FormData(this);
-
-                fetch('/registrar', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json()) // Asumiendo que Flask devuelve JSON
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = '/resumen/' + data.consecutivo;
-                    } else {
-                        showNotification(data.message || 'Error al guardar la remisión', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Error de conexión al intentar guardar.', 'error');
-                })
-                .finally(() => {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('loading');
-                });
-            });
-
-            // --- Lógica de Visibilidad para # de Cuotas ---
-            const periodicidadSelect = document.getElementById('periodicidad_pago');
-            const formaPagoSelect = document.getElementById('forma_pago');
-            const cuotasGroup = document.getElementById('numero_cuotas_group');
-            const cuotasInput = document.getElementById('numero_cuotas');
-            const tipoMovimientoGroup = document.getElementById('tipo_movimiento_group');
-            const tipoMovimientoInput = document.getElementById('tipo_movimiento');
-
-            function toggleCuotasField() {
-                const periodicidad = periodicidadSelect.value;
-                const formaPago = formaPagoSelect.value;
-                const formasPagoValidas = ['Fraccionado', 'Acuerdo de pago', 'Cobro mensual', 'Financiado'];
-
-                if (periodicidad === 'Mensual' && formasPagoValidas.includes(formaPago)) {
-                    cuotasGroup.style.display = 'block';
-                    cuotasInput.required = true;
-                    tipoMovimientoGroup.style.display = 'block';
-                    tipoMovimientoInput.required = true;
-                } else {
-                    cuotasGroup.style.display = 'none';
-                    cuotasInput.required = false;
-                    cuotasInput.value = ''; // Limpiar el valor si se oculta
-                    
-                    tipoMovimientoGroup.style.display = 'none';
-                    tipoMovimientoInput.required = false;
-                }
-            }
-
-            // Listeners para los selects
-            if(periodicidadSelect) periodicidadSelect.addEventListener('change', toggleCuotasField);
-            if(formaPagoSelect) formaPagoSelect.addEventListener('change', toggleCuotasField);
-
-            // Llamada inicial para establecer el estado correcto al cargar la página
-            toggleCuotasField();
-
-            // --- Lógica para Categorías / Grupo ---
-            const categoriasSelect = document.getElementById('categorias_grupo');
-            const otroGrupoInput = document.getElementById('categorias_grupo_otro');
-            const cartagenaModal = document.getElementById('cartagenaModal');
-            const modalAceptarBtn = document.getElementById('modalAceptarBtn');
-
-            if (categoriasSelect) {
-                categoriasSelect.addEventListener('change', function() {
-                    const selectedValue = this.value;
-
-                    // Manejar la visibilidad del campo "Otro"
-                    if (selectedValue === 'Otro') {
-                        otroGrupoInput.style.display = 'block';
-                        otroGrupoInput.required = true;
-                    } else {
-                        otroGrupoInput.style.display = 'none';
-                        otroGrupoInput.required = false;
-                    }
-
-                    // Manejar el modal de Cartagena
-                    if (selectedValue === 'Grupo Cartagena') {
-                        cartagenaModal.style.display = 'flex';
-                    }
-                });
-            }
-
-            if (modalAceptarBtn) {
-                modalAceptarBtn.addEventListener('click', function() {
-                    cartagenaModal.style.display = 'none';
-                });
-            }
-
-            // Cerrar modal si se hace clic fuera de él (en el overlay)
-            if (cartagenaModal) {
-                cartagenaModal.addEventListener('click', function(event) {
-                    if (event.target === cartagenaModal) {
-                        cartagenaModal.style.display = 'none';
-                    }
-                });
-            }
-
-            // Inicializar progreso
-            updateProgress();
         });
+        const progress = (filledCount / requiredInputs.length) * 100;
+        progressFill.style.width = `${progress}%`;
+        progressFill.setAttribute('aria-valuenow', progress);
+    }
+    
+    allInputs.forEach(input => {
+        input.addEventListener('input', updateProgress);
+        input.addEventListener('change', updateProgress);
+    });
 
-        // Función para validar formato de NIT/CC
-        function validateNIT(input) {
-            const value = input.value.replace(/[^0-9]/g, '');
-            if (value.length > 0) {
-                input.value = value;
-            }
+    document.querySelectorAll('.currency').forEach(input => {
+        if (!input.readOnly) {
+            input.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/[^0-9]/g, '');
+                e.target.value = value ? '$' + parseInt(value, 10).toLocaleString('es-CO') : '';
+            });
         }
+    });
 
-        // Función para validar porcentajes
-        function validatePercentage(input) {
-            let value = parseFloat(input.value.replace('$', '').replace(/\./g, '').replace(',', '.'));
-            if (isNaN(value)) value = 0;
-            if (value > 100) value = 100;
-            if (value < 0) value = 0;
-            // Formatear a dos decimales, pero solo si es necesario o si el usuario ya puso decimales
-            if (input.value.includes(',') || input.value.includes('.')) {
-                 input.value = value.toFixed(2).replace('.',','); // Usar coma para decimales si es la preferencia
-            } else {
-                 input.value = Math.round(value); // Si no hay decimales, mostrar como entero
-            }
+    document.querySelectorAll('select[name="tipo_archivo[]"]').forEach(select => {
+        select.addEventListener('change', (e) => handleTipoArchivoChange(e.target));
+    });
+
+    document.getElementById('renovacion').addEventListener('change', function() {
+        document.getElementById('policy-modification-section').style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) {
+            document.getElementById('policy_number_modified').checked = false;
+            document.getElementById('old-policy-number-section').style.display = 'none';
+            document.getElementById('old_policy_number').required = false;
+        }
+    });
+
+    document.getElementById('policy_number_modified').addEventListener('change', function() {
+        document.getElementById('old-policy-number-section').style.display = this.checked ? 'block' : 'none';
+        document.getElementById('old_policy_number').required = this.checked;
+    });
+
+    const primaNetaInput = document.getElementById('prima_neta');
+    const porcComisionInput = document.getElementById('porcentaje_comision_valor');
+    const porcParticipacionVendedorInput = document.getElementById('porcentaje_vendedor');
+    const comisionCalculadaInput = document.getElementById('comision_calculada');
+    const comisionTppInput = document.getElementById('comision_tpp');
+    const participacionUibInput = document.getElementById('uib');
+
+    function calcularComisiones() {
+        const primaNeta = parseFloat(primaNetaInput.value.replace(/\$|\.|,/g, '')) || 0;
+        const porcComision = parseFloat(porcComisionInput.value) || 0;
+        const porcParticipacionVendedor = parseFloat(porcParticipacionVendedorInput.value) || 0;
+        
+        const vendedorSelect = document.getElementById('vendedor');
+        const coCorretajeSelect = document.getElementById('co_corretaje_opcion');
+        const selectedVendedorName = vendedorSelect.options[vendedorSelect.selectedIndex].value;
+
+        const comisionCalculada = primaNeta * (porcComision / 100);
+        comisionCalculadaInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+
+        let comisionTpp = 0;
+        // If the seller is UIB, their commission is not TPP.
+        if (selectedVendedorName === 'UIB CORREDORES DE SEGUROS S.A.') {
+            comisionTpp = 0;
+        } else if (porcParticipacionVendedor > 0) {
+            // For any other seller, calculate TPP as before.
+            comisionTpp = comisionCalculada * (porcParticipacionVendedor / 100);
         }
         
-        document.addEventListener('DOMContentLoaded', function() {
-            const nitInput = document.getElementById('nit');
-            if (nitInput) {
-                nitInput.addEventListener('input', () => validateNIT(nitInput));
-            }
+        comisionTppInput.value = '$' + Math.round(comisionTpp).toLocaleString('es-CO');
+        
+        // Automatically set the co-brokerage option based on the TPP commission value.
+        coCorretajeSelect.value = comisionTpp > 0 ? 'si' : 'no';
 
-            const percentageInputs = document.querySelectorAll('input[name*="porcentaje"], input[name="comision"], input[name="uib"], input[name="correcol"], input[name="corredor2"]');
-            percentageInputs.forEach(input => {
-                input.addEventListener('blur', () => validatePercentage(input));
-                input.addEventListener('input', (event) => {
-                    // Permitir solo números y un punto/coma decimal
-                    event.target.value = event.target.value.replace(/[^0-9.,]/g, '');
-                });
-                input.setAttribute('max', '100');
-                input.setAttribute('min', '0');
-                input.setAttribute('step', '0.01'); // Permitir decimales
-            });
+        const comisionUib = comisionCalculada - comisionTpp;
+        participacionUibInput.value = '$' + Math.round(comisionUib).toLocaleString('es-CO');
+    }
 
-            const fechaRecepcion = document.getElementById('fecha_recepcion');
-            if (fechaRecepcion && !fechaRecepcion.value) {
-                const today = new Date().toISOString().split('T')[0];
-                fechaRecepcion.value = today;
+    [primaNetaInput, porcComisionInput, porcParticipacionVendedorInput].forEach(input => {
+        if(input) input.addEventListener('input', calcularComisiones);
+    });
+
+    document.getElementById('vendedor').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const comision = selectedOption.dataset.comision;
+        porcParticipacionVendedorInput.value = comision || '';
+        porcParticipacionVendedorInput.dispatchEvent(new Event('input'));
+    });
+
+    const periodicidadSelect = document.getElementById('periodicidad_pago');
+    const formaPagoSelect = document.getElementById('forma_pago');
+    const cuotasGroup = document.getElementById('numero_cuotas_group');
+    const cuotasInput = document.getElementById('numero_cuotas');
+    const tipoMovimientoGroup = document.getElementById('tipo_movimiento_group');
+
+    function handlePaymentOptionsChange() {
+        const periodicidad = periodicidadSelect.value;
+        const formaPago = formaPagoSelect.value;
+        const formasPagoConCuotas = ['Fraccionado', 'Acuerdo de pago', 'Cobro mensual', 'Financiado'];
+
+        const showCuotas = formasPagoConCuotas.includes(formaPago);
+
+        cuotasGroup.style.display = showCuotas ? 'block' : 'none';
+        cuotasInput.required = showCuotas;
+        tipoMovimientoGroup.style.display = showCuotas ? 'block' : 'none';
+        tipoMovimientoGroup.querySelector('select').required = showCuotas;
+
+        if (showCuotas) {
+            switch (periodicidad) {
+                case 'Mensual':
+                    cuotasInput.value = 12;
+                    break;
+                case 'Trimestral':
+                    cuotasInput.value = 4;
+                    break;
+                case 'Anual':
+                    cuotasInput.value = 1;
+                    break;
+                default:
+                    cuotasInput.value = ''; // Clear if no periodicity is selected
+                    break;
             }
+        } else {
+            cuotasInput.value = ''; // Clear if payment form is 'Contado'
+        }
+    }
+
+    [periodicidadSelect, formaPagoSelect].forEach(el => el.addEventListener('change', handlePaymentOptionsChange));
+
+    document.getElementById('categorias_grupo').addEventListener('change', function() {
+        const otroGrupoInput = document.getElementById('categorias_grupo_otro');
+        otroGrupoInput.style.display = this.value === 'Otro' ? 'block' : 'none';
+        otroGrupoInput.required = this.value === 'Otro';
+        if (this.value === 'Grupo Cartagena') {
+            cartagenaModal.show();
+        }
+    });
+
+    document.getElementById('fecha_recepcion').valueAsDate = new Date();
+
+    document.getElementById('mainForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('guardarRemisionBtn'); // Correctly select the button by its ID
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        
+        const formData = new FormData(this);
+        document.querySelectorAll('.currency').forEach(input => {
+            formData.set(input.name, input.value.replace(/\$|\.|,/g, ''));
         });
-    </script>
+
+        fetch('/registrar', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/resumen/' + data.consecutivo;
+            } else {
+                const notificationContainer = document.getElementById('notification-container');
+                notificationContainer.innerHTML = `<div class="alert alert-danger">${data.message || 'Error al guardar la remisión'}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const notificationContainer = document.getElementById('notification-container');
+            notificationContainer.innerHTML = `<div class="alert alert-danger">Error de conexión al intentar guardar.</div>`;
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Guardar Remisión';
+        });
+    });
+
+    updateProgress();
+});
+</script>
 </body>
 </html>

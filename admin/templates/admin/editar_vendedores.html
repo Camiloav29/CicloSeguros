@@ -1,0 +1,55 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Editar Lista: Vendedores{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1><i class="fas fa-user-tie"></i> Editar Lista: Vendedores</h1>
+        <a href="{{ url_for('admin.listas') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a Listas</a>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('admin.edit_list_item', list_name='vendedores') }}" method="POST">
+            <p>Edite el nombre y la comisión de cada vendedor. Para eliminar un vendedor, simplemente vacíe el campo de su nombre. Añada nuevas filas para nuevos vendedores.</p>
+
+            <table id="vendedores-table" class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre del Vendedor</th>
+                        <th>Comisión (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><input type="text" name="item_nombre" class="form-control" value="{{ item.nombre }}"></td>
+                        <td><input type="number" name="item_comision" class="form-control" value="{{ item.comision }}" step="0.01" placeholder="0.0"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="button" id="add-row-btn" class="btn btn-add"><i class="fas fa-plus"></i> Añadir Fila</button>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addRowBtn = document.getElementById('add-row-btn');
+    const tableBody = document.querySelector('#vendedores-table tbody');
+
+    addRowBtn.addEventListener('click', function() {
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="text" name="item_nombre" class="form-control" placeholder="Nuevo Vendedor"></td>
+            <td><input type="number" name="item_comision" class="form-control" placeholder="0.0" step="0.01"></td>
+        `;
+        tableBody.appendChild(newRow);
+    });
+});
+</script>
+{% endblock %}

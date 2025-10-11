@@ -3,233 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Vencimientos - {{ nombre_empresa }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Dashboard de Vencimientos - UIB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/vencimientos_vista.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main_layout.css') }}">
+    <style>
+        .kpi-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+        .kpi-card.active { border: 2px solid var(--primary-color); }
+        .form-control-inline { width: 100%; padding: .25rem .5rem; font-size: .875rem; border-radius: .2rem; }
+        .table-hover tbody tr:hover { background-color: #f8f9fa; }
+        
+        .alerta-icon { font-size: 1.2rem; /* Base size for all icons */ }
+        .alerta-icon.is-critical { font-size: 1.5rem; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        
+        /* Semaphore colors for icons */
+        .alerta-rojo .alerta-icon { color: #dc3545; } /* Danger Red */
+        .alerta-amarillo .alerta-icon { color: #ffc107; } /* Warning Yellow */
+        .alerta-verde .alerta-icon { color: #198754; } /* Success Green */
+        .alerta-azul .alerta-icon { color: #0dcaf0; } /* Info Cyan */
+        .alerta-renovado .alerta-icon { color: var(--primary-color); }
+        .alerta-no-renovado .alerta-icon { color: #6c757d; }
+        .alerta-gris .alerta-icon { color: #adb5bd; }
+    </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <header class="page-header">
-            <h1><i class="fas fa-tachometer-alt"></i> Dashboard de Vencimientos</h1>
-            <div class="header-actions">
-                <a href="{{ url_for('index') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
-            </div>
+
+<div class="main-container">
+    <!-- Sidebar -->
+  <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='UIBH_logo_WHITE2-300x78-1.png') }}" alt="UIB Logo">
+            </a>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('formulario_remision') }}"><i class="fas fa-file-alt fa-fw"></i> Nueva Remisión</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('control') }}"><i class="fas fa-cogs fa-fw"></i> Control de remisiones </a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('panel_cobros') }}"><i class="fas fa-hand-holding-usd fa-fw"></i> Cobros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_cartera') }}"><i class="fas fa-book fa-fw"></i> Cartera</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_vencimientos') }}"><i class="fas fa-calendar-times fa-fw"></i> Vencimientos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('prospectos_vista') }}"><i class="fas fa-users fa-fw"></i> Prospectos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('siniestros_registrar') }}"><i class="fas fa-car-crash fa-fw"></i> Siniestros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('recaudo') }}"><i class="fas fa-chart-line fa-fw"></i> Produccion</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_sarlaft') }}"><i class="fas fa-user-shield fa-fw"></i> SARLAFT</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_crear_carpeta') }}"><i class="fas fa-folder-plus fa-fw"></i> Crear Carpeta</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_carga_maestra') }}"><i class="fas fa-upload fa-fw"></i> Carga Maestra</a></li>
+            <li class="nav-item mt-auto"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt fa-fw"></i> Admin</a></li>
+        </ul>
+    </div>
+    <!-- Main Content -->
+    <div class="content">
+        <header class="pb-3 mb-4 border-bottom">
+            <h1 class="h3"><i class="fas fa-tachometer-alt me-2"></i>Dashboard de Vencimientos</h1>
+            <p class="text-muted">Análisis y gestión de pólizas por vencer.</p>
         </header>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            <div class="flash-messages-container">
-              {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">{{ message }}</div>
-              {% endfor %}
-            </div>
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+            {% endfor %}
           {% endif %}
         {% endwith %}
 
-        <!-- KPIs Resumen -->
-        <div class="kpi-grid">
-            <div class="kpi-card" data-filter-days="15">
-                <div class="kpi-icon icon-danger"><i class="fas fa-exclamation-triangle"></i></div>
-                <div class="kpi-info">
-                    <div class="kpi-value">{{ kpis.vencer_15_dias }}</div>
-                    <div class="kpi-label">Por Vencer en &lt; 15 Días</div>
-                </div>
-            </div>
-            <div class="kpi-card" data-filter-days="30">
-                <div class="kpi-icon icon-warning"><i class="fas fa-clock"></i></div>
-                <div class="kpi-info">
-                    <div class="kpi-value">{{ kpis.vencer_30_dias }}</div>
-                    <div class="kpi-label">Por Vencer en &lt; 30 Días</div>
-                </div>
-            </div>
-            <div class="kpi-card" data-filter-days="60">
-                <div class="kpi-icon icon-info"><i class="fas fa-calendar-alt"></i></div>
-                <div class="kpi-info">
-                    <div class="kpi-value">{{ kpis.vencer_60_dias }}</div>
-                    <div class="kpi-label">Por Vencer en &lt; 60 Días</div>
-                </div>
-            </div>
-            <div class="kpi-card" data-filter-vencidas="true">
-                <div class="kpi-icon icon-danger"><i class="fas fa-calendar-times"></i></div>
-                <div class="kpi-info">
-                    <div class="kpi-value">{{ kpis.vencidas }}</div>
-                    <div class="kpi-label">Vencidas</div>
-                </div>
-            </div>
-            <div class="kpi-card" data-filter-cumplimiento="true">
-                <div class="kpi-icon"><i class="fas fa-file-signature"></i></div>
-                <div class="kpi-info">
-                    <div class="kpi-value">{{ kpis.cumplimiento }}</div>
-                    <div class="kpi-label">Cumplimiento</div>
-                </div>
-            </div>
+        <div class="row g-4 mb-4">
+            <div class="col"><div class="card shadow-sm kpi-card" data-filter-days="15"><div class="card-body text-center"><h3 class="card-title text-danger">{{ kpis.vencer_15_dias }}</h3><p class="card-text text-muted">Vencen &lt; 15 Días</p></div></div></div>
+            <div class="col"><div class="card shadow-sm kpi-card" data-filter-days="30"><div class="card-body text-center"><h3 class="card-title text-warning">{{ kpis.vencer_30_dias }}</h3><p class="card-text text-muted">Vencen &lt; 30 Días</p></div></div></div>
+            <div class="col"><div class="card shadow-sm kpi-card" data-filter-days="60"><div class="card-body text-center"><h3 class="card-title text-info">{{ kpis.vencer_60_dias }}</h3><p class="card-text text-muted">Vencen &lt; 60 Días</p></div></div></div>
+            <div class="col"><div class="card shadow-sm kpi-card" data-filter-vencidas="true"><div class="card-body text-center"><h3 class="card-title text-danger">{{ kpis.vencidas }}</h3><p class="card-text text-muted">Vencidas</p></div></div></div>
+            <div class="col"><div class="card shadow-sm kpi-card" data-filter-cumplimiento="true"><div class="card-body text-center"><h3 class="card-title">{{ kpis.cumplimiento }}</h3><p class="card-text text-muted">Cumplimiento</p></div></div></div>
         </div>
 
         <!-- KPIs por Ramo -->
-        <div class="kpi-grid">
+        <div class="row g-4 mb-4">
+            <h5 class="mb-3 text-secondary" style="font-weight: 500;">Filtros por Ramo (Vencimiento a 30 días)</h5>
             {% for ramo_kpi in ramos_kpis %}
-            <div class="kpi-card kpi-ramo-card" data-filter-ramo="{{ ramo_kpi.ramo }}">
-                <div class="kpi-icon">
-                    <i class="fas fa-{{ 'car' if 'AUTOS' in ramo_kpi.ramo else ('building' if 'COPROPIEDADES' in ramo_kpi.ramo else ('file-signature' if 'ARRENDAMIENTO' in ramo_kpi.ramo else 'home')) }}"></i>
-                </div>
-                <div class="kpi-info">
-                    <div class="kpi-value">{{ ramo_kpi.count }}</div>
-                    <div class="kpi-label">{{ ramo_kpi.ramo }}</div>
-                    <div class="kpi-sublabel">Vencen en los próximos 30 días</div>
+            <div class="col">
+                <div class="card shadow-sm kpi-card" data-filter-ramo="{{ ramo_kpi.ramo }}">
+                    <div class="card-body text-center">
+                        <h3 class="card-title" style="color: var(--primary-color);">{{ ramo_kpi.count }}</h3>
+                        <p class="card-text text-muted">{{ ramo_kpi.ramo }}</p>
+                    </div>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <div class="search-container">
-            <form method="get" action="{{ url_for('visualizar_vencimientos') }}">
-                <input type="text" id="searchInput" name="search_term" class="form-control" placeholder="Buscar por Tomador..." value="{{ search_term or '' }}">
-                <button type="submit" class="btn-search"><i class="fas fa-search"></i></button>
-            </form>
+        <div class="card shadow-sm">
+            <div class="card-header bg-light"><form method="get" action="{{ url_for('visualizar_vencimientos') }}" class="d-flex"><input type="text" id="searchInput" name="search_term" class="form-control" placeholder="Buscar por Tomador..." value="{{ search_term or '' }}"><button type="submit" class="btn btn-primary ms-2"><i class="fas fa-search"></i></button></form></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 vencimientos-table">
+                        <thead class="table-light">
+                            <tr><th>Alerta</th><th>Días</th><th>Fecha Fin</th><th>Tomador</th><th>N° Póliza</th><th>Aseguradora</th><th>Ramo</th><th>Responsable</th><th>Estado</th><th>Observaciones</th><th class="text-center">Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            {% if registros %}
+                                {% for registro in registros %}
+                                    <tr data-id="{{ registro.ID_VENCIMIENTO }}" data-dias-vencer="{{ registro.Dias_Para_Vencer }}" data-ramo="{{ registro['RAMO PRINCIPAL'] }}">
+                                        <td class="text-center">
+                                            <span title="{{ registro.Indicador_Vencimiento_Text }}" class="{{ registro.Indicador_Vencimiento_CSS_Class }}">
+                                                <i class="alerta-icon {% if registro.Indicador_Vencimiento_Is_Critical %}is-critical{% endif %} {{ registro.Indicador_Vencimiento_Icon }}"></i>
+                                            </span>
+                                        </td>
+                                        <td>{{ registro.Dias_Para_Vencer }}</td>
+                                        <td>{{ registro['FECHA FIN'] }}</td>
+                                        <td>{{ registro.Tomador }}</td>
+                                        <td>{{ registro['NÚMERO PÓLIZA'] }}</td>
+                                        <td>{{ registro.ASEGURADORA }}</td>
+                                        <td>{{ registro['RAMO PRINCIPAL'] }}</td>
+                                        <td class="editable-cell" data-field="Responsable">{{ registro.Responsable | default('', true) }}</td>
+                                        <td class="editable-cell" data-field="Estado">{{ registro.Estado | default('', true) }}</td>
+                                        <td class="editable-cell" data-field="Observaciones_adicionales">{{ registro.Observaciones_adicionales | default('', true) }}</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-primary btn-editar"><i class="fas fa-pencil-alt"></i></button>
+                                            <button type="button" class="btn btn-sm btn-success btn-guardar-cambios" style="display: none;"><i class="fas fa-save"></i></button>
+                                            <a href="{{ url_for('formulario_remision', tomador=registro.Tomador, ramo=registro['RAMO PRINCIPAL'], aseguradora=registro.ASEGURADORA, poliza=registro['NÚMERO PÓLIZA']) }}" class="btn btn-sm btn-info" title="Crear Remisión de Renovación"><i class="fas fa-file-alt"></i></a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr><td colspan="11" class="text-center py-4">No hay vencimientos que coincidan con los criterios.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
-        <div class="table-responsive card">
-            <table class="table table-striped table-hover vencimientos-table">
-                <thead>
-                    <tr>
-                        <th class="col-alerta">Alerta</th>
-                        <th>Días Vencer</th>
-                        <th>Fecha Fin</th>
-                        <th>Tomador</th>
-                        <th>Número Póliza</th>
-                        <th>Aseguradora</th>
-                        <th>Ramo Principal</th>
-                        <th>Responsable</th>
-                        <th>Estado</th>
-                        <th>Observaciones</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if registros %}
-                        {% for registro in registros %}
-                            <tr data-id="{{ registro.ID_VENCIMIENTO }}" data-dias-vencer="{{ registro.Dias_Para_Vencer }}" data-ramo="{{ registro['RAMO PRINCIPAL'] }}">
-                                <td data-label="Alerta" class="cell-alerta">
-                                    <span class="alerta-badge {{ registro.Indicador_Vencimiento_CSS_Class }}" title="{{ registro.Indicador_Vencimiento_Text }}">
-                                        <i class="{{ registro.Indicador_Vencimiento_Icon }}"></i>
-                                    </span>
-                                </td>
-                                <td data-label="Días Vencer" class="cell-dias-vencer">{{ registro.Dias_Para_Vencer }}</td>
-                                <td data-label="Fecha Fin">{{ registro['FECHA FIN'] }}</td>
-                                <td data-label="Tomador">{{ registro.Tomador }}</td>
-                                <td data-label="N° Póliza">{{ registro['NÚMERO PÓLIZA'] }}</td>
-                                <td data-label="Aseguradora">{{ registro.ASEGURADORA }}</td>
-                                <td data-label="Ramo">{{ registro['RAMO PRINCIPAL'] }}</td>
-                                <td data-label="Responsable" class="editable-cell" data-field="Responsable">{{ registro.Responsable | default('', true) }}</td>
-                                <td data-label="Estado" class="editable-cell" data-field="Estado">{{ registro.Estado | default('', true) }}</td>
-                                <td data-label="Observaciones" class="editable-cell" data-field="Observaciones_adicionales">{{ registro.Observaciones_adicionales | default('', true) }}</td>
-                                <td data-label="Acciones" class="actions-cell">
-                                    <button type="button" class="btn btn-primary btn-sm btn-editar">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-secondary btn-sm btn-guardar-cambios" style="display: none;">
-                                        <i class="fas fa-save"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="11">No hay vencimientos que coincidan con los criterios de búsqueda.</td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">&copy; 2024 UIB Corredores de Seguros S.A.</footer>
     </div>
-    <script>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
     const opciones_responsable_js = {{ opciones_responsable_js | tojson }};
     const opciones_estado_js = {{ opciones_estado_js | tojson }};
-
     document.addEventListener('DOMContentLoaded', function() {
         const kpiCards = document.querySelectorAll('.kpi-card');
         const tableRows = document.querySelectorAll('.vencimientos-table tbody tr');
-        const searchInput = document.getElementById('searchInput');
-
         function filterTable() {
-            const searchTerm = searchInput.value.toLowerCase();
             let activeCard = document.querySelector('.kpi-card.active');
-
             tableRows.forEach(row => {
-                const tomador = row.querySelector('[data-label="Tomador"]').textContent.toLowerCase();
-                let showRow = tomador.includes(searchTerm);
+                let showRow = true; // Default to show
+                const diasVencer = parseInt(row.dataset.diasVencer, 10);
+                const ramo = row.dataset.ramo.toUpperCase();
+                const ramosExcluir = ['CUMPLIMIENTO', 'SERIEDAD DE OFERTA'];
 
                 if (activeCard) {
                     const filterDays = activeCard.dataset.filterDays;
                     const filterRamo = activeCard.dataset.filterRamo;
-                const filterVencidas = activeCard.dataset.filterVencidas;
-                const filterCumplimiento = activeCard.dataset.filterCumplimiento;
+                    const filterVencidas = activeCard.dataset.filterVencidas;
+                    const filterCumplimiento = activeCard.dataset.filterCumplimiento;
 
                     if (filterDays) {
-                        const diasVencer = parseInt(row.dataset.diasVencer, 10);
-                    if (diasVencer < 0 || diasVencer > parseInt(filterDays, 10)) {
+                        if (diasVencer < 0 || diasVencer > parseInt(filterDays, 10) || ramosExcluir.includes(ramo)) {
+                            showRow = false;
+                        }
+                    } else if (filterRamo) {
+                        if (row.dataset.ramo.toUpperCase().indexOf(filterRamo.toUpperCase()) === -1 || diasVencer < 0 || diasVencer > 30) {
+                            showRow = false;
+                        }
+                    } else if (filterVencidas) {
+                        if (diasVencer >= 0 || ramosExcluir.includes(ramo)) {
+                            showRow = false;
+                        }
+                    } else if (filterCumplimiento) {
+                        if (ramo !== 'CUMPLIMIENTO' || diasVencer < 0 || diasVencer > 45) {
                             showRow = false;
                         }
                     }
-
-                    if (filterRamo) {
-                    const diasVencer = parseInt(row.dataset.diasVencer, 10);
-                        const ramo = row.dataset.ramo;
-                    if (ramo.toLowerCase().indexOf(filterRamo.toLowerCase()) === -1 || diasVencer < 0 || diasVencer > 30) {
-                            showRow = false;
-                        }
-                    }
-
-                if (filterVencidas) {
-                    const diasVencer = parseInt(row.dataset.diasVencer, 10);
-                    if (diasVencer >= 0) {
-                        showRow = false;
-                    }
                 }
-
-                if (filterCumplimiento) {
-                    const diasVencer = parseInt(row.dataset.diasVencer, 10);
-                    const ramo = row.dataset.ramo;
-                    if (ramo.toLowerCase() !== 'cumplimiento' || diasVencer < 0 || diasVencer > 45) {
-                        showRow = false;
-                    }
-                }
-                }
-
                 row.style.display = showRow ? '' : 'none';
             });
         }
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', filterTable);
-        }
-
         kpiCards.forEach(card => {
             card.addEventListener('click', function() {
-                if (this.classList.contains('active')) {
-                    this.classList.remove('active');
-                } else {
-                    kpiCards.forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                }
+                if (this.classList.contains('active')) { this.classList.remove('active'); } 
+                else { kpiCards.forEach(c => c.classList.remove('active')); this.classList.add('active'); }
                 filterTable();
             });
         });
-
         const tableBody = document.querySelector('.vencimientos-table tbody');
         let activeRow = null;
-
         tableBody.addEventListener('click', function(event) {
             const target = event.target;
             const editButton = target.closest('.btn-editar');
             const saveButton = target.closest('.btn-guardar-cambios');
-
             if (editButton) {
                 const row = editButton.closest('tr');
-                if (activeRow && activeRow !== row) {
-                    revertRow(activeRow);
-                }
+                if (activeRow && activeRow !== row) { revertRow(activeRow); }
                 makeRowEditable(row);
                 activeRow = row;
             } else if (saveButton) {
@@ -238,7 +203,6 @@
                 activeRow = null;
             }
         });
-
         function makeRowEditable(row) {
             row.querySelectorAll('.editable-cell').forEach(cell => {
                 const originalValue = cell.textContent.trim();
@@ -246,88 +210,48 @@
                 const field = cell.dataset.field;
                 cell.innerHTML = '';
                 let input;
-
                 if (field === 'Responsable') {
                     input = document.createElement('select');
-                    opciones_responsable_js.forEach(opt => {
-                        const option = document.createElement('option');
-                        option.value = opt;
-                        option.textContent = opt;
-                        if (opt === originalValue) option.selected = true;
-                        input.appendChild(option);
-                    });
+                    opciones_responsable_js.forEach(opt => { input.add(new Option(opt, opt, false, opt === originalValue)); });
                 } else if (field === 'Estado') {
                     input = document.createElement('select');
-                    opciones_estado_js.forEach(opt => {
-                        const option = document.createElement('option');
-                        option.value = opt;
-                        option.textContent = opt;
-                        if (opt === originalValue) option.selected = true;
-                        input.appendChild(option);
-                    });
-                } else { // Observaciones
+                    opciones_estado_js.forEach(opt => { input.add(new Option(opt, opt, false, opt === originalValue)); });
+                } else {
                     input = document.createElement('textarea');
                     input.value = originalValue;
                 }
-                input.className = 'form-control-inline';
+                input.className = 'form-control form-control-sm';
                 cell.appendChild(input);
             });
             row.querySelector('.btn-editar').style.display = 'none';
             row.querySelector('.btn-guardar-cambios').style.display = 'inline-block';
         }
-        
         function revertRow(row) {
-            row.querySelectorAll('.editable-cell').forEach(cell => {
-                cell.innerHTML = cell.dataset.originalValue;
-            });
+            row.querySelectorAll('.editable-cell').forEach(cell => { cell.innerHTML = cell.dataset.originalValue; });
             row.querySelector('.btn-editar').style.display = 'inline-block';
             row.querySelector('.btn-guardar-cambios').style.display = 'none';
         }
-
         function saveRow(row) {
             const id = row.dataset.id;
             const dataToSave = { id_vencimiento: id };
             let hasChanges = false;
-
             row.querySelectorAll('.editable-cell').forEach(cell => {
-                const input = cell.querySelector('input, select, textarea');
-                const newValue = input.value;
-                const field = cell.dataset.field;
-                dataToSave[field] = newValue;
-                if (newValue !== cell.dataset.originalValue) {
-                    hasChanges = true;
-                }
-                cell.dataset.originalValue = newValue; // Update original value for future edits
+                const input = cell.querySelector('select, textarea');
+                dataToSave[cell.dataset.field] = input.value;
+                if (input.value !== cell.dataset.originalValue) { hasChanges = true; }
             });
-
             if (hasChanges) {
                 fetch('/vencimientos/actualizar_registro', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dataToSave)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        console.log('Guardado exitoso:', data.message);
-                        // Optionally, show a success indicator to the user
-                    } else {
-                        console.error('Error al guardar:', data.message);
-                        alert('Error al guardar: ' + data.message); // Show error to user
-                        revertRow(row); // Revert on failure
-                    }
-                })
-                .catch(error => {
-                    console.error('Error de red:', error);
-                    alert('Error de red al intentar guardar los cambios.');
-                    revertRow(row); // Revert on network error
-                });
+                }).then(res => res.json()).then(data => {
+                    if(!data.success) { alert('Error: ' + data.message); revertRow(row); }
+                }).catch(() => { alert('Error de red.'); revertRow(row); });
             }
-            
-            // Revert row to non-editable state regardless of changes, but after sending fetch
             revertRow(row);
         }
     });
-    </script>
+</script>
 </body>
 </html>

@@ -1,0 +1,38 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Gestionar Listas{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1><i class="fas fa-list-alt"></i> Gestionar Listas Desplegables</h1>
+        <p>Seleccione una lista para ver o editar sus valores.</p>
+    </div>
+    <div class="card-body">
+        {% if list_names %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre de la Lista</th>
+                    <th style="width: 150px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for name in list_names %}
+                <tr>
+                    <td>{{ name.replace('_', ' ').title() }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_list_item', list_name=name) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No se encontraron listas de configuración.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

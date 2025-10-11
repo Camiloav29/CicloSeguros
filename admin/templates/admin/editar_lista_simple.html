@@ -1,0 +1,72 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Editar Lista: {{ list_name.replace('_', ' ').title() }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1><i class="fas fa-edit"></i> Editar Lista: {{ list_name.replace('_', ' ').title() }}</h1>
+        <a href="{{ url_for('admin.listas') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a Listas</a>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('admin.edit_list_item', list_name=list_name) }}" method="POST">
+            <p>Edite, añada o elimine los valores de la lista. Para eliminar un ítem, haga clic en su botón de 'Eliminar' o simplemente deje el campo de texto vacío.</p>
+
+            <table id="items-table" class="table">
+                <thead>
+                    <tr>
+                        <th>Valor del Ítem</th>
+                        <th style="width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><input type="text" name="item" class="form-control" value="{{ item }}"></td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm delete-row-btn">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="button" id="add-row-btn" class="btn btn-add"><i class="fas fa-plus"></i> Añadir Ítem</button>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addRowBtn = document.getElementById('add-row-btn');
+    const tableBody = document.querySelector('#items-table tbody');
+
+    // Función para añadir una nueva fila
+    addRowBtn.addEventListener('click', function() {
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="text" name="item" class="form-control" placeholder="Nuevo valor"></td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm delete-row-btn">
+                    <i class="fas fa-trash-alt"></i> Eliminar
+                </button>
+            </td>
+        `;
+        tableBody.appendChild(newRow);
+    });
+
+    // Función para eliminar una fila (usando delegación de eventos)
+    tableBody.addEventListener('click', function(event) {
+        if (event.target && event.target.closest('.delete-row-btn')) {
+            const row = event.target.closest('tr');
+            row.remove();
+        }
+    });
+});
+</script>
+{% endblock %}

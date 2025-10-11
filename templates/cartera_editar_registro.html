@@ -3,96 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Registro de Cartera - {{ nombre_empresa }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Editar Registro de Cartera - UIB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/cartera_editar_registro.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main_layout.css') }}">
 </head>
 <body>
-    <div class="form-container">
-        <div class="form-card">
-            <div class="form-header">
-                <a href="{{ url_for('visualizar_cartera') }}" class="back-to-link"><i class="fas fa-arrow-left"></i> Volver a Vista de Cartera</a>
-                <h1><i class="fas fa-edit"></i> Editar Registro de Cartera</h1>
-                <p>Modifique los campos necesarios. Los campos grises son informativos y no editables aquí.</p>
-            </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                <div class="flash-messages-container" style="margin-bottom: 1rem;">
-                  {% for category, message in messages %}
-                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% endwith %}
-
-            <form method="POST" action="{{ url_for('guardar_edicion_cartera') }}" id="editarCarteraForm">
-                <input type="hidden" name="id_cartera" value="{{ registro.ID_CARTERA | default('', true) }}">
-
-                <fieldset>
-                    <legend><i class="fas fa-info-circle"></i> Datos de Identificación (Solo Lectura)</legend>
-                    <div class="form-row">
-                        <div class="form-group"><label>ID Cartera:</label><input type="text" value="{{ registro.ID_CARTERA | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Fecha Creación:</label><input type="text" value="{{ registro['FECHA CREACIÓN'] | default('', true) }}" readonly></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Número Póliza:</label><input type="text" value="{{ registro['NÚMERO PÓLIZA'] | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Nombres Cliente:</label><input type="text" value="{{ registro['NOMBRES CLIENTE'] | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Aseguradora:</label><input type="text" value="{{ registro.ASEGURADORA | default('', true) }}" readonly></div>
-                    </div>
-                </fieldset>
-                
-                <fieldset>
-                    <legend><i class="fas fa-calculator"></i> Valores Originales y Calculados (Solo Lectura)</legend>
-                    <div class="form-row">
-                        <div class="form-group"><label>Prima Neta:</label><input type="text" value="{{ registro['PRIMA NETA'] | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Comisión Total:</label><input type="text" value="{{ registro['COMISIÓN'] | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>% Comisión Intermediario (Original):</label><input type="text" value="{{ registro['PORCENTAJE DE COMISIÓN'] | default('', true) }}" readonly></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Retención:</label><input type="text" value="{{ registro.Retencion_Calc | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Reteica:</label><input type="text" value="{{ registro.Reteica_Calc | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Valor Comisión Neto Intermediario:</label><input type="text" value="{{ registro.Valor_Comision_UIB_Neto_Calc | default('', true) }}" readonly></div>
-                    </div>
-                     <div class="form-row">
-                        <div class="form-group"><label>Intermediario:</label><input type="text" value="{{ registro.Intermediario_Original | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>% Com. Intermediario:</label><input type="text" value="{{ registro.Porc_Com_Intermediario_Original | default('', true) }}" readonly></div>
-                        <div class="form-group"><label>Valor Comisión Intermediario:</label><input type="text" value="{{ registro.Valor_Comision_Intermediario_Calc | default('', true) }}" readonly></div>
-                    </div>
-                </fieldset>
-
-                <fieldset>
-                    <legend><i class="fas fa-pencil-ruler"></i> Campos Editables</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="N_FACTURA_Manual">N° Factura:</label>
-                            <input type="text" name="N_FACTURA_Manual" id="N_FACTURA_Manual" value="{{ registro.N_FACTURA_Manual | default('', true) }}" placeholder="Ingrese N° Factura">
-                        </div>
-                        <div class="form-group">
-                            <label for="Clasificacion_Manual">Clasificación:</label>
-                            <input type="text" name="Clasificacion_Manual" id="Clasificacion_Manual" value="{{ registro.Clasificacion_Manual | default('', true) }}" placeholder="Ingrese Clasificación">
-                        </div>
-                        <div class="form-group">
-                            <label for="Line_of_Business_Manual">Line of Business:</label>
-                            <input type="text" name="Line_of_Business_Manual" id="Line_of_Business_Manual" value="{{ registro.Line_of_Business_Manual | default('', true) }}" placeholder="Ingrese Line of Business">
-                        </div>
-                    </div>
-                </fieldset>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-submit"><i class="fas fa-save"></i> Guardar Cambios</button>
-                    <a href="{{ url_for('visualizar_cartera') }}" class="btn btn-outline-secondary"><i class="fas fa-times"></i> Cancelar</a>
-                </div>
-            </form>
+<div class="main-container">
+    <!-- Sidebar -->
+  <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='UIBH_logo_WHITE2-300x78-1.png') }}" alt="UIB Logo">
+            </a>
         </div>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('formulario_remision') }}"><i class="fas fa-file-alt fa-fw"></i> Nueva Remisión</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('control') }}"><i class="fas fa-cogs fa-fw"></i> Control de remisiones </a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('panel_cobros') }}"><i class="fas fa-hand-holding-usd fa-fw"></i> Cobros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_cartera') }}"><i class="fas fa-book fa-fw"></i> Cartera</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_vencimientos') }}"><i class="fas fa-calendar-times fa-fw"></i> Vencimientos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('prospectos_vista') }}"><i class="fas fa-users fa-fw"></i> Prospectos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('siniestros_registrar') }}"><i class="fas fa-car-crash fa-fw"></i> Siniestros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('recaudo') }}"><i class="fas fa-chart-line fa-fw"></i> Produccion</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_sarlaft') }}"><i class="fas fa-user-shield fa-fw"></i> SARLAFT</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_crear_carpeta') }}"><i class="fas fa-folder-plus fa-fw"></i> Crear Carpeta</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_carga_maestra') }}"><i class="fas fa-upload fa-fw"></i> Carga Maestra</a></li>
+            <li class="nav-item mt-auto"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt fa-fw"></i> Admin</a></li>
+        </ul>
     </div>
-    <script>
-     document.getElementById('editarCarteraForm').addEventListener('submit', function() {
-         const btn = this.querySelector('.btn-submit');
-         btn.disabled = true;
-         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-     });
-    </script>
+
+    <!-- Main Content -->
+    <div class="content">
+        <header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3"><i class="fas fa-edit me-2"></i>Editar Registro de Cartera</h1>
+                <p class="text-muted">Modifique los campos necesarios. Los campos grises son informativos y no editables aquí.</p>
+            </div>
+            <a href="{{ url_for('visualizar_cartera') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver a Vista de Cartera</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages-container mb-3">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'message' else category }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('guardar_edicion_cartera') }}" id="editarCarteraForm" class="card p-4">
+            <input type="hidden" name="id_cartera" value="{{ registro.ID_CARTERA | default('', true) }}">
+
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="fas fa-info-circle"></i> Datos de Identificación (Solo Lectura)</legend>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label class="form-label">ID Cartera:</label><input type="text" class="form-control" value="{{ registro.ID_CARTERA | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Fecha Creación:</label><input type="text" class="form-control" value="{{ registro['FECHA CREACIÓN'] | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Número Póliza:</label><input type="text" class="form-control" value="{{ registro['NÚMERO PÓLIZA'] | default('', true) }}" readonly></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Nombres Cliente:</label><input type="text" class="form-control" value="{{ registro['NOMBRES CLIENTE'] | default('', true) }}" readonly></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Aseguradora:</label><input type="text" class="form-control" value="{{ registro.ASEGURADORA | default('', true) }}" readonly></div>
+                </div>
+            </fieldset>
+            
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="fas fa-calculator"></i> Valores Originales y Calculados (Solo Lectura)</legend>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label class="form-label">Prima Neta:</label><input type="text" class="form-control" value="{{ registro['PRIMA NETA'] | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Comisión Total:</label><input type="text" class="form-control" value="{{ registro['COMISIÓN'] | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">% Comisión UIB (Original):</label><input type="text" class="form-control" value="{{ registro['PORCENTAJE DE COMISIÓN'] | default('', true) }}" readonly></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3"><label class="form-label">Retención:</label><input type="text" class="form-control" value="{{ registro.Retencion_Calc | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Reteica:</label><input type="text" class="form-control" value="{{ registro.Reteica_Calc | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Valor Comisión UIB Neto:</label><input type="text" class="form-control" value="{{ registro.Valor_Comision_UIB_Neto_Calc | default('', true) }}" readonly></div>
+                </div>
+                 <div class="row">
+                    <div class="col-md-4 mb-3"><label class="form-label">Intermediario:</label><input type="text" class="form-control" value="{{ registro.VENDEDOR | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">% Com. Intermediario:</label><input type="text" class="form-control" value="{{ registro.Porc_Com_Intermediario_Original | default('', true) }}" readonly></div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Valor Comisión Intermediario:</label><input type="text" class="form-control" value="{{ registro.Valor_Comision_Intermediario_Calc | default('', true) }}" readonly></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-4">
+                <legend class="h5 mb-3"><i class="fas fa-pencil-ruler"></i> Campos Editables</legend>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="N_FACTURA_Manual" class="form-label">N° Factura:</label>
+                        <input type="text" name="N_FACTURA_Manual" id="N_FACTURA_Manual" class="form-control" value="{{ registro.N_FACTURA_Manual | default('', true) }}" placeholder="Ingrese N° Factura">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="Clasificacion_Manual" class="form-label">Clasificación:</label>
+                        <input type="text" name="Clasificacion_Manual" id="Clasificacion_Manual" class="form-control" value="{{ registro.Clasificacion_Manual | default('', true) }}" placeholder="Ingrese Clasificación">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="Line_of_Business_Manual" class="form-label">Line of Business:</label>
+                        <input type="text" name="Line_of_Business_Manual" id="Line_of_Business_Manual" class="form-control" value="{{ registro.Line_of_Business_Manual | default('', true) }}" placeholder="Ingrese Line of Business">
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+                <a href="{{ url_for('visualizar_cartera') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+        <footer class="pt-3 mt-4 text-muted border-top">&copy; 2024 UIB Corredores de Seguros S.A.</footer>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+ document.getElementById('editarCarteraForm').addEventListener('submit', function() {
+     const btn = this.querySelector('button[type="submit"]');
+     btn.disabled = true;
+     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+ });
+</script>
 </body>
 </html>

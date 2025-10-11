@@ -1,0 +1,32 @@
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Carpetas de dependencias
+node_modules/
+venv/
+__pycache__/
+
+# Archivos de configuración local
+.env
+*.log
+*.sqlite3
+
+# Compilaciones y builds
+dist/
+build/
+*.class
+*.exe
+*.dll
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.sublime-workspace
+*.sublime-project
+
+# Archivos temporales
+*.tmp
+*.bak
+*.orig

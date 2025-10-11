@@ -3,115 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Cobros - {{ nombre_empresa }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Panel de Cobros y Pagos - UIB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/cobros.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main_layout.css') }}">
+    <style>
+        .kpi-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+        .kpi-card.active { border: 2px solid var(--primary-color); background-color: #e9f5ff; }
+        .estado-pendiente { color: #fd7e14; font-weight: bold; }
+        .estado-cobrado { color: #198754; font-weight: bold; }
+        .section-divider {
+            border-top: 2px solid #dee2e6;
+            margin-top: 2rem;
+            padding-top: 2rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <header class="page-header">
-            <h1><i class="fas fa-cash-register"></i> Panel de Cobros</h1>
-            <div class="header-actions">
-                <a href="{{ url_for('index') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+
+<div class="main-container">
+    <!-- Sidebar -->
+  <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='UIBH_logo_WHITE2-300x78-1.png') }}" alt="UIB Logo">
+            </a>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('formulario_remision') }}"><i class="fas fa-file-alt fa-fw"></i> Nueva Remisión</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('control') }}"><i class="fas fa-cogs fa-fw"></i> Control de remisiones </a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('panel_cobros') }}"><i class="fas fa-hand-holding-usd fa-fw"></i> Cobros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_cartera') }}"><i class="fas fa-book fa-fw"></i> Cartera</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_vencimientos') }}"><i class="fas fa-calendar-times fa-fw"></i> Vencimientos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('prospectos_vista') }}"><i class="fas fa-users fa-fw"></i> Prospectos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('siniestros_registrar') }}"><i class="fas fa-car-crash fa-fw"></i> Siniestros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('recaudo') }}"><i class="fas fa-chart-line fa-fw"></i> Produccion</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_sarlaft') }}"><i class="fas fa-user-shield fa-fw"></i> SARLAFT</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_crear_carpeta') }}"><i class="fas fa-folder-plus fa-fw"></i> Crear Carpeta</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_carga_maestra') }}"><i class="fas fa-upload fa-fw"></i> Carga Maestra</a></li>
+            <li class="nav-item mt-auto"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt fa-fw"></i> Admin</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3"><i class="fas fa-cash-register me-2"></i>Panel de Cobros y Pagos</h1>
+                <p class="text-muted">Gestión de movimientos pendientes del mes actual.</p>
             </div>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
         </header>
 
-        {% if not cobros and not pagos %}
-            <div class="card">
-                <div class="card-body text-center">
-                    <p>No hay cobros ni pagos para el mes actual.</p>
-                </div>
-            </div>
-        {% else %}
-            <!-- Sección de Cobros -->
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-arrow-down"></i> Cobros Mensuales</h3>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Tomador</th><th>NIT / CC</th><th>Aseguradora</th><th>Ramo</th><th>N° Póliza</th><th># de Cuota</th><th>Vencimiento Cuota</th><th>Estado</th><th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if cobros %}
-                                    {% for cobro in cobros %}
-                                        <tr>
-                                            <td data-label="Tomador">{{ cobro.Tomador }}</td>
-                                            <td data-label="NIT / CC">{{ cobro.NIT_CC }}</td>
-                                            <td data-label="Aseguradora">{{ cobro.Aseguradora }}</td>
-                                            <td data-label="Ramo">{{ cobro.Ramo }}</td>
-                                            <td data-label="N° Póliza">{{ cobro.N_Poliza }}</td>
-                                            <td data-label="# de Cuota">{{ cobro.N_Cuota }} de {{ cobro.Total_Cuotas }}</td>
-                                            <td data-label="Vencimiento Cuota">{{ cobro.Fecha_Vencimiento_Cuota.strftime('%Y-%m-%d') if cobro.Fecha_Vencimiento_Cuota else '' }}</td>
-                                            <td data-label="Estado"><span class="estado-{{ cobro.Estado | lower | replace(' ', '-') }}">{{ cobro.Estado }}</span></td>
-                                            <td data-label="Acciones">
-                                                <a href="{{ url_for('editar_cobro', id_cobro=cobro.ID_COBRO) }}" class="boton-accion"><i class="fas fa-edit"></i> Editar</a>
-                                                {% if cobro.Estado != 'Cobrado' %}
-                                                <form action="{{ url_for('marcar_cobrado', id_cobro=cobro.ID_COBRO) }}" method="POST" style="display: inline; margin-left: 0.5rem;">
-                                                    <button type="submit" class="boton-accion"><i class="fas fa-check"></i> Marcar Cobrado</button>
-                                                </form>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr><td colspan="9" class="text-center">No hay cobros para el mes actual.</td></tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-            <!-- Sección de Pagos -->
-            <div class="card" style="margin-top: 2rem;">
-                <div class="card-header">
-                    <h3><i class="fas fa-arrow-up"></i> Pagos Mensuales</h3>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Tomador</th><th>NIT / CC</th><th>Aseguradora</th><th>Ramo</th><th>N° Póliza</th><th># de Cuota</th><th>Vencimiento Cuota</th><th>Estado</th><th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if pagos %}
-                                    {% for pago in pagos %}
-                                        <tr>
-                                            <td data-label="Tomador">{{ pago.Tomador }}</td>
-                                            <td data-label="NIT / CC">{{ pago.NIT_CC }}</td>
-                                            <td data-label="Aseguradora">{{ pago.Aseguradora }}</td>
-                                            <td data-label="Ramo">{{ pago.Ramo }}</td>
-                                            <td data-label="N° Póliza">{{ pago.N_Poliza }}</td>
-                                            <td data-label="# de Cuota">{{ pago.N_Cuota }} de {{ pago.Total_Cuotas }}</td>
-                                            <td data-label="Vencimiento Cuota">{{ pago.Fecha_Vencimiento_Cuota.strftime('%Y-%m-%d') if pago.Fecha_Vencimiento_Cuota else '' }}</td>
-                                            <td data-label="Estado"><span class="estado-{{ pago.Estado | lower | replace(' ', '-') }}">{{ pago.Estado }}</span></td>
-                                            <td data-label="Acciones">
-                                                <a href="{{ url_for('editar_cobro', id_cobro=pago.ID_COBRO) }}" class="boton-accion"><i class="fas fa-edit"></i> Editar</a>
-                                                {% if pago.Estado != 'Cobrado' %}
-                                                <form action="{{ url_for('marcar_cobrado', id_cobro=pago.ID_COBRO) }}" method="POST" style="display: inline; margin-left: 0.5rem;">
-                                                    <button type="submit" class="boton-accion"><i class="fas fa-check"></i> Marcar Cobrado</button>
-                                                </form>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr><td colspan="9" class="text-center">No hay pagos para el mes actual.</td></tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+        <!-- ########## SECCIÓN DE COBROS ########## -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-arrow-down me-2"></i>Cobros</h5>
+            </div>
+            <div class="card-body">
+                <!-- KPIs Cobros -->
+                <div class="row g-4 mb-4">
+                    {% for p in opciones_periodicidad %}
+                    <div class="col">
+                        <div class="card shadow-sm kpi-card {% if cobros_data.selected_period == p %}active{% endif %}" data-section="cobros" data-periodicidad="{{ p }}">
+                            <div class="card-body text-center">
+                                <h3 class="card-title" style="color: var(--primary-color);">{{ cobros_data.kpis.get(p, 0) }}</h3>
+                                <p class="card-text text-muted">Pendientes {{ p }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="col">
+                        <div class="card shadow-sm kpi-card {% if cobros_data.selected_period == 'Pendientes Mes Anterior' %}active{% endif %}" data-section="cobros" data-periodicidad="Pendientes Mes Anterior">
+                            <div class="card-body text-center">
+                                <h3 class="card-title text-danger">{{ cobros_data.kpis.get('Pendientes Mes Anterior', 0) }}</h3>
+                                <p class="card-text text-muted">Pendientes Mes Anterior</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <!-- Tabla Cobros -->
+                <h5 class="mb-3">Mostrando: {{ cobros_data.selected_period }}</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th>Tomador</th><th>NIT/CC</th><th>Aseguradora</th><th>Ramo</th><th>N° Póliza</th><th># Cuota</th><th>Vencimiento</th><th>Estado</th><th class="text-center">Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            {% if cobros_data.records %}
+                                {% for record in cobros_data.records %}
+                                    <tr>
+                                        <td>{{ record.Tomador }}</td><td>{{ record.NIT_CC }}</td><td>{{ record.Aseguradora }}</td><td>{{ record.Ramo }}</td><td>{{ record.N_Poliza }}</td>
+                                        <td>{{ record.N_Cuota }} de {{ record.Total_Cuotas }}</td>
+                                        <td>{{ record.Fecha_Vencimiento_Cuota.strftime('%Y-%m-%d') if record.Fecha_Vencimiento_Cuota else '' }}</td>
+                                        <td><span class="estado-{{ record.Estado | lower }}">{{ record.Estado }}</span></td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('editar_cobro', id_cobro=record.ID_COBRO) }}" class="btn btn-sm btn-secondary" title="Editar"><i class="fas fa-edit"></i></a>
+                                            {% if record.Estado != 'Cobrado' %}<form action="{{ url_for('marcar_cobrado', id_cobro=record.ID_COBRO) }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-success" title="Marcar como Cobrado"><i class="fas fa-check"></i></button></form>{% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr><td colspan="9" class="text-center p-4">No hay cobros que coincidan con los criterios.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        {% endif %}
+            <!-- Paginación Cobros -->
+            {% set pagination = cobros_data.pagination %}
+            {% if pagination and pagination.total_pages > 1 %}
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small class="text-muted">Página {{ pagination.page }} de {{ pagination.total_pages }} ({{ pagination.total_registros }} registros)</small>
+                <nav>
+                    <ul class="pagination mb-0">
+                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}"><a class="page-link" href="{{ url_for('panel_cobros', periodicidad_cobros=cobros_data.selected_period, page_cobros=pagination.prev_num, periodicidad_pagos=pagos_data.selected_period, page_pagos=pagos_data.pagination.page) }}">&laquo;</a></li>
+                        {% for page_num in range(1, pagination.total_pages + 1) %}<li class="page-item {% if page_num == pagination.page %}active{% endif %}"><a class="page-link" href="{{ url_for('panel_cobros', periodicidad_cobros=cobros_data.selected_period, page_cobros=page_num, periodicidad_pagos=pagos_data.selected_period, page_pagos=pagos_data.pagination.page) }}">{{ page_num }}</a></li>{% endfor %}
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}"><a class="page-link" href="{{ url_for('panel_cobros', periodicidad_cobros=cobros_data.selected_period, page_cobros=pagination.next_num, periodicidad_pagos=pagos_data.selected_period, page_pagos=pagos_data.pagination.page) }}">&raquo;</a></li>
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ########## SECCIÓN DE PAGOS ########## -->
+        <div class="card shadow-sm section-divider">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-arrow-up me-2"></i>Pagos Mensuales</h5>
+            </div>
+            <div class="card-body">
+                <!-- KPIs Pagos -->
+                <div class="row g-4 mb-4">
+                    {% for p in opciones_periodicidad %}
+                    <div class="col">
+                        <div class="card shadow-sm kpi-card {% if pagos_data.selected_period == p %}active{% endif %}" data-section="pagos" data-periodicidad="{{ p }}">
+                            <div class="card-body text-center">
+                                <h3 class="card-title" style="color: var(--primary-color);">{{ pagos_data.kpis.get(p, 0) }}</h3>
+                                <p class="card-text text-muted">Pendientes {{ p }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="col">
+                        <div class="card shadow-sm kpi-card {% if pagos_data.selected_period == 'Pendientes Mes Anterior' %}active{% endif %}" data-section="pagos" data-periodicidad="Pendientes Mes Anterior">
+                            <div class="card-body text-center">
+                                <h3 class="card-title text-danger">{{ pagos_data.kpis.get('Pendientes Mes Anterior', 0) }}</h3>
+                                <p class="card-text text-muted">Pendientes Mes Anterior</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tabla Pagos -->
+                <h5 class="mb-3">Mostrando: {{ pagos_data.selected_period }}</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr><th>Tomador</th><th>NIT/CC</th><th>Aseguradora</th><th>Ramo</th><th>N° Póliza</th><th># Cuota</th><th>Vencimiento</th><th>Estado</th><th class="text-center">Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            {% if pagos_data.records %}
+                                {% for record in pagos_data.records %}
+                                    <tr>
+                                        <td>{{ record.Tomador }}</td><td>{{ record.NIT_CC }}</td><td>{{ record.Aseguradora }}</td><td>{{ record.Ramo }}</td><td>{{ record.N_Poliza }}</td>
+                                        <td>{{ record.N_Cuota }} de {{ record.Total_Cuotas }}</td>
+                                        <td>{{ record.Fecha_Vencimiento_Cuota.strftime('%Y-%m-%d') if record.Fecha_Vencimiento_Cuota else '' }}</td>
+                                        <td><span class="estado-{{ record.Estado | lower }}">{{ record.Estado }}</span></td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('editar_cobro', id_cobro=record.ID_COBRO) }}" class="btn btn-sm btn-secondary" title="Editar"><i class="fas fa-edit"></i></a>
+                                            {% if record.Estado != 'Cobrado' %}<form action="{{ url_for('marcar_cobrado', id_cobro=record.ID_COBRO) }}" method="POST" class="d-inline"><button type="submit" class="btn btn-sm btn-success" title="Marcar como Cobrado"><i class="fas fa-check"></i></button></form>{% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr><td colspan="9" class="text-center p-4">No hay pagos que coincidan con los criterios.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Paginación Pagos -->
+            {% set pagination = pagos_data.pagination %}
+            {% if pagination and pagination.total_pages > 1 %}
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small class="text-muted">Página {{ pagination.page }} de {{ pagination.total_pages }} ({{ pagination.total_registros }} registros)</small>
+                <nav>
+                    <ul class="pagination mb-0">
+                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}"><a class="page-link" href="{{ url_for('panel_cobros', periodicidad_cobros=cobros_data.selected_period, page_cobros=cobros_data.pagination.page, periodicidad_pagos=pagos_data.selected_period, page_pagos=pagination.prev_num) }}">&laquo;</a></li>
+                        {% for page_num in range(1, pagination.total_pages + 1) %}<li class="page-item {% if page_num == pagination.page %}active{% endif %}"><a class="page-link" href="{{ url_for('panel_cobros', periodicidad_cobros=cobros_data.selected_period, page_cobros=cobros_data.pagination.page, periodicidad_pagos=pagos_data.selected_period, page_pagos=page_num) }}">{{ page_num }}</a></li>{% endfor %}
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}"><a class="page-link" href="{{ url_for('panel_cobros', periodicidad_cobros=cobros_data.selected_period, page_cobros=cobros_data.pagination.page, periodicidad_pagos=pagos_data.selected_period, page_pagos=pagination.next_num) }}">&raquo;</a></li>
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+        
+        <footer class="pt-3 mt-4 text-muted border-top">&copy; 2024 UIB Corredores de Seguros S.A.</footer>
     </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    
+    kpiCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const section = this.dataset.section; // 'cobros' or 'pagos'
+            const periodicidad = this.dataset.periodicidad;
+            
+            const currentParams = new URLSearchParams(window.location.search);
+            currentParams.set(`periodicidad_${section}`, periodicidad);
+            currentParams.delete(`page_${section}`); // Reset to page 1 on new filter
+            
+            window.location.href = `{{ url_for('panel_cobros') }}?${currentParams.toString()}`;
+        });
+    });
+});
+</script>
 </body>
 </html>

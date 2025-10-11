@@ -3,56 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargar Reporte Maestro - {{ nombre_empresa }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Cargar Reporte Maestro - UIB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/carga_maestra.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main_layout.css') }}">
 </head>
 <body>
-    <div class="form-container">
-        <div class="form-card">
-            <div class="form-header">
-                <a href="{{ url_for('index') }}" class="back-to-dashboard"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
-                <h1><i class="fas fa-sync-alt"></i> Cargar Reporte Maestro</h1>
-                <p>Seleccione el archivo Excel (.xlsx, .xls) con los datos maestros para actualizar los módulos.</p>
-            </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                <div class="flash-messages-container" style="margin-bottom: 1rem;">
-                  {% for category, message in messages %}
-                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% endwith %}
-
-            <form method="POST" action="{{ url_for('procesar_reporte_maestro') }}" enctype="multipart/form-data" id="cargarMaestroForm">
-                <fieldset>
-                    <legend><i class="fas fa-file-excel"></i> Selección de Archivo Maestro</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="archivo">Archivo del Reporte Maestro</label>
-                            <input type="file" name="archivo" id="archivo" class="custom-file-input" accept=".xlsx, .xls" required>
-                            <small class="form-text text-muted" style="display: block; margin-top: 0.5rem; font-size: 0.85em;">Formatos aceptados: .xlsx, .xls</small>
-                        </div>
-                    </div>
-                </fieldset>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-submit">
-                        <i class="fas fa-cogs"></i> Procesar Reporte Maestro
-                    </button>
-                </div>
-            </form>
+<div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+             <img src="{{ url_for('static', filename='UIBH_logo_WHITE2-300x78-1.png') }}" alt="UIB Logo">
         </div>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('formulario_remision') }}"><i class="fas fa-file-alt fa-fw"></i> Nueva Remisión</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('control') }}"><i class="fas fa-cogs fa-fw"></i> Control de remisiones </a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('panel_cobros') }}"><i class="fas fa-hand-holding-usd fa-fw"></i> Cobros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_cartera') }}"><i class="fas fa-book fa-fw"></i> Cartera</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_vencimientos') }}"><i class="fas fa-calendar-times fa-fw"></i> Vencimientos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('prospectos_vista') }}"><i class="fas fa-users fa-fw"></i> Prospectos</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('siniestros_registrar') }}"><i class="fas fa-car-crash fa-fw"></i> Siniestros</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('recaudo') }}"><i class="fas fa-chart-line fa-fw"></i> Produccion</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_sarlaft') }}"><i class="fas fa-user-shield fa-fw"></i> SARLAFT</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_crear_carpeta') }}"><i class="fas fa-folder-plus fa-fw"></i> Crear Carpeta</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('mostrar_formulario_carga_maestra') }}"><i class="fas fa-upload fa-fw"></i> Carga Maestra</a></li>
+            <li class="nav-item mt-auto"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt fa-fw"></i> Admin</a></li>
+        </ul>
     </div>
-    <script>
-     document.getElementById('cargarMaestroForm').addEventListener('submit', function() {
-         const btn = this.querySelector('.btn-submit');
-         btn.disabled = true;
-         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-     });
-    </script>
+
+    <!-- Main Content -->
+    <div class="content">
+        <header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3"><i class="fas fa-sync-alt me-2"></i>Cargar Reporte Maestro</h1>
+                <p class="text-muted">Seleccione el archivo Excel (.xlsx, .xls) con los datos maestros para actualizar los módulos.</p>
+            </div>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages-container mb-3">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'message' else category }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('procesar_reporte_maestro') }}" enctype="multipart/form-data" id="cargarMaestroForm" class="card p-4">
+            <fieldset>
+                <legend class="h5 mb-3"><i class="fas fa-file-excel"></i> Selección de Archivo Maestro</legend>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="archivo" class="form-label">Archivo del Reporte Maestro</label>
+                        <input type="file" name="archivo" id="archivo" class="form-control" accept=".xlsx, .xls" required>
+                        <div class="form-text">Formatos aceptados: .xlsx, .xls</div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="text-end mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cogs"></i> Procesar Reporte Maestro
+                </button>
+            </div>
+        </form>
+        <footer class="pt-3 mt-4 text-muted border-top">&copy; 2024 UIB Corredores de Seguros S.A.</footer>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+ document.getElementById('cargarMaestroForm').addEventListener('submit', function() {
+     const btn = this.querySelector('button[type="submit"]');
+     btn.disabled = true;
+     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+ });
+</script>
 </body>
 </html>
