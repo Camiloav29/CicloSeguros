@@ -12,7 +12,9 @@
     <div class="admin-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h3><i class="fas fa-shield-alt"></i> Admin UIB</h3>
+                <a href="{{ url_for('index') }}">
+               <img src="{{ url_for('static', filename='ChatGPT Image 27 oct 2025, 12_38_37 copia.png') }}" alt="CicloSeguros Logo">
+            </a>
             </div>
             <nav class="sidebar-nav">
                 <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">

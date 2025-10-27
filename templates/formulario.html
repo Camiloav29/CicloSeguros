@@ -33,15 +33,15 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <a href="{{ url_for('index') }}">
-                <img src="{{ url_for('static', filename='ChatGPT Image 11 oct 2025, 03_01_51 p.m..png') }}" alt="CicloSeguros Logo">
+               <img src="{{ url_for('static', filename='ChatGPT Image 27 oct 2025, 12_38_37 copia.png') }}" alt="CicloSeguros Logo">
             </a>
         </div>
         <ul class="nav flex-column">
-            <li class="nav-item"><a class="nav-link active" href="{{ url_for('formulario_remision') }}"><i class="fas fa-file-alt fa-fw"></i> Registro Póliza</a></li>
+            <li class="nav-item"><a class="nav-link active" href="{{ url_for('formulario_remision') }}"><i class="fas fa-file-alt fa-fw"></i> Grabar Pólizas</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('control') }}"><i class="fas fa-cogs fa-fw"></i> Pólizas Registradas </a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_vencimientos') }}"><i class="fas fa-calendar-times fa-fw"></i> Pólizas por Vencer</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('panel_cobros') }}"><i class="fas fa-hand-holding-usd fa-fw"></i> Control de Cobros</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_cartera') }}"><i class="fas fa-book fa-fw"></i> Cartera</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('visualizar_vencimientos') }}"><i class="fas fa-calendar-times fa-fw"></i> Pólizas por Vencer</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('prospectos_vista') }}"><i class="fas fa-users fa-fw"></i> Prospectos</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('siniestros_registrar') }}"><i class="fas fa-car-crash fa-fw"></i> Registro de Siniestros</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('recaudo') }}"><i class="fas fa-chart-line fa-fw"></i> Control de Producción</a></li>
@@ -64,107 +64,118 @@
             </div>
         </header>
 
-        <div class="progress mb-4">
-            <div class="progress-bar" id="progressFill" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-        </div>
-
         <div id="notification-container"></div>
         
         <form method="POST" action="/registrar" enctype="multipart/form-data" id="mainForm" class="card p-4">
             <!-- Datos Básicos -->
             <fieldset class="mb-4">
-                <legend class="h5 mb-3"><i class="fas fa-info-circle"></i> Datos Básicos</legend>
-                <div class="row mb-3">
-                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="renovacion" id="renovacion" value="si"><label class="form-check-label" for="renovacion"><i class="fas fa-redo"></i> Es Renovación</label></div></div>
-                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="negocio_nuevo" id="negocio_nuevo" value="si"><label class="form-check-label" for="negocio_nuevo"><i class="fas fa-plus-circle"></i> Es Negocio Nuevo</label></div></div>
-                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="renovable" id="renovable" value="si"><label class="form-check-label" for="renovable"><i class="fas fa-sync"></i> Es Renovable</label></div></div>
-                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="modificacion" id="modificacion" value="si"><label class="form-check-label" for="modificacion"><i class="fas fa-edit"></i> Es Modificación</label></div></div>
-                    <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="anexo_checkbox" id="anexo_checkbox" value="si"><label class="form-check-label" for="anexo_checkbox"><i class="fas fa-paperclip"></i> Es Anexo</label></div></div>
-                </div>
-                
-                <div class="row mb-3" id="policy-modification-section" style="display: none;">
-                    <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="policy_number_modified" id="policy_number_modified" value="si"><label class="form-check-label" for="policy_number_modified">¿Se modificó el número de póliza en esta renovación?</label></div></div>
-                    <div class="col-12 mt-2" id="old-policy-number-section" style="display: none;"><label for="old_policy_number" class="form-label">Número de Póliza Anterior</label><input type="text" name="old_policy_number" id="old_policy_number" class="form-control" placeholder="Ingrese el número de póliza anterior"></div>
-                </div>
+                <div class="card shadow-sm mb-4"><div class="card-header"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Datos de la Remisión</h5><br>
+                    <div class="card-body"><div class="row g-3">
+                        <div class="row mb-3">
+                            <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="renovacion" id="renovacion" value="si"><label class="form-check-label" for="renovacion"><i class="fas fa-redo"></i> Es Renovación</label></div></div>
+                            <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="negocio_nuevo" id="negocio_nuevo" value="si"><label class="form-check-label" for="negocio_nuevo"><i class="fas fa-plus-circle"></i> Es Negocio Nuevo</label></div></div>
+                            <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="renovable" id="renovable" value="si"><label class="form-check-label" for="renovable"><i class="fas fa-sync"></i> Es Renovable</label></div></div>
+                            <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="modificacion" id="modificacion" value="si"><label class="form-check-label" for="modificacion"><i class="fas fa-edit"></i> Es Modificación</label></div></div>
+                            <div class="col-auto"><div class="form-check"><input class="form-check-input" type="checkbox" name="anexo_checkbox" id="anexo_checkbox" value="si"><label class="form-check-label" for="anexo_checkbox"><i class="fas fa-paperclip"></i> Es Anexo</label></div></div>
+                        </div>
+                                
+                        <div class="row mb-3" id="policy-modification-section" style="display: none;">
+                            <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="policy_number_modified" id="policy_number_modified" value="si"><label class="form-check-label" for="policy_number_modified">¿Se modificó el número de póliza en esta renovación?</label></div></div>
+                            <div class="col-12 mt-2" id="old-policy-number-section" style="display: none;"><label for="old_policy_number" class="form-label">Número de Póliza Anterior</label><input type="text" name="old_policy_number" id="old_policy_number" class="form-control" placeholder="Ingrese el número de póliza anterior"></div>
+                        </div>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3"><label for="fecha_recepcion" class="form-label">Fecha de Recepción</label><input type="date" name="fecha_recepcion" id="fecha_recepcion" class="form-control"></div>
-                    <div class="col-md-4 mb-3"><label for="tomador" class="form-label">Tomador</label><input type="text" name="tomador" id="tomador" class="form-control" placeholder="Nombre del tomador" required></div>
-                    <div class="col-md-4 mb-3"><label for="nit" class="form-label">NIT / CC</label><input type="text" name="nit" id="nit" class="form-control" placeholder="Número de identificación" required></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-3 mb-3"><label for="aseguradora" class="form-label">Aseguradora</label><select name="aseguradora" id="aseguradora" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_aseguradora %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 mb-3"><label for="ramo" class="form-label">Ramo</label><select name="ramo" id="ramo" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_ramo %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 mb-3"><label for="poliza" class="form-label">N° Póliza</label><input type="text" name="poliza" id="poliza" class="form-control" placeholder="Número de póliza" required></div>
-                    <div class="col-md-3 mb-3"><label for="anexo" class="form-label">Anexo / Certificado</label><input type="text" name="anexo" id="anexo" class="form-control" placeholder="Número de anexo"></div>
-                </div>
-                 <div class="row">
-                    <div class="col-md-6 mb-3"><label for="categorias_grupo" class="form-label">Categorías / Grupo</label><select name="categorias_grupo" id="categorias_grupo" class="form-select"><option value="">Seleccione un grupo...</option><option value="Grupo Cartagena">Grupo Cartagena</option><option value="Grupo Tenco">Grupo Tenco</option><option value="Otro">Otro</option></select><input type="text" name="categorias_grupo_otro" id="categorias_grupo_otro" class="form-control mt-2" placeholder="Especifique otro grupo" style="display:none;"></div>
-                    <div class="col-md-6 mb-3"><label for="analista_responsable" class="form-label">Analista Responsable</label><select name="analista_responsable" id="analista_responsable" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_analista %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3"><label for="fecha_inicio" class="form-label">Fecha Inicio Vigencia</label><input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" required></div>
-                    <div class="col-md-4 mb-3"><label for="fecha_fin" class="form-label">Fecha Fin Vigencia</label><input type="date" name="fecha_fin" id="fecha_fin" class="form-control" required></div>
-                    <div class="col-md-4 mb-3"><label for="fecha_limite_pago" class="form-label">Fecha Límite de Pago</label><input type="date" name="fecha_limite_pago" id="fecha_limite_pago" class="form-control"></div>
-                </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3"><label for="fecha_recepcion" class="form-label">Fecha de Recepción</label><input type="date" name="fecha_recepcion" id="fecha_recepcion" class="form-control"></div>
+                            <div class="col-md-4 mb-3"><label for="tomador" class="form-label">Tomador</label><input type="text" name="tomador" id="tomador" class="form-control" placeholder="Nombre del tomador" required></div>
+                            <div class="col-md-4 mb-3"><label for="nit" class="form-label">NIT / CC</label><input type="text" name="nit" id="nit" class="form-control" placeholder="Número de identificación" required></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3"><label for="aseguradora" class="form-label">Aseguradora</label><select name="aseguradora" id="aseguradora" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_aseguradora %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                            <div class="col-md-3 mb-3"><label for="ramo" class="form-label">Ramo</label><select name="ramo" id="ramo" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_ramo %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                            <div class="col-md-3 mb-3"><label for="poliza" class="form-label">N° Póliza</label><input type="text" name="poliza" id="poliza" class="form-control" placeholder="Número de póliza" required></div>
+                            <div class="col-md-3 mb-3"><label for="anexo" class="form-label">Anexo / Certificado</label><input type="text" name="anexo" id="anexo" class="form-control" placeholder="Número de anexo"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3"><label for="fecha_inicio" class="form-label">Fecha Inicio Vigencia</label><input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" required></div>
+                            <div class="col-md-4 mb-3"><label for="fecha_fin" class="form-label">Fecha Fin Vigencia</label><input type="date" name="fecha_fin" id="fecha_fin" class="form-control" required></div>
+                            <div class="col-md-4 mb-3"><label for="fecha_limite_pago" class="form-label">Fecha Límite de Pago</label><input type="date" name="fecha_limite_pago" id="fecha_limite_pago" class="form-control"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label for="categorias_grupo" class="form-label">Categorías / Grupo</label><select name="categorias_grupo" id="categorias_grupo" class="form-select"><option value="">Seleccione un grupo...</option><option value="Grupo Cartagena">Grupo Cartagena</option><option value="Grupo Tenco">Grupo Tenco</option><option value="Otro">Otro</option></select><input type="text" name="categorias_grupo_otro" id="categorias_grupo_otro" class="form-control mt-2" placeholder="Especifique otro grupo" style="display:none;"></div>
+                            <div class="col-md-6 mb-3"><label for="analista_responsable" class="form-label">Analista Responsable</label><select name="analista_responsable" id="analista_responsable" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_analista %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                        </div>
+                 </div></div></div></div>
             </fieldset>
 
             <fieldset class="mb-4">
-                <legend class="h5 mb-3"><i class="fas fa-chart-line"></i> Información de Venta y Comisiones</legend>
-                <div class="row">
-                    <div class="col-md-4 mb-3"><label for="tipo_moneda" class="form-label">Tipo Moneda</label><select name="tipo_moneda" id="tipo_moneda" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_tipo_moneda %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
-                    <div class="col-md-4 mb-3"><label for="prima_neta" class="form-label">Prima Neta</label><input type="text" name="prima_neta" id="prima_neta" class="form-control currency" placeholder="$0" required></div>
-                    <div class="col-md-4 mb-3"><label for="gastos_adicionales" class="form-label">Gastos Adicionales</label><input type="text" name="gastos_adicionales" id="gastos_adicionales" class="form-control currency" placeholder="$0"></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-3 mb-3"><label for="porcentaje_comision_valor" class="form-label">% Comisión</label><input type="number" name="porcentaje_comision_valor" id="porcentaje_comision_valor" class="form-control" placeholder="0.00" step="0.01" required></div>
-                    <div class="col-md-3 mb-3"><label for="comision_calculada" class="form-label">Comisión $</label><input type="text" name="comision_calculada" id="comision_calculada" class="form-control currency" placeholder="$0" readonly></div>
-                    <div class="col-md-3 mb-3"><label for="vendedor" class="form-label">Vendedor</label><select name="vendedor" id="vendedor" class="form-select" required><option value="">Seleccione...</option>{% for vendedor in opciones_vendedor %}<option value="{{ vendedor.nombre }}" data-comision="{{ vendedor.comision }}">{{ vendedor.nombre }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 mb-3"><label for="porcentaje_vendedor" class="form-label">% Part. Vendedor</label><input type="number" name="porcentaje_vendedor" id="porcentaje_vendedor" class="form-control" placeholder="0.00" step="0.01"></div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3"><label for="comision_tpp" class="form-label">Comisión TPP</label><input type="text" name="comision_tpp" id="comision_tpp" class="form-control currency" placeholder="$0" readonly></div>
-                    <div class="col-md-4 mb-3"><label for="uib" class="form-label">Comisión UIB</label><input type="text" name="uib" id="uib" class="form-control currency" placeholder="$0" readonly></div>
-                    <div class="col-md-4 mb-3"><label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label><select name="co_corretaje_opcion" id="co_corretaje_opcion" class="form-select"><option value="no" selected>No</option><option value="si">Sí</option></select></div>
-                </div>
+                <div class="card shadow-sm mb-4"><div class="card-header"><h5 class="mb-0"><i class="fas fa-credit-card"></i> Información de Venta y Comisiones</h5><br>
+                    <div class="card-body"><div class="row g-3"><div class="row mb-3">
+                        <div class="row">
+                            <div class="col-md-4 mb-3"><label for="tipo_moneda" class="form-label">Tipo Moneda</label><select name="tipo_moneda" id="tipo_moneda" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_tipo_moneda %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                                <div class="col-md-4 mb-3"><label for="prima_neta" class="form-label">Prima Neta</label><input type="text" name="prima_neta" id="prima_neta" class="form-control currency" placeholder="$0" required></div>
+                                <div class="col-md-4 mb-3"><label for="gastos_adicionales" class="form-label">Gastos Adicionales</label><input type="text" name="gastos_adicionales" id="gastos_adicionales" class="form-control currency" placeholder="$0"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3"><label for="porcentaje_comision_valor" class="form-label">% Comisión</label><input type="number" name="porcentaje_comision_valor" id="porcentaje_comision_valor" class="form-control" placeholder="0.00" step="0.01" required></div>
+                                <div class="col-md-3 mb-3"><label for="comision_calculada" class="form-label">Comisión $</label><input type="text" name="comision_calculada" id="comision_calculada" class="form-control currency" placeholder="$0" readonly></div>
+                                <div class="col-md-3 mb-3"><label for="vendedor" class="form-label">Vendedor</label><select name="vendedor" id="vendedor" class="form-select" required><option value="">Seleccione...</option>{% for vendedor in opciones_vendedor %}<option value="{{ vendedor.nombre }}" data-comision="{{ vendedor.comision }}">{{ vendedor.nombre }}</option>{% endfor %}</select></div>
+                            <div class="col-md-3 mb-3"><label for="porcentaje_vendedor" class="form-label">% Part. Vendedor</label><input type="number" name="porcentaje_vendedor" id="porcentaje_vendedor" class="form-control" placeholder="0.00" step="0.01"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3"><label for="comision_tpp" class="form-label">Comisión TPP</label><input type="text" name="comision_tpp" id="comision_tpp" class="form-control currency" placeholder="$0" readonly></div>
+                                <div class="col-md-4 mb-3"><label for="uib" class="form-label">Comisión UIB</label><input type="text" name="uib" id="uib" class="form-control currency" placeholder="$0" readonly></div>
+                                <div class="col-md-4 mb-3"><label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label><select name="co_corretaje_opcion" id="co_corretaje_opcion" class="form-select"><option value="no" selected>No</option><option value="si">Sí</option></select></div>
+                             </div>
+                </div></div></div></div></div>  
             </fieldset>
 
             <fieldset class="mb-4">
-                <legend class="h5 mb-3"><i class="fas fa-credit-card"></i> Información del Pago</legend>
-                <div class="row">
-                    <div class="col-md-3 mb-3"><label for="periodicidad_pago" class="form-label">Periodicidad de Pago</label><select name="periodicidad_pago" id="periodicidad_pago" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_periodicidad_pago %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 mb-3"><label for="forma_pago" class="form-label">Forma de Pago</label><select name="forma_pago" id="forma_pago" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_forma_pago %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 mb-3" id="numero_cuotas_group" style="display: none;"><label for="numero_cuotas" class="form-label"># de Cuotas</label><input type="number" id="numero_cuotas" name="numero_cuotas" class="form-control" min="0" max="12" step="1" placeholder="0-12"></div>
-                    <div class="col-md-3 mb-3" id="tipo_movimiento_group" style="display: none;"><label for="tipo_movimiento" class="form-label">Tipo de Movimiento</label><select id="tipo_movimiento" name="tipo_movimiento" class="form-select"><option value="Cobro mensual">Cobro mensual</option><option value="Pago mensual">Pago mensual</option></select></div>
-                </div>
+                <div class="card shadow-sm mb-4"><div class="card-header"><h5 class="mb-0"><i class="fas fa-credit-card"></i> Información del Pago</h5><br>
+                    <div class="card-body"><div class="row g-3"><div class="row mb-3">
+                        <div class="row">
+                            <div class="col-md-3 mb-3"><label for="periodicidad_pago" class="form-label">Periodicidad de Pago</label><select name="periodicidad_pago" id="periodicidad_pago" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_periodicidad_pago %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                            <div class="col-md-3 mb-3"><label for="forma_pago" class="form-label">Forma de Pago</label><select name="forma_pago" id="forma_pago" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_forma_pago %}<option value="{{ opt }}">{{ opt }}</option>{% endfor %}</select></div>
+                            <div class="col-md-3 mb-3" id="numero_cuotas_group" style="display: none;"><label for="numero_cuotas" class="form-label"># de Cuotas</label><input type="number" id="numero_cuotas" name="numero_cuotas" class="form-control" min="0" max="12" step="1" placeholder="0-12"></div>
+                            <div class="col-md-3 mb-3" id="tipo_movimiento_group" style="display: none;"><label for="tipo_movimiento" class="form-label">Tipo de Movimiento</label><select id="tipo_movimiento" name="tipo_movimiento" class="form-select"><option value="Cobro mensual">Cobro mensual</option><option value="Pago mensual">Pago mensual</option></select></div>
+                        </div>
+                </div></div></div></div></div>            
             </fieldset>
 
             <fieldset class="mb-4">
-                <legend class="h5 mb-3"><i class="far fa-file-alt"></i> Observaciones</legend>
-                <div class="row">
-                    <div class="col-md-6 mb-3"><label for="observaciones" class="form-label">Observaciones</label><textarea name="observaciones" id="observaciones" class="form-control" rows="3" placeholder="Escriba aquí cualquier observación adicional..."></textarea></div>
-                    <div class="col-md-6 mb-3"><label for="riesgos_adicionales" class="form-label">Riesgos Adicionales</label><textarea name="riesgos_adicionales" id="riesgos_adicionales" class="form-control" rows="3" placeholder="Describa riesgos adicionales..."></textarea></div>
-                </div>
+                <div class="card shadow-sm mb-4"><div class="card-header"><h5 class="mb-0"><i class="far fa-file-alt"></i> Observaciones</h5><br>
+                    <div class="card-body"><div class="row g-3"><div class="row mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label for="observaciones" class="form-label">Observaciones</label><textarea name="observaciones" id="observaciones" class="form-control" rows="3" placeholder="Escriba aquí cualquier observación adicional..."></textarea></div>
+                            <div class="col-md-6 mb-3"><label for="riesgos_adicionales" class="form-label">Riesgos Adicionales</label><textarea name="riesgos_adicionales" id="riesgos_adicionales" class="form-control" rows="3" placeholder="Describa riesgos adicionales..."></textarea></div>
+                        </div>
+                </div></div></div></div></div>  
             </fieldset>
 
             <fieldset class="mb-4">
-                <legend class="h5 mb-3"><i class="fas fa-cloud-upload-alt"></i> Cargar Archivos</legend>
-                <div id="file-container">
-                    <div class="row align-items-center mb-2 archivo-group">
-                        <div class="col-md-5"><input type="file" name="archivos[]" class="form-control" required></div>
-                        <div class="col-md-5"><select name="tipo_archivo[]" class="form-select"><option value="Recibo">RECIBO</option><option value="Poliza">PÓLIZA</option><option value="Clausulado">CLAUSULADO</option><option value="Otro">Otro</option></select></div>
-                        <div class="col-md-2"></div>
-                        <div class="col-12 mt-2"><input type="text" name="otro_tipo_nombre[]" class="form-control otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none;"></div>
-                    </div>
-                </div>                
-                <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="agregarArchivo()"><i class="fas fa-plus"></i> Añadir otro archivo</button>
+                <div class="card shadow-sm mb-4"><div class="card-header"><h5 class="mb-0"><i class="fas fa-cloud-upload-alt"></i> Cargar Archivos</h5><br>
+                    <div class="card-body"><div class="row g-3"><div class="row mb-3">
+                        <div id="file-container">
+                            <div class="row align-items-center mb-2 archivo-group">
+                                <div class="col-md-5"><input type="file" name="archivos[]" class="form-control" required></div>
+                                <div class="col-md-5"><select name="tipo_archivo[]" class="form-select"><option value="Recibo">RECIBO</option><option value="Poliza">PÓLIZA</option><option value="Clausulado">CLAUSULADO</option><option value="Otro">Otro</option></select></div>
+                                <div class="col-md-2"></div>
+                                <div class="col-12 mt-2"><input type="text" name="otro_tipo_nombre[]" class="form-control otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none;"></div>
+                            </div>
+                        </div>
+                </div></div>
+                <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="agregarArchivo()"><i class="fas fa-plus"></i> Añadir otro archivo</button></div></div></div>                
             </fieldset>
+
+        <div class="progress mb-4">
+            <div class="progress-bar" id="progressFill" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
         </form>
-
-        <div>
+        <br>
+        <div class="text-end">
             <button type="submit" class="btn btn-primary" form="mainForm" id="guardarRemisionBtn"><i class="fas fa-save"></i> Guardar Remisión</button>
         </div>
-        <footer class="pt-3 mt-4 text-muted border-top">&copy; CicloSeguros</footer>
+        <footer class="pt-3 mt-4 text-muted border-top">&copy; 2024 UIB Corredores de Seguros S.A.</footer>
     </div>
 </div>
 

@@ -30,6 +30,20 @@
             padding: 3rem;
         }
 
+        #branding-column img {
+                max-width: 60%;      /* Ajusta el tamaño relativo del logo (puedes probar 50% o 70%) */
+                height: auto;        /* Mantiene proporciones */
+                object-fit: contain; /* Evita deformaciones */
+                transition: all 0.3s ease; /* Suaviza cambios */
+        }
+
+         @media (max-width: 992px) {
+            #branding-column img {
+                max-width: 50%;
+            }
+        }
+
+
         .login-form-container {
             width: 100%;
             max-width: 420px;
@@ -59,7 +73,7 @@
             <!-- Left Column: Branding -->
             <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center" id="branding-column">
                 <div class="text-center">
-                    <img src="{{ url_for('static', filename='UIBH_logo_WHITE2-300x78-1.png') }}" alt="UIB Logo" style="max-width: 200px;">
+                    <img src="{{ url_for('static', filename='ChatGPT Image 27 oct 2025, 12_38_37 copia.png') }}" alt="CicloSeguros Logo">
                 </div>
             </div>
 
@@ -67,7 +81,7 @@
             <div class="col-md-6 d-flex align-items-center justify-content-center bg-light">
                 <div class="login-form-container">
                     <div class="text-center mb-4">
-                        <h2>Bienvenido de Nuevo</h2>
+                        <h2>Bienvenido</h2>
                         <p class="text-muted">Inicia sesión para continuar</p>
                     </div>
 

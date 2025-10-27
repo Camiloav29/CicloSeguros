@@ -22,10 +22,21 @@ body {
 }
 
 .sidebar-header {
-    padding: 20px;
+    padding: 1rem 1rem;
     text-align: center;
-    border-bottom: 1px solid #34495e;
+    background-color: rgba(0,0,0,0.15); /* más sutil */
 }
+
+.sidebar-header img {
+    width: 95%;          /* ocupa casi todo el ancho disponible */
+    max-width: 280px;    /* aumentamos límite para pantallas grandes */
+    height: auto;        /* mantiene proporción */
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); /* resalta un poco el logo */
+}
+
+
 
 .sidebar-header h3 {
     margin: 0;
