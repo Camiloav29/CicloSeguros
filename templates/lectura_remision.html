@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Póliza</title>
+    <title>Lectura de Póliza</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='main_layout.css') }}">
     <style>
-        .form-control[readonly], .form-control:disabled { background-color: #e9ecef; opacity: 1; }
-        .card-header h5 { color: var(--primary-dark); }
-        .highlight-card { border-color: var(--primary-color); }
-        .highlight-card .card-header { color: white; }
-        .form-group-checkbox-display { display: flex; align-items: center; gap: 10px; }
-        .form-group-checkbox-display input { flex-grow: 1; }
+        .form-control[readonly], .form-control:disabled, .form-select:disabled { background-color: #e9ecef; opacity: 1; }
     </style>
 </head>
 <body>
@@ -42,26 +37,17 @@
             <li class="nav-item mt-auto"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt fa-fw"></i> Admin</a></li>
         </ul>
     </div>
+
     <!-- Main Content -->
     <div class="content">
         <header class="pb-3 mb-4 border-bottom">
-            <h1 class="h3"><i class="fas fa-edit me-2"></i>Editar Póliza</h1>
-            <p class="text-muted">Editando el registro con consecutivo: <strong>{{ datos.get('consecutivo', 'N/A') }}</strong></p>
-            
-            <div class="text-end">
-                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
-                <a href="{{ url_for('control') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver a las Pólizas</a>                    
-            </div>
-
-
+            <h1 class="h3"><i class="fas fa-book-open me-2"></i>Lectura de Póliza</h1>
+            <p class="text-muted">Visualizando el registro con consecutivo: <strong>{{ datos.get('consecutivo', 'N/A') }}</strong></p>
         </header>
 
-        <div id="notification-container"></div>
-        
-        <form method="POST" action="{{ url_for('actualizar_remision') }}" enctype="multipart/form-data" id="mainForm" class="card p-4">
-            <input type="hidden" name="consecutivo" value="{{ datos.get('consecutivo', '') }}">
-            <!-- Datos Básicos -->
-            <fieldset class="mb-4">
+        <form class="card p-4">
+            <!-- All fields will be disabled -->
+            <fieldset class="mb-4" disabled>
                 <div class="card shadow-sm mb-4">
                     <div class="card-header"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Datos de la Póliza</h5><br>
                         <div class="d-flex flex-wrap gap-2">
@@ -102,7 +88,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="mb-4">                
+            <fieldset class="mb-4" disabled>                
                 <div class="card shadow-sm mb-4">
                     <div class="card-header"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información de Venta y Comisiones</h5><br>
                         <div class="row"><br>
@@ -125,7 +111,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="mb-4">
+            <fieldset class="mb-4" disabled>
                 <div class="card shadow-sm mb-4">
                     <div class="card-header"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información del Pago</h5><br>
                         <div class="row"><br>
@@ -138,7 +124,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="mb-4">
+            <fieldset class="mb-4" disabled>
                 <div class="card shadow-sm mb-4">
                     <div class="card-header"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Observaciones</h5><br>
                         <div class="row"><br>
@@ -149,7 +135,7 @@
                 </div>                
             </fieldset>
 
-            <fieldset class="mb-4">
+            <fieldset class="mb-4" disabled>
                 <div class="card shadow-sm mb-4"><div class="card-header"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Archivos Cargados</h5><br>
                     {% if datos.get('archivos') %}
                         <div class="mb-3">
@@ -163,254 +149,16 @@
                     {% endif %}
                 </div>
             </fieldset>
-        </form><br>
+            
+            <!-- Other fieldsets would go here, similarly disabled -->
 
-        <div>
-            <button type="submit" class="btn btn-primary" form="mainForm" id="guardarRemisionBtn"><i class="fas fa-save"></i> Guardar Cambios</button>
-        </div>
+        </form>
+        <a href="{{ url_for('control') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left"></i> Volver a Control</a>
+        
         <footer class="pt-3 mt-4 text-muted border-top">&copy; CicloSeguros</footer>
     </div>
 </div>
 
-<!-- Modal para Grupo Cartagena -->
-<div class="modal fade" id="cartagenaModal" tabindex="-1" aria-labelledby="cartagenaModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="cartagenaModalLabel">Aviso de Co-corretaje</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Recuerda que este grupo tiene Co-corretaje, por favor ingresa los valores y las comisiones correctas.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-let fileCounter = 1;
-
-function handleTipoArchivoChange(selectElement) {
-    const archivoGroup = selectElement.closest('.archivo-group');
-    const otroNombreInput = archivoGroup.querySelector('.otro-tipo-nombre-input');
-    otroNombreInput.style.display = selectElement.value === 'Otro' ? 'block' : 'none';
-    otroNombreInput.required = selectElement.value === 'Otro';
-}
-
-function agregarArchivo() {
-    fileCounter++;
-    const container = document.getElementById('file-container');
-    const nuevo = document.createElement('div');
-    nuevo.className = 'row align-items-center mb-2 archivo-group';
-    nuevo.innerHTML = `
-        <div class="col-md-5"><input type="file" name="archivos[]" class="form-control" required></div>
-        <div class="col-md-5"><select name="tipo_archivo[]" class="form-select"><option value="Recibo">RECIBO</option><option value="Poliza">PÓLIZA</option><option value="Clausulado">CLAUSULADO</option><option value="Otro">Otro</option></select></div>
-        <div class="col-md-2"><button type="button" class="btn btn-danger btn-sm" onclick="eliminarArchivo(this)"><i class="fas fa-trash"></i></button></div>
-        <div class="col-12 mt-2"><input type="text" name="otro_tipo_nombre[]" class="form-control otro-tipo-nombre-input" placeholder="Especifique nombre para 'Otro'" style="display:none;"></div>
-    `;
-    container.appendChild(nuevo);
-    nuevo.querySelector('select').addEventListener('change', (e) => handleTipoArchivoChange(e.target));
-}
-
-function eliminarArchivo(button) {
-    button.closest('.archivo-group').remove();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const allInputs = document.querySelectorAll('#mainForm input, #mainForm select, #mainForm textarea');
-    const progressFill = document.getElementById('progressFill');
-    const requiredInputs = document.querySelectorAll('#mainForm [required]');
-    const cartagenaModal = new bootstrap.Modal(document.getElementById('cartagenaModal'));
-
-    function updateProgress() {
-        let filledCount = 0;
-        requiredInputs.forEach(input => {
-            if ((input.type === 'file' && input.files.length > 0) || (input.type !== 'file' && input.value.trim() !== '')) {
-                filledCount++;
-            }
-        });
-        const progress = (filledCount / requiredInputs.length) * 100;
-        progressFill.style.width = `${progress}%`;
-        progressFill.setAttribute('aria-valuenow', progress);
-    }
-    
-    allInputs.forEach(input => {
-        input.addEventListener('input', updateProgress);
-        input.addEventListener('change', updateProgress);
-    });
-
-    document.querySelectorAll('.currency').forEach(input => {
-        if (!input.readOnly) {
-            input.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/[^0-9]/g, '');
-                e.target.value = value ? '$' + parseInt(value, 10).toLocaleString('es-CO') : '';
-            });
-        }
-    });
-
-    document.querySelectorAll('select[name="tipo_archivo[]"]').forEach(select => {
-        select.addEventListener('change', (e) => handleTipoArchivoChange(e.target));
-    });
-
-    document.getElementById('renovacion').addEventListener('change', function() {
-        document.getElementById('policy-modification-section').style.display = this.checked ? 'block' : 'none';
-        if (!this.checked) {
-            document.getElementById('policy_number_modified').checked = false;
-            document.getElementById('old-policy-number-section').style.display = 'none';
-            document.getElementById('old_policy_number').required = false;
-        }
-    });
-
-    document.getElementById('policy_number_modified').addEventListener('change', function() {
-        document.getElementById('old-policy-number-section').style.display = this.checked ? 'block' : 'none';
-        document.getElementById('old_policy_number').required = this.checked;
-    });
-
-    const primaNetaInput = document.getElementById('prima_neta');
-    const porcComisionInput = document.getElementById('porcentaje_comision_valor');
-    const porcParticipacionVendedorInput = document.getElementById('porcentaje_vendedor');
-    const comisionCalculadaInput = document.getElementById('comision_calculada');
-    const comisionTppInput = document.getElementById('comision_tpp');
-    const participacionUibInput = document.getElementById('uib');
-
-    function calcularComisiones() {
-        const primaNeta = parseFloat(primaNetaInput.value.replace(/\$|\.|,/g, '')) || 0;
-        const porcComision = parseFloat(porcComisionInput.value) || 0;
-        const porcParticipacionVendedor = parseFloat(porcParticipacionVendedorInput.value) || 0;
-        
-        const vendedorSelect = document.getElementById('vendedor');
-        const coCorretajeSelect = document.getElementById('co_corretaje_opcion');
-        const selectedVendedorName = vendedorSelect.options[vendedorSelect.selectedIndex].value;
-
-        const comisionCalculada = primaNeta * (porcComision / 100);
-        comisionCalculadaInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
-
-        let comisionTpp = 0;
-        // If the seller is UIB, their commission is not TPP.
-        if (selectedVendedorName === 'UIB CORREDORES DE SEGUROS S.A.') {
-            comisionTpp = 0;
-        } else if (porcParticipacionVendedor > 0) {
-            // For any other seller, calculate TPP as before.
-            comisionTpp = comisionCalculada * (porcParticipacionVendedor / 100);
-        }
-        
-        comisionTppInput.value = '$' + Math.round(comisionTpp).toLocaleString('es-CO');
-        
-        // Automatically set the co-brokerage option based on the TPP commission value.
-        coCorretajeSelect.value = comisionTpp > 0 ? 'si' : 'no';
-
-        const comisionUib = comisionCalculada - comisionTpp;
-        participacionUibInput.value = '$' + Math.round(comisionUib).toLocaleString('es-CO');
-    }
-
-    [primaNetaInput, porcComisionInput, porcParticipacionVendedorInput].forEach(input => {
-        if(input) input.addEventListener('input', calcularComisiones);
-    });
-
-    document.getElementById('vendedor').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const comision = selectedOption.dataset.comision;
-        porcParticipacionVendedorInput.value = comision || '';
-        porcParticipacionVendedorInput.dispatchEvent(new Event('input'));
-    });
-
-    const periodicidadSelect = document.getElementById('periodicidad_pago');
-    const formaPagoSelect = document.getElementById('forma_pago');
-    const cuotasGroup = document.getElementById('numero_cuotas_group');
-    const cuotasInput = document.getElementById('numero_cuotas');
-    const tipoMovimientoGroup = document.getElementById('tipo_movimiento_group');
-
-    function handlePaymentOptionsChange() {
-        const periodicidad = periodicidadSelect.value;
-        const formaPago = formaPagoSelect.value;
-        const formasPagoConCuotas = ['Fraccionado', 'Acuerdo de pago', 'Cobro mensual', 'Financiado'];
-
-        const showCuotas = formasPagoConCuotas.includes(formaPago);
-
-        cuotasGroup.style.display = showCuotas ? 'block' : 'none';
-        cuotasInput.required = showCuotas;
-        tipoMovimientoGroup.style.display = showCuotas ? 'block' : 'none';
-        tipoMovimientoGroup.querySelector('select').required = showCuotas;
-
-        if (showCuotas) {
-            switch (periodicidad) {
-                case 'Mensual':
-                    cuotasInput.value = 12;
-                    break;
-                case 'Trimestral':
-                    cuotasInput.value = 4;
-                    break;
-                case 'Anual':
-                    cuotasInput.value = 1;
-                    break;
-                default:
-                    cuotasInput.value = ''; // Clear if no periodicity is selected
-                    break;
-            }
-        } else {
-            cuotasInput.value = ''; // Clear if payment form is 'Contado'
-        }
-    }
-
-    [periodicidadSelect, formaPagoSelect].forEach(el => el.addEventListener('change', handlePaymentOptionsChange));
-
-    document.getElementById('categorias_grupo').addEventListener('change', function() {
-        const otroGrupoInput = document.getElementById('categorias_grupo_otro');
-        otroGrupoInput.style.display = this.value === 'Otro' ? 'block' : 'none';
-        otroGrupoInput.required = this.value === 'Otro';
-        if (this.value === 'Grupo Cartagena') {
-            cartagenaModal.show();
-        }
-    });
-
-    document.getElementById('fecha_recepcion').valueAsDate = new Date();
-
-    document.getElementById('mainForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('guardarRemisionBtn'); // Correctly select the button by its ID
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-        
-        const formData = new FormData(this);
-        document.querySelectorAll('.currency').forEach(input => {
-            formData.set(input.name, input.value.replace(/\$|\.|,/g, ''));
-        });
-
-        fetch("{{ url_for('actualizar_remision') }}", {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = data.redirect_url || "{{ url_for('control') }}";
-            } else {
-                const notificationContainer = document.getElementById('notification-container');
-                notificationContainer.innerHTML = `<div class="alert alert-danger">${data.message || 'Error al actualizar la remisión'}</div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const notificationContainer = document.getElementById('notification-container');
-            notificationContainer.innerHTML = `<div class="alert alert-danger">Error de conexión al intentar actualizar.</div>`;
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
-        });
-    });
-
-    // Initialize form state on page load
-    document.getElementById('renovacion').dispatchEvent(new Event('change'));
-    document.getElementById('policy_number_modified').dispatchEvent(new Event('change'));
-    document.getElementById('categorias_grupo').dispatchEvent(new Event('change'));
-    handlePaymentOptionsChange();
-    calcularComisiones();
-});
-</script>
 </body>
 </html>

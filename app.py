@@ -248,7 +248,7 @@ def obtener_consecutivo():
                 num = 1 # Default to 1 if file is empty or corrupt
 
     year_short = datetime.now().strftime('%y')
-    consecutivo_actual = f"UIB-{year_short}-{num:05d}"
+    consecutivo_actual = f"POL-{year_short}-{num:05d}"
 
     nuevo_num = num + 1
     with open(CONSECUTIVO_FILE, 'w') as f:
@@ -679,36 +679,96 @@ def registrar():
         traceback.print_exc()
         return jsonify({'success': False, 'message': f'Error interno del servidor: {e}'}), 500
 
+@app.route('/lectura_remision/<string:consecutivo_id>')
+@login_required
+def lectura_remision(consecutivo_id):
+    remisiones = cargar_remisiones()
+    remision_a_ver = None
+    for r in remisiones:
+        if str(r.get('consecutivo')).strip() == str(consecutivo_id).strip():
+            remision_a_ver = r
+            break
+
+    if remision_a_ver:
+        return render_template('lectura_remision.html', 
+                               datos=remision_a_ver,
+                               opciones_aseguradora=config_manager.get_list('aseguradoras'),
+                               opciones_ramo=config_manager.get_list('ramos'),
+                               opciones_tipo_moneda=config_manager.get_list('tipo_moneda'),
+                               opciones_vendedor=config_manager.get_list('vendedores'),
+                               opciones_forma_pago=config_manager.get_list('forma_pago'),
+                               opciones_periodicidad_pago=config_manager.get_list('periodicidad_pago'),
+                               opciones_analista=config_manager.get_list('analistas'))
+    else:
+        return f"Error: Remisión con consecutivo {consecutivo_id} no encontrada.", 404
+
+@app.route('/generar_remision/<string:consecutivo_id>', methods=['POST'])
+@login_required
+def generar_remision(consecutivo_id):
+    remisiones = cargar_remisiones()
+    df = pd.DataFrame(remisiones)
+    
+    current_year_short = datetime.now().strftime('%y')
+    
+    # Ensure the column is of string type before using .str accessor
+    df['numero_remision_manual'] = df['numero_remision_manual'].astype(str)
+    
+    # Filter for remisiones of the current year to find the max
+    remisiones_del_ano = df[df['numero_remision_manual'].str.startswith(f"{current_year_short}-", na=False)]
+    
+    if not remisiones_del_ano.empty:
+        max_remision = remisiones_del_ano['numero_remision_manual'].str.split('-').str[1].astype(int).max()
+        next_num = max_remision + 1
+    else:
+        next_num = 1
+        
+    nuevo_numero_remision = f"{current_year_short}-{next_num:05d}"
+    
+    # Update the specific remission
+    df['consecutivo'] = df['consecutivo'].astype(str)
+    idx_list = df[df['consecutivo'] == str(consecutivo_id)].index
+    if not idx_list.empty:
+        idx = idx_list[0]
+        df.loc[idx, 'numero_remision_manual'] = nuevo_numero_remision
+        df.loc[idx, 'estado'] = 'Gestionado' # Change status to 'Gestionado'
+        df.to_excel(EXCEL_FILE, index=False)
+        flash(f'Remisión generada: {nuevo_numero_remision}', 'success')
+    else:
+        flash('Error: No se encontró la remisión para actualizar.', 'danger')
+        
+    return redirect(url_for('control'))
+
 @app.route('/control')
 @login_required
 def control():
     remisiones_data = cargar_remisiones()
-    remisiones_ordenadas = sorted(remisiones_data, key=lambda r: str(r.get('consecutivo', '')), reverse=True)
-    primeras_10_remisiones = remisiones_ordenadas[:10]
+    df = pd.DataFrame(remisiones_data)
 
-    campos_esperados = [
-        'consecutivo', 'fecha_recepcion', 'tomador', 'nit',
-        'aseguradora', 'ramo', 'poliza',
-        'fecha_inicio', 'fecha_fin', 'estado', 'numero_remision_manual',
-        'archivos',
-        'prima_neta',
-        'Comision$',
-        'ComisionTPP',
-        'ComisionUIB',
-        'uib'
-    ]
-    remisiones_list = []
-    for r in primeras_10_remisiones:
-        for campo in campos_esperados:
-            if campo not in r:
-                r[campo] = 'N/A'
-        
-        # FIX: Ensure 'archivos' is a string to prevent .split() error on float (NaN)
-        if 'archivos' in r and not isinstance(r['archivos'], str):
-            r['archivos'] = ''
+    # Get search parameters from URL
+    poliza_query = request.args.get('poliza', '').strip()
+    tomador_query = request.args.get('tomador', '').strip()
+    ramo_query = request.args.get('ramo', '').strip()
+    aseguradora_query = request.args.get('aseguradora', '').strip()
 
-        remisiones_list.append(r)
-    return render_template('control.html', remisiones=remisiones_list)
+    # Filter DataFrame based on query parameters
+    if poliza_query:
+        df = df[df['poliza'].astype(str).str.contains(poliza_query, case=False, na=False)]
+    if tomador_query:
+        df = df[df['tomador'].astype(str).str.contains(tomador_query, case=False, na=False)]
+    if ramo_query:
+        df = df[df['ramo'].astype(str).str.contains(ramo_query, case=False, na=False)]
+    if aseguradora_query:
+        df = df[df['aseguradora'].astype(str).str.contains(aseguradora_query, case=False, na=False)]
+
+    remisiones_ordenadas = df.sort_values(by='consecutivo', ascending=False).to_dict(orient='records')
+    
+    ramos = config_manager.get_list('ramos')
+    aseguradoras = config_manager.get_list('aseguradoras')
+    
+    return render_template('control.html', 
+                           remisiones=remisiones_ordenadas, 
+                           ramos=ramos, 
+                           aseguradoras=aseguradoras)
 
 @app.route('/marcar_creado', methods=['POST'])
 @login_required
@@ -767,7 +827,15 @@ def editar_remision(consecutivo_id):
             if campo not in remision_a_editar:
                 remision_a_editar[campo] = '' # Default to empty string if missing
 
-        return render_template('editar_remision.html', datos=remision_a_editar)
+        return render_template('editar_remision.html', 
+                               datos=remision_a_editar,
+                               opciones_aseguradora=config_manager.get_list('aseguradoras'),
+                               opciones_ramo=config_manager.get_list('ramos'),
+                               opciones_tipo_moneda=config_manager.get_list('tipo_moneda'),
+                               opciones_vendedor=config_manager.get_list('vendedores'),
+                               opciones_forma_pago=config_manager.get_list('forma_pago'),
+                               opciones_periodicidad_pago=config_manager.get_list('periodicidad_pago'),
+                               opciones_analista=config_manager.get_list('analistas'))
     else:
         return f"Error: Remisión con consecutivo {consecutivo_id} no encontrada. Verifique el número o contacte soporte.", 404
 
@@ -886,6 +954,104 @@ def guardar_numero_remision():
     else:
         return f"Error: No se encontró la remisión con consecutivo {consecutivo_a_actualizar} para actualizar. Es posible que haya sido eliminada.", 404
     return redirect(url_for('control'))
+
+@app.route('/actualizar_remision', methods=['POST'])
+@login_required
+def actualizar_remision():
+    try:
+        datos_formulario = request.form.to_dict()
+        consecutivo = datos_formulario.get('consecutivo')
+
+        if not consecutivo:
+            flash('Error: No se proporcionó un consecutivo para actualizar.', 'danger')
+            return redirect(url_for('control'))
+
+        remisiones = cargar_remisiones()
+        df = pd.DataFrame(remisiones)
+        
+        # Ensure consecutivo column is of string type for matching
+        df['consecutivo'] = df['consecutivo'].astype(str)
+        consecutivo = str(consecutivo)
+
+        # Find the index of the row to update
+        idx_list = df[df['consecutivo'] == consecutivo].index
+        if idx_list.empty:
+            flash(f'Error: No se encontró la remisión con consecutivo {consecutivo}.', 'danger')
+            return redirect(url_for('control'))
+        
+        idx = idx_list[0]
+
+        # Update the row with the new data
+        for key, value in datos_formulario.items():
+            if key in df.columns:
+                df.loc[idx, key] = value
+
+        # Recalculate commissions and other derived fields
+        prima_neta = limpiar_valor_moneda(datos_formulario.get('prima_neta', '0'))
+        porcentaje_comision = limpiar_valor_moneda(datos_formulario.get('porcentaje_comision_valor', '0'))
+        porcentaje_vendedor = limpiar_valor_moneda(datos_formulario.get('porcentaje_vendedor', '0'))
+
+        comision_dolar = (prima_neta * porcentaje_comision) / 100.0
+        comision_tpp = 0
+        if datos_formulario.get('vendedor') != 'UIB CORREDORES DE SEGUROS S.A.' and porcentaje_vendedor > 0 and datos_formulario.get('co_corretaje_opcion') == 'si':
+            comision_tpp = comision_dolar * (porcentaje_vendedor / 100.0)
+        
+        comision_uib = comision_dolar - comision_tpp
+
+        df.loc[idx, 'prima_neta'] = prima_neta
+        df.loc[idx, 'porcentaje_comision_valor'] = porcentaje_comision
+        df.loc[idx, 'porcentaje_vendedor'] = porcentaje_vendedor
+        df.loc[idx, 'Comision$'] = comision_dolar
+        df.loc[idx, 'ComisionTPP'] = comision_tpp
+        df.loc[idx, 'ComisionUIB'] = comision_uib
+        df.loc[idx, 'uib'] = comision_uib
+
+        # File processing logic (adapted from /registrar)
+        archivos = request.files.getlist("archivos[]")
+        nombres_archivos_guardados = []
+        if archivos and archivos[0].filename:
+            # New files are being uploaded, so we process them
+            nombre_cliente_form = df.loc[idx, 'tomador']
+            nit_cliente_form = df.loc[idx, 'nit']
+            nombre_carpeta_cliente_base = f"{nombre_cliente_form}_{nit_cliente_form}"
+            nombre_carpeta_cliente_seguro = secure_filename(nombre_carpeta_cliente_base)
+            ruta_base_cliente = os.path.join(app.config['CLIENT_FOLDERS_BASE_DIR'], nombre_carpeta_cliente_seguro)
+            
+            # This logic is simplified; in a real-world scenario, you might want to create the folders if they don't exist
+            # For now, we assume the client folder structure already exists from the initial registration
+            
+            tipos = request.form.getlist("tipo_archivo[]")
+            otros_tipos_nombres = request.form.getlist("otro_tipo_nombre[]")
+
+            for i, archivo in enumerate(archivos):
+                if archivo and archivo.filename:
+                    # This is a simplified version of the file naming logic in /registrar
+                    ramo_form = df.loc[idx, 'ramo'].replace(' ','_')
+                    poliza_form = df.loc[idx, 'poliza']
+                    aseguradora_form = df.loc[idx, 'aseguradora']
+                    tipo_archivo = tipos[i] if i < len(tipos) else 'Otro'
+                    
+                    filename = secure_filename(f"{ramo_form}_{poliza_form}_{aseguradora_form}_{tipo_archivo}{os.path.splitext(archivo.filename)[1]}")
+                    
+                    # For simplicity, we'll save new files in a generic 'DOCUMENTOS' subfolder
+                    # A more robust solution would check the file type and save to the appropriate subfolder
+                    ruta_destino_final = os.path.join(ruta_base_cliente, 'DOCUMENTOS')
+                    os.makedirs(ruta_destino_final, exist_ok=True)
+                    
+                    ruta_archivo_con_nombre = os.path.join(ruta_destino_final, filename)
+                    archivo.save(ruta_archivo_con_nombre)
+                    nombres_archivos_guardados.append(os.path.relpath(ruta_archivo_con_nombre, app.config['CLIENT_FOLDERS_BASE_DIR']))
+
+            # Replace the old file list with the new one
+            df.loc[idx, 'archivos'] = ", ".join(nombres_archivos_guardados)
+
+        # Save the updated DataFrame back to the Excel file
+        df.to_excel(EXCEL_FILE, index=False)
+
+        return jsonify({'success': True, 'message': 'Remisión actualizada exitosamente.', 'redirect_url': url_for('control')})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error al actualizar la remisión: {e}'})
 
 @app.route('/formulario_crear_carpeta', methods=['GET'])
 @login_required
@@ -2174,6 +2340,7 @@ def panel_cobros():
             
             # "Mensual": todos los pendientes del mes actual
             df_mensual_actual = df_pendientes[
+                (df_pendientes['Periodicidad'] == 'Mensual') &
                 (df_pendientes['Fecha_Vencimiento_Cuota'].dt.month == hoy.month) & 
                 (df_pendientes['Fecha_Vencimiento_Cuota'].dt.year == hoy.year)
             ]
@@ -2183,12 +2350,20 @@ def panel_cobros():
             
             # "Pasados": todos los pendientes antes del mes actual
             df_pasados = df_pendientes[df_pendientes['Fecha_Vencimiento_Cuota'] < primer_dia_mes_actual]
+            
+            # "Cobrados en el mes"
+            df_cobrados_mes_actual = df_raw[
+                (df_raw['Estado'] == 'Cobrado') &
+                (df_raw['Fecha_Vencimiento_Cuota'].dt.month == hoy.month) &
+                (df_raw['Fecha_Vencimiento_Cuota'].dt.year == hoy.year)
+            ]
 
             # --- Lógica para KPIs ---
             kpis['Mensual'] = len(df_mensual_actual)
-            kpis['Trimestral'] = len(df_futuro[df_futuro['Periodicidad'] == 'Trimestral'].drop_duplicates(subset=['Tomador', 'N_Poliza']))
-            kpis['Anual'] = len(df_futuro[df_futuro['Periodicidad'] == 'Anual'].drop_duplicates(subset=['Tomador', 'N_Poliza']))
+            kpis['Trimestral'] = len(df_pendientes[df_pendientes['Periodicidad'] == 'Trimestral'].drop_duplicates(subset=['Tomador', 'N_Poliza']))
+            kpis['Anual'] = len(df_pendientes[df_pendientes['Periodicidad'] == 'Anual'].drop_duplicates(subset=['Tomador', 'N_Poliza']))
             kpis['Pendientes Mes Anterior'] = len(df_pasados)
+            kpis['Cobrados en el Mes'] = len(df_cobrados_mes_actual)
 
             # --- Lógica para selección de tabla y paginación ---
             periodicidad_seleccionada = request.args.get(f'periodicidad_{section_name_prefix}', 'Mensual')
@@ -2199,9 +2374,10 @@ def panel_cobros():
                 registros_filtrados_df = df_mensual_actual
             elif periodicidad_seleccionada == 'Pendientes Mes Anterior':
                 registros_filtrados_df = df_pasados
+            elif periodicidad_seleccionada == 'Cobrados en el Mes':
+                registros_filtrados_df = df_cobrados_mes_actual
             else: # Trimestral, Anual, etc.
-                df_futuro_filtrado = df_futuro[df_futuro['Periodicidad'] == periodicidad_seleccionada]
-                registros_filtrados_df = df_futuro_filtrado.sort_values('Fecha_Vencimiento_Cuota').drop_duplicates(subset=['Tomador', 'N_Poliza'], keep='first')
+                registros_filtrados_df = df_pendientes[df_pendientes['Periodicidad'] == periodicidad_seleccionada]
 
             total_registros = len(registros_filtrados_df)
             total_pages = (total_registros + per_page - 1) // per_page if per_page > 0 else 0

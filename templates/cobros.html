@@ -46,6 +46,7 @@
             <li class="nav-item mt-auto"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt fa-fw"></i> Admin</a></li>
         </ul>
     </div>
+
     <!-- Main Content -->
     <div class="content">
         <header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center">
@@ -87,6 +88,14 @@
                             <div class="card-body text-center">
                                 <h3 class="card-title text-danger">{{ cobros_data.kpis.get('Pendientes Mes Anterior', 0) }}</h3>
                                 <p class="card-text text-muted">Pendientes Mes Anterior</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card shadow-sm kpi-card {% if cobros_data.selected_period == 'Cobrados en el Mes' %}active{% endif %}" data-section="cobros" data-periodicidad="Cobrados en el Mes">
+                            <div class="card-body text-center">
+                                <h3 class="card-title text-success">{{ cobros_data.kpis.get('Cobrados en el Mes', 0) }}</h3>
+                                <p class="card-text text-muted">Cobrados en el Mes</p>
                             </div>
                         </div>
                     </div>
@@ -138,7 +147,7 @@
         <!-- ########## SECCIÓN DE PAGOS ########## -->
         <div class="card shadow-sm section-divider">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-arrow-up me-2"></i>Pagos Mensuales</h5>
+                <h5 class="mb-0"><i class="fas fa-arrow-up me-2"></i>Pagos</h5>
             </div>
             <div class="card-body">
                 <!-- KPIs Pagos -->
@@ -158,6 +167,14 @@
                             <div class="card-body text-center">
                                 <h3 class="card-title text-danger">{{ pagos_data.kpis.get('Pendientes Mes Anterior', 0) }}</h3>
                                 <p class="card-text text-muted">Pendientes Mes Anterior</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card shadow-sm kpi-card {% if pagos_data.selected_period == 'Cobrados en el Mes' %}active{% endif %}" data-section="pagos" data-periodicidad="Cobrados en el Mes">
+                            <div class="card-body text-center">
+                                <h3 class="card-title text-success">{{ pagos_data.kpis.get('Cobrados en el Mes', 0) }}</h3>
+                                <p class="card-text text-muted">Cobrados en el Mes</p>
                             </div>
                         </div>
                     </div>
