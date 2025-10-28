@@ -123,6 +123,29 @@
             <div class="alert alert-info text-center">No hay pólizas registradas que coincidan con los filtros.</div>
         {% endif %}
 
+        <!-- Pagination -->
+        {% if pagination and pagination.total_pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('control', page=pagination.prev_num, **search_params) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% for page_num in range(1, pagination.total_pages + 1) %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('control', page=page_num, **search_params) }}">{{ page_num }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('control', page=pagination.next_num, **search_params) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+
         <footer class="pt-3 mt-4 text-muted border-top">&copy; CicloSeguros</footer>
     </div>
 </div>

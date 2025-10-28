@@ -43,6 +43,11 @@
         <header class="pb-3 mb-4 border-bottom">
             <h1 class="h3"><i class="fas fa-book-open me-2"></i>Lectura de Póliza</h1>
             <p class="text-muted">Visualizando el registro con consecutivo: <strong>{{ datos.get('consecutivo', 'N/A') }}</strong></p>
+
+            <div class="text-end">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+                <a href="{{ url_for('control') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver a las Pólizas</a>                    
+            </div>
         </header>
 
         <form class="card p-4">
@@ -88,24 +93,99 @@
                 </div>
             </fieldset>
 
-            <fieldset class="mb-4" disabled>                
+            <fieldset class="mb-4" disabled>
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información de Venta y Comisiones</h5><br>
-                        <div class="row"><br>
-                            <div class="col-md-4 mb-3"><label for="tipo_moneda" class="form-label">Tipo Moneda</label><select name="tipo_moneda" id="tipo_moneda" class="form-select" required><option value="">Seleccione...</option>{% for opt in opciones_tipo_moneda %}<option value="{{ opt }}" {% if datos.get('tipo_moneda') == opt %}selected{% endif %}>{{ opt }}</option>{% endfor %}</select></div>
-                            <div class="col-md-4 mb-3"><label for="prima_neta" class="form-label">Prima Neta</label><input type="text" name="prima_neta" id="prima_neta" class="form-control currency" placeholder="$0" required value="{{ datos.get('prima_neta', '') }}"></div>
-                            <div class="col-md-4 mb-3"><label for="gastos_adicionales" class="form-label">Gastos Adicionales</label><input type="text" name="gastos_adicionales" id="gastos_adicionales" class="form-control currency" placeholder="$0" value="{{ datos.get('gastos_adicionales', '') }}"></div>
+                    <div class="card-header"><h5 class="mb-0"><i class="fas fa-user-check me-2"></i>Datos del Asegurado y Beneficiario</h5></div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="asegurado" class="form-label">Asegurado</label>
+                                <input type="text" name="asegurado" class="form-control" value="{{ datos.get('asegurado', '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nit_asegurado" class="form-label">NIT / CC</label>
+                                <input type="text" name="nit_asegurado" class="form-control" value="{{ datos.get('nit_asegurado', '') }}">
+                            </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-3 mb-3"><label for="porcentaje_comision_valor" class="form-label">% Comisión</label><input type="number" name="porcentaje_comision_valor" id="porcentaje_comision_valor" class="form-control" placeholder="0.00" step="0.01" required value="{{ datos.get('porcentaje_comision_valor', '') }}"></div>
-                            <div class="col-md-3 mb-3"><label for="comision_calculada" class="form-label">Comisión $</label><input type="text" name="comision_calculada" id="comision_calculada" class="form-control currency" placeholder="$0" readonly value="{{ datos.get('Comision$', '') }}"></div>
-                            <div class="col-md-3 mb-3"><label for="vendedor" class="form-label">Vendedor</label><select name="vendedor" id="vendedor" class="form-select" required><option value="">Seleccione...</option>{% for vendedor in opciones_vendedor %}<option value="{{ vendedor.nombre }}" data-comision="{{ vendedor.comision }}" {% if datos.get('vendedor') == vendedor.nombre %}selected{% endif %}>{{ vendedor.nombre }}</option>{% endfor %}</select></div>
-                            <div class="col-md-3 mb-3"><label for="porcentaje_vendedor" class="form-label">% Part. Vendedor</label><input type="number" name="porcentaje_vendedor" id="porcentaje_vendedor" class="form-control" placeholder="0.00" step="0.01" value="{{ datos.get('porcentaje_vendedor', '') }}"></div>
+                            <div class="col-md-6 mb-3">
+                                <label for="beneficiario" class="form-label">Beneficiario</label>
+                                <input type="text" name="beneficiario" class="form-control" value="{{ datos.get('beneficiario', '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nit_beneficiario" class="form-label">NIT / CC</label>
+                                <input type="text" name="nit_beneficiario" class="form-control" value="{{ datos.get('nit_beneficiario', '') }}">
+                            </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3"><label for="comision_tpp" class="form-label">Comisión TPP</label><input type="text" name="comision_tpp" id="comision_tpp" class="form-control currency" placeholder="$0" readonly value="{{ datos.get('ComisionTPP', '') }}"></div>
-                            <div class="col-md-4 mb-3"><label for="uib" class="form-label">Comisión UIB</label><input type="text" name="uib" id="uib" class="form-control currency" placeholder="$0" readonly value="{{ datos.get('uib', '') }}"></div>
-                            <div class="col-md-4 mb-3"><label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label><select name="co_corretaje_opcion" id="co_corretaje_opcion" class="form-select"><option value="no" {% if datos.get('co_corretaje_opcion') == 'no' %}selected{% endif %}>No</option><option value="si" {% if datos.get('co_corretaje_opcion') == 'si' %}selected{% endif %}>Sí</option></select></div>
+                    </div>
+                </div>
+            </fieldset>
+            
+            <fieldset class="mb-4" disabled>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header"><h5 class="mb-0"><i class="fas fa-credit-card"></i> Información de Venta y Comisiones</h5></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3 mb-3">
+                                <label for="tipo_moneda" class="form-label">Tipo Moneda</label>
+                                <select name="tipo_moneda" class="form-select">
+                                    <option>{{ datos.get('tipo_moneda', 'N/A') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="prima_sin_iva" class="form-label">Prima sin IVA</label>
+                                <input type="text" name="prima_sin_iva" class="form-control" value="{{ datos.get('prima_sin_iva') | string | format_currency }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="gastos_adicionales" class="form-label">Gastos Adicionales</label>
+                                <input type="text" name="gastos_adicionales" class="form-control" value="{{ datos.get('gastos_adicionales') | string | format_currency }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="porcentaje_iva" class="form-label">%IVA</label>
+                                <input type="text" name="porcentaje_iva" class="form-control" value="{{ datos.get('porcentaje_iva', '19') }}%">
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-3 mb-3">
+                                <label for="total_a_pagar" class="form-label">Total a pagar</label>
+                                <input type="text" name="total_a_pagar" class="form-control" value="{{ datos.get('total_a_pagar') | string | format_currency }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="porcentaje_comision_agencia" class="form-label">% Comisión Agencia</label>
+                                <input type="text" name="porcentaje_comision_agencia" class="form-control" value="{{ datos.get('porcentaje_comision_agencia', '') }}%">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="comision_agencia" class="form-label">$ Comisión Agencia</label>
+                                <input type="text" name="comision_agencia" class="form-control" value="{{ datos.get('comision_agencia') | string | format_currency }}">
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-3 mb-3">
+                                <label for="vendedor" class="form-label">Vendedor</label>
+                                <select name="vendedor" class="form-select">
+                                    <option>{{ datos.get('vendedor', 'N/A') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="porcentaje_vendedor" class="form-label">% Part. Vendedor</label>
+                                <input type="text" name="porcentaje_vendedor" class="form-control" value="{{ datos.get('porcentaje_vendedor', '') }}%">
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4 mb-3">
+                                <label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label>
+                                <select name="co_corretaje_opcion" class="form-select">
+                                    <option>{{ "Sí" if datos.get('co_corretaje_opcion') == 'si' else "No" }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="comision_vendedor" class="form-label">$ Comisión Vendedor</label>
+                                <input type="text" name="comision_vendedor" class="form-control" value="{{ datos.get('comision_vendedor') | string | format_currency }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="comision_cocorretaje" class="form-label">Comisión con Co-correjeta</label>
+                                <input type="text" name="comision_cocorretaje" class="form-control" value="{{ datos.get('comision_cocorretaje') | string | format_currency }}">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -153,8 +233,7 @@
             <!-- Other fieldsets would go here, similarly disabled -->
 
         </form>
-        <a href="{{ url_for('control') }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left"></i> Volver a Control</a>
-        
+                
         <footer class="pt-3 mt-4 text-muted border-top">&copy; CicloSeguros</footer>
     </div>
 </div>

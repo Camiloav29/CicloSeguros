@@ -57,6 +57,18 @@ def get_year_from_date(date_str):
 app = Flask(__name__) # Ensure app instance is created
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'dev_super_secret_key_12345_replace_in_production')
 
+# --- Custom Jinja Filter ---
+def format_currency_filter(value):
+    """Formats a number as currency, e.g., '$ 1.500.000'."""
+    try:
+        num = int(float(value))
+        # Format with commas and then replace with dots for es-CO style
+        return f"$ {num:,}".replace(",", ".")
+    except (ValueError, TypeError):
+        return value # Return original value if conversion fails
+
+app.jinja_env.filters['format_currency'] = format_currency_filter
+
 # --- Login Manager Configuration ---
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -193,18 +205,20 @@ ORDEN_COLUMNAS_EXCEL_REMISIONES = [
     'categorias_grupo', 'categorias_grupo_otro', # Handling for "Otro"
     'fecha_inicio', 'fecha_fin', 'fecha_limite_pago',
 
+    # Datos del Asegurado y Beneficiario
+    'asegurado', 'nit_asegurado', 'beneficiario', 'nit_beneficiario',
+
     # Información de Venta y Comisiones
-    'tipo_moneda', 'prima_neta', 'porcentaje_comision_valor',
-    'Comision$', # Calculated
-    'vendedor', 'porcentaje_vendedor',
-    'co_corretaje_opcion', 'co_corretaje_nombre', 'co_corretaje_porcentaje',
-    'ComisionTPP', # Calculated
-    'ComisionUIB', # Calculated
-    'uib', # This is the final value after all calculations, should match ComisionUIB
-    'gastos_adicionales',
+    'tipo_moneda', 'prima_sin_iva', 'gastos_adicionales', 'porcentaje_iva', 'total_a_pagar',
+    'porcentaje_comision_agencia', 'comision_agencia',
+    'vendedor', 'porcentaje_vendedor', 'comision_vendedor',
+    'co_corretaje_opcion', 'comision_cocorretaje', 'co_corretaje_nombre', 'co_corretaje_porcentaje',
+
+    # Legacy/Calculated commission fields for compatibility
+    'prima_neta', 'porcentaje_comision_valor', 'Comision$', 'ComisionTPP', 'ComisionUIB', 'uib',
 
     # Condiciones y Vigencia
-    'forma_pago', 'numero_cuotas', 'periodicidad_pago',
+    'forma_pago', 'numero_cuotas', 'periodicidad_pago', 'tipo_movimiento',
 
     # Observaciones
     'observaciones', 'riesgos_adicionales', 'analista_responsable',
@@ -505,11 +519,11 @@ def registrar():
             'fecha_recepcion', 'tomador', 'nit', 'aseguradora', 'ramo', 'poliza', 'old_policy_number', 'anexo',
             'categorias_grupo', 'categorias_grupo_otro',
             'fecha_inicio', 'fecha_fin', 'fecha_limite_pago',
+            'asegurado', 'nit_asegurado', 'beneficiario', 'nit_beneficiario',
             'tipo_moneda',
-            'vendedor', 'porcentaje_vendedor',
-            'co_corretaje_opcion', 'co_corretaje_nombre', 'co_corretaje_porcentaje',
-            'gastos_adicionales',
-            'forma_pago', 'numero_cuotas', 'periodicidad_pago',
+            'vendedor',
+            'co_corretaje_opcion', 'co_corretaje_nombre',
+            'forma_pago', 'numero_cuotas', 'periodicidad_pago', 'tipo_movimiento',
             'observaciones', 'riesgos_adicionales', 'analista_responsable'
         ]
         for field in form_fields_to_collect:
@@ -523,38 +537,48 @@ def registrar():
         if datos['categorias_grupo'] == 'Otro':
             datos['categorias_grupo'] = datos_formulario.get('categorias_grupo_otro', 'Otro').strip()
 
-        # Clean numeric fields from form
-        prima_neta = limpiar_valor_moneda(datos_formulario.get('prima_neta', '0'))
-        porcentaje_comision = limpiar_valor_moneda(datos_formulario.get('porcentaje_comision_valor', '0'))
-        porcentaje_vendedor = limpiar_valor_moneda(datos_formulario.get('porcentaje_vendedor', '0'))
-        porcentaje_co_corretaje = limpiar_valor_moneda(datos_formulario.get('co_corretaje_porcentaje', '0')) # Keep for now, might be used elsewhere
-
         # --- 2. Backend Calculations (Corrected Logic) ---
 
-        # Calculate Comision$
-        comision_dolar = (prima_neta * porcentaje_comision) / 100.0
+        # Clean numeric fields from form
+        prima_sin_iva = limpiar_valor_moneda(datos_formulario.get('prima_sin_iva', '0'))
+        gastos_adicionales = limpiar_valor_moneda(datos_formulario.get('gastos_adicionales', '0'))
+        porc_iva = limpiar_valor_moneda(datos_formulario.get('porcentaje_iva', '19'))
+        porc_comision_agencia = limpiar_valor_moneda(datos_formulario.get('porcentaje_comision_agencia', '0'))
+        porc_vendedor = limpiar_valor_moneda(datos_formulario.get('porcentaje_vendedor', '0'))
+        porcentaje_co_corretaje = limpiar_valor_moneda(datos_formulario.get('co_corretaje_porcentaje', '0')) # Keep for now
 
-        # Calculate ComisionTPP based on the seller's participation
-        comision_tpp = 0
-        # If the seller is UIB, their commission is not TPP.
-        if datos.get('vendedor') != 'UIB CORREDORES DE SEGUROS S.A.' and porcentaje_vendedor > 0 and datos.get('co_corretaje_opcion') == 'si':
-             comision_tpp = comision_dolar * (porcentaje_vendedor / 100.0)
+        # Calculations mirroring frontend logic, but with corrected IVA as per user request
+        iva_calculado = (prima_sin_iva + gastos_adicionales) * (porc_iva / 100.0)
+        total_a_pagar = prima_sin_iva + gastos_adicionales + iva_calculado
+        comision_agencia = prima_sin_iva * (porc_comision_agencia / 100.0)
 
-        # Calculate ComisionUIB, which is the remainder
-        comision_uib = comision_dolar - comision_tpp
+        comision_vendedor = 0
+        if datos_formulario.get('vendedor') != 'UIB CORREDORES DE SEGUROS S.A.':
+            comision_vendedor = comision_agencia * (porc_vendedor / 100.0)
 
-        # --- 3. Populate 'datos' dictionary for saving ---
-
-        # Add cleaned and calculated values to the main dictionary
-        datos['prima_neta'] = prima_neta
-        datos['porcentaje_comision_valor'] = porcentaje_comision
-        datos['porcentaje_vendedor'] = porcentaje_vendedor
-        datos['co_corretaje_porcentaje'] = porcentaje_co_corretaje
+        comision_cocorretaje = comision_agencia - comision_vendedor
         
-        datos['Comision$'] = comision_dolar
-        datos['ComisionTPP'] = comision_tpp
-        datos['ComisionUIB'] = comision_uib
-        datos['uib'] = comision_uib # This is the final UIB value
+        # --- 3. Populate 'datos' dictionary for saving ---
+        
+        # Add all new and calculated fields
+        datos['prima_sin_iva'] = prima_sin_iva
+        datos['gastos_adicionales'] = gastos_adicionales
+        datos['porcentaje_iva'] = porc_iva
+        datos['total_a_pagar'] = total_a_pagar
+        datos['porcentaje_comision_agencia'] = porc_comision_agencia
+        datos['comision_agencia'] = comision_agencia
+        datos['porcentaje_vendedor'] = porc_vendedor
+        datos['comision_vendedor'] = comision_vendedor
+        datos['comision_cocorretaje'] = comision_cocorretaje
+        datos['co_corretaje_porcentaje'] = porcentaje_co_corretaje
+
+        # Add legacy fields for compatibility
+        datos['prima_neta'] = prima_sin_iva
+        datos['porcentaje_comision_valor'] = porc_comision_agencia
+        datos['Comision$'] = comision_agencia
+        datos['ComisionTPP'] = comision_vendedor
+        datos['ComisionUIB'] = comision_cocorretaje
+        datos['uib'] = comision_cocorretaje
 
         # Add automatic and placeholder fields
         datos['consecutivo'] = obtener_consecutivo()
@@ -760,15 +784,42 @@ def control():
     if aseguradora_query:
         df = df[df['aseguradora'].astype(str).str.contains(aseguradora_query, case=False, na=False)]
 
-    remisiones_ordenadas = df.sort_values(by='consecutivo', ascending=False).to_dict(orient='records')
+    # Ordenar los datos antes de paginar
+    df_sorted = df.sort_values(by='consecutivo', ascending=False)
+    
+    # Lógica de paginación
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    total_remisiones = len(df_sorted)
+    start = (page - 1) * per_page
+    end = start + per_page
+    remisiones_paginadas = df_sorted.iloc[start:end].to_dict(orient='records')
+    
+    total_pages = (total_remisiones + per_page - 1) // per_page
+
+    pagination = {
+        'page': page,
+        'total_pages': total_pages,
+        'has_prev': page > 1,
+        'has_next': page < total_pages,
+        'prev_num': page - 1,
+        'next_num': page + 1
+    }
     
     ramos = config_manager.get_list('ramos')
     aseguradoras = config_manager.get_list('aseguradoras')
     
-    return render_template('control.html', 
-                           remisiones=remisiones_ordenadas, 
-                           ramos=ramos, 
-                           aseguradoras=aseguradoras)
+    return render_template('control.html',
+                           remisiones=remisiones_paginadas,
+                           ramos=ramos,
+                           aseguradoras=aseguradoras,
+                           pagination=pagination,
+                           search_params={ # Pasar los parámetros de búsqueda para mantenerlos en los enlaces de paginación
+                               'poliza': poliza_query,
+                               'tomador': tomador_query,
+                               'ramo': ramo_query,
+                               'aseguradora': aseguradora_query
+                           })
 
 @app.route('/marcar_creado', methods=['POST'])
 @login_required
@@ -986,25 +1037,41 @@ def actualizar_remision():
             if key in df.columns:
                 df.loc[idx, key] = value
 
-        # Recalculate commissions and other derived fields
-        prima_neta = limpiar_valor_moneda(datos_formulario.get('prima_neta', '0'))
-        porcentaje_comision = limpiar_valor_moneda(datos_formulario.get('porcentaje_comision_valor', '0'))
-        porcentaje_vendedor = limpiar_valor_moneda(datos_formulario.get('porcentaje_vendedor', '0'))
+        # Recalculate values based on the new comprehensive logic
+        prima_sin_iva = limpiar_valor_moneda(datos_formulario.get('prima_sin_iva', '0'))
+        gastos_adicionales = limpiar_valor_moneda(datos_formulario.get('gastos_adicionales', '0'))
+        porc_iva = limpiar_valor_moneda(datos_formulario.get('porcentaje_iva', '19'))
+        porc_comision_agencia = limpiar_valor_moneda(datos_formulario.get('porcentaje_comision_agencia', '0'))
+        porc_vendedor = limpiar_valor_moneda(datos_formulario.get('porcentaje_vendedor', '0'))
 
-        comision_dolar = (prima_neta * porcentaje_comision) / 100.0
-        comision_tpp = 0
-        if datos_formulario.get('vendedor') != 'UIB CORREDORES DE SEGUROS S.A.' and porcentaje_vendedor > 0 and datos_formulario.get('co_corretaje_opcion') == 'si':
-            comision_tpp = comision_dolar * (porcentaje_vendedor / 100.0)
+        iva_calculado = (prima_sin_iva + gastos_adicionales) * (porc_iva / 100.0)
+        total_a_pagar = prima_sin_iva + gastos_adicionales + iva_calculado
+        comision_agencia = prima_sin_iva * (porc_comision_agencia / 100.0)
         
-        comision_uib = comision_dolar - comision_tpp
+        comision_vendedor = 0
+        if datos_formulario.get('vendedor') != 'UIB CORREDORES DE SEGUROS S.A.':
+            comision_vendedor = comision_agencia * (porc_vendedor / 100.0)
+            
+        comision_cocorretaje = comision_agencia - comision_vendedor
 
-        df.loc[idx, 'prima_neta'] = prima_neta
-        df.loc[idx, 'porcentaje_comision_valor'] = porcentaje_comision
-        df.loc[idx, 'porcentaje_vendedor'] = porcentaje_vendedor
-        df.loc[idx, 'Comision$'] = comision_dolar
-        df.loc[idx, 'ComisionTPP'] = comision_tpp
-        df.loc[idx, 'ComisionUIB'] = comision_uib
-        df.loc[idx, 'uib'] = comision_uib
+        # Update DataFrame with all new and recalculated fields
+        df.loc[idx, 'prima_sin_iva'] = prima_sin_iva
+        df.loc[idx, 'gastos_adicionales'] = gastos_adicionales
+        df.loc[idx, 'porcentaje_iva'] = porc_iva
+        df.loc[idx, 'total_a_pagar'] = total_a_pagar
+        df.loc[idx, 'porcentaje_comision_agencia'] = porc_comision_agencia
+        df.loc[idx, 'comision_agencia'] = comision_agencia
+        df.loc[idx, 'porcentaje_vendedor'] = porc_vendedor
+        df.loc[idx, 'comision_vendedor'] = comision_vendedor
+        df.loc[idx, 'comision_cocorretaje'] = comision_cocorretaje
+
+        # Update legacy fields for compatibility
+        df.loc[idx, 'prima_neta'] = prima_sin_iva
+        df.loc[idx, 'porcentaje_comision_valor'] = porc_comision_agencia
+        df.loc[idx, 'Comision$'] = comision_agencia
+        df.loc[idx, 'ComisionTPP'] = comision_vendedor
+        df.loc[idx, 'ComisionUIB'] = comision_cocorretaje
+        df.loc[idx, 'uib'] = comision_cocorretaje
 
         # File processing logic (adapted from /registrar)
         archivos = request.files.getlist("archivos[]")
@@ -2438,7 +2505,7 @@ def marcar_cobrado(id_cobro):
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        app.run(host='0.0.0.0', port=5001, debug=True)
     except Exception as e:
         import traceback
         with open('server_error.log', 'w') as f:

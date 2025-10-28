@@ -24,6 +24,12 @@
             top: 0;
             opacity: 0;
         }
+        .form-control[readonly], .form-control:disabled { background-color: #e9ecef; opacity: 1; }
+        .card-header h5 { color: var(--primary-dark); }
+        .highlight-card { border-color: var(--primary-color); }
+        .highlight-card .card-header { color: white; }
+        .form-group-checkbox-display { display: flex; align-items: center; gap: 10px; }
+        .form-group-checkbox-display input { flex-grow: 1; }
     </style>
 </head>
 <body>
@@ -186,28 +192,28 @@
                             </div>
                         </div>
                         <div class="row g-3">
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="vendedor" class="form-label">Vendedor</label>
                                 <select name="vendedor" id="vendedor" class="form-select" required>
                                     <option value="">Seleccione...</option>
                                     {% for vendedor in opciones_vendedor %}<option value="{{ vendedor.nombre }}" data-comision="{{ vendedor.comision }}">{{ vendedor.nombre }}</option>{% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="porcentaje_vendedor" class="form-label">% Part. Vendedor</label>
                                 <input type="number" name="porcentaje_vendedor" id="porcentaje_vendedor" class="form-control" placeholder="0.00" step="0.01">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="comision_vendedor" class="form-label">$ Comisión Vendedor</label>
+                                <input type="text" name="comision_vendedor" id="comision_vendedor" class="form-control currency" placeholder="$0" readonly>
                             </div>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-4 mb-3">
                                 <label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label>
                                 <select name="co_corretaje_opcion" id="co_corretaje_opcion" class="form-select"><option value="no" selected>No</option><option value="si">Sí</option></select>
-                            </div>
-                                            
-                            <div class="col-md-4 mb-3">
-                                <label for="comision_vendedor" class="form-label">$ Comisión Vendedor</label>
-                                <input type="text" name="comision_vendedor" id="comision_vendedor" class="form-control currency" placeholder="$0" readonly>
-                            </div>
+                            </div>                                          
+
                             <div class="col-md-4 mb-3">
                                 <label for="comision_cocorretaje" class="form-label">Comisión con Co-correjeta</label>
                                 <input type="text" name="comision_cocorretaje" id="comision_cocorretaje" class="form-control currency" placeholder="$0" readonly>
