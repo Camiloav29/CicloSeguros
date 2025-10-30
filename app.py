@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import uuid
+import json
 import config_manager
 from admin.routes import admin_bp
 
@@ -67,7 +68,14 @@ def format_currency_filter(value):
     except (ValueError, TypeError):
         return value # Return original value if conversion fails
 
+def fromjson_filter(value):
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
 app.jinja_env.filters['format_currency'] = format_currency_filter
+app.jinja_env.filters['fromjson'] = fromjson_filter
 
 # --- Login Manager Configuration ---
 login_manager = LoginManager()
@@ -212,7 +220,7 @@ ORDEN_COLUMNAS_EXCEL_REMISIONES = [
     'tipo_moneda', 'prima_sin_iva', 'gastos_adicionales', 'porcentaje_iva', 'total_a_pagar',
     'porcentaje_comision_agencia', 'comision_agencia',
     'vendedor', 'porcentaje_vendedor', 'comision_vendedor',
-    'co_corretaje_opcion', 'comision_cocorretaje', 'co_corretaje_nombre', 'co_corretaje_porcentaje',
+    'co_corretaje_opcion', 'comision_cocorretaje', 'co_corretaje_aliados',
 
     # Legacy/Calculated commission fields for compatibility
     'prima_neta', 'porcentaje_comision_valor', 'Comision$', 'ComisionTPP', 'ComisionUIB', 'uib',
@@ -492,6 +500,7 @@ def formulario_remision():
                            opciones_ramo=config_manager.get_list('ramos'),
                            opciones_tipo_moneda=config_manager.get_list('tipo_moneda'),
                            opciones_vendedor=config_manager.get_list('vendedores'),
+                           opciones_aliado=config_manager.get_list('aliados'),
                            opciones_forma_pago=config_manager.get_list('forma_pago'),
                            opciones_periodicidad_pago=config_manager.get_list('periodicidad_pago'),
                            opciones_analista=config_manager.get_list('analistas'),
@@ -522,16 +531,12 @@ def registrar():
             'asegurado', 'nit_asegurado', 'beneficiario', 'nit_beneficiario',
             'tipo_moneda',
             'vendedor',
-            'co_corretaje_opcion', 'co_corretaje_nombre',
+            'co_corretaje_opcion',
             'forma_pago', 'numero_cuotas', 'periodicidad_pago', 'tipo_movimiento',
             'observaciones', 'riesgos_adicionales', 'analista_responsable'
         ]
         for field in form_fields_to_collect:
             datos[field] = datos_formulario.get(field, '').strip()
-
-        # If co-corretaje is selected, the TPP seller is the one from the main 'vendedor' dropdown.
-        if datos.get('co_corretaje_opcion') == 'si':
-            datos['co_corretaje_nombre'] = datos.get('vendedor', '').strip()
 
         # Handle "Otro" for categorias_grupo
         if datos['categorias_grupo'] == 'Otro':
@@ -570,7 +575,27 @@ def registrar():
         datos['porcentaje_vendedor'] = porc_vendedor
         datos['comision_vendedor'] = comision_vendedor
         datos['comision_cocorretaje'] = comision_cocorretaje
-        datos['co_corretaje_porcentaje'] = porcentaje_co_corretaje
+        
+        if datos.get('co_corretaje_opcion') == 'si':
+            aliado_nombres = request.form.getlist('aliado_nombre[]')
+            aliado_porcentajes = request.form.getlist('aliado_porcentaje[]')
+            
+            aliados_data = []
+            for i in range(len(aliado_nombres)):
+                porcentaje = limpiar_valor_moneda(aliado_porcentajes[i])
+                comision_aliado = comision_agencia * (porcentaje / 100.0)
+                aliados_data.append({
+                    "nombre": aliado_nombres[i],
+                    "porcentaje": porcentaje,
+                    "comision": comision_aliado
+                })
+            datos['co_corretaje_aliados'] = json.dumps(aliados_data)
+            # Clear seller fields if co-corretaje is active
+            datos['vendedor'] = None
+            datos['porcentaje_vendedor'] = None
+            datos['comision_vendedor'] = None
+        else:
+            datos['co_corretaje_aliados'] = None
 
         # Add legacy fields for compatibility
         datos['prima_neta'] = prima_sin_iva
@@ -720,6 +745,7 @@ def lectura_remision(consecutivo_id):
                                opciones_ramo=config_manager.get_list('ramos'),
                                opciones_tipo_moneda=config_manager.get_list('tipo_moneda'),
                                opciones_vendedor=config_manager.get_list('vendedores'),
+                               opciones_aliado=config_manager.get_list('aliados'),
                                opciones_forma_pago=config_manager.get_list('forma_pago'),
                                opciones_periodicidad_pago=config_manager.get_list('periodicidad_pago'),
                                opciones_analista=config_manager.get_list('analistas'))
@@ -884,6 +910,7 @@ def editar_remision(consecutivo_id):
                                opciones_ramo=config_manager.get_list('ramos'),
                                opciones_tipo_moneda=config_manager.get_list('tipo_moneda'),
                                opciones_vendedor=config_manager.get_list('vendedores'),
+                               opciones_aliado=config_manager.get_list('aliados'),
                                opciones_forma_pago=config_manager.get_list('forma_pago'),
                                opciones_periodicidad_pago=config_manager.get_list('periodicidad_pago'),
                                opciones_analista=config_manager.get_list('analistas'))
@@ -1055,6 +1082,27 @@ def actualizar_remision():
         comision_cocorretaje = comision_agencia - comision_vendedor
 
         # Update DataFrame with all new and recalculated fields
+        df.loc[idx, 'co_corretaje_opcion'] = datos_formulario.get('co_corretaje_opcion')
+        if datos_formulario.get('co_corretaje_opcion') == 'si':
+            aliado_nombres = request.form.getlist('aliado_nombre[]')
+            aliado_porcentajes = request.form.getlist('aliado_porcentaje[]')
+            
+            aliados_data = []
+            for i in range(len(aliado_nombres)):
+                porcentaje = limpiar_valor_moneda(aliado_porcentajes[i])
+                comision_aliado = comision_agencia * (porcentaje / 100.0)
+                aliados_data.append({
+                    "nombre": aliado_nombres[i],
+                    "porcentaje": porcentaje,
+                    "comision": comision_aliado
+                })
+            df.loc[idx, 'co_corretaje_aliados'] = json.dumps(aliados_data)
+            df.loc[idx, 'vendedor'] = None
+            df.loc[idx, 'porcentaje_vendedor'] = None
+            df.loc[idx, 'comision_vendedor'] = None
+        else:
+            df.loc[idx, 'co_corretaje_aliados'] = None
+
         df.loc[idx, 'prima_sin_iva'] = prima_sin_iva
         df.loc[idx, 'gastos_adicionales'] = gastos_adicionales
         df.loc[idx, 'porcentaje_iva'] = porc_iva
@@ -2505,7 +2553,7 @@ def marcar_cobrado(id_cobro):
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port=5001, debug=True)
+        app.run(host='0.0.0.0', port=5000, debug=True)
     except Exception as e:
         import traceback
         with open('server_error.log', 'w') as f:

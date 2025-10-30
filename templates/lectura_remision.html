@@ -174,19 +174,39 @@
                         <div class="row g-3">
                             <div class="col-md-4 mb-3">
                                 <label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label>
-                                <select name="co_corretaje_opcion" class="form-select">
+                                <select name="co_corretaje_opcion" class="form-select" disabled>
                                     <option>{{ "Sí" if datos.get('co_corretaje_opcion') == 'si' else "No" }}</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="comision_vendedor" class="form-label">$ Comisión Vendedor</label>
-                                <input type="text" name="comision_vendedor" class="form-control" value="{{ datos.get('comision_vendedor') | string | format_currency }}">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="comision_cocorretaje" class="form-label">Comisión con Co-correjeta</label>
-                                <input type="text" name="comision_cocorretaje" class="form-control" value="{{ datos.get('comision_cocorretaje') | string | format_currency }}">
-                            </div>
                         </div>
+
+                        {% if datos.get('co_corretaje_opcion') == 'si' %}
+                        <div id="co-corretaje-info-lectura">
+                            <hr>
+                            <h5>Información Co-corretaje</h5>
+                            {% set aliados_data = datos.get('co_corretaje_aliados') | fromjson %}
+                            {% if aliados_data %}
+                                {% for aliado in aliados_data %}
+                                <div class="row g-3 align-items-center mb-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Aliado</label>
+                                        <input type="text" class="form-control" value="{{ aliado.nombre }}" readonly>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">% Aliado</label>
+                                        <input type="text" class="form-control" value="{{ aliado.porcentaje }}%" readonly>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Comisión Aliado</label>
+                                        <input type="text" class="form-control" value="{{ aliado.comision | format_currency }}" readonly>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No hay datos de aliados registrados para esta remisión.</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </fieldset>

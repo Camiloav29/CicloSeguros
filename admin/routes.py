@@ -67,7 +67,7 @@ def edit_list_item(list_name):
     """
     if request.method == 'POST':
         # Guardar los datos
-        if list_name == 'vendedores':
+        if list_name in ['vendedores', 'aliados']:
             items = []
             nombres = request.form.getlist('item_nombre')
             comisiones = request.form.getlist('item_comision')
@@ -93,7 +93,7 @@ def edit_list_item(list_name):
         flash(f"La lista '{list_name}' no fue encontrada.", 'danger')
         return redirect(url_for('admin.listas'))
 
-    if list_name == 'vendedores':
+    if list_name in ['vendedores', 'aliados']:
         # Renderizar la plantilla específica para vendedores
         return render_template('admin/editar_vendedores.html', list_name=list_name, items=items)
     else:

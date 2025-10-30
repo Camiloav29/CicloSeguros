@@ -191,7 +191,7 @@
                                 <input type="text" name="comision_agencia" id="comision_agencia" class="form-control currency" placeholder="$0" readonly>
                             </div>
                         </div>
-                        <div class="row g-3">
+                        <div class="row g-3" id="vendedor-info">
                             <div class="col-md-4 mb-3">
                                 <label for="vendedor" class="form-label">Vendedor</label>
                                 <select name="vendedor" id="vendedor" class="form-select" required>
@@ -208,17 +208,25 @@
                                 <input type="text" name="comision_vendedor" id="comision_vendedor" class="form-control currency" placeholder="$0" readonly>
                             </div>
                         </div>
+
                         <div class="row g-3">
                             <div class="col-md-4 mb-3">
                                 <label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label>
-                                <select name="co_corretaje_opcion" id="co_corretaje_opcion" class="form-select"><option value="no" selected>No</option><option value="si">Sí</option></select>
-                            </div>                                          
-
-                            <div class="col-md-4 mb-3">
-                                <label for="comision_cocorretaje" class="form-label">Comisión con Co-correjeta</label>
-                                <input type="text" name="comision_cocorretaje" id="comision_cocorretaje" class="form-control currency" placeholder="$0" readonly>
+                                <select name="co_corretaje_opcion" id="co_corretaje_opcion" class="form-select">
+                                    <option value="no" selected>No</option>
+                                    <option value="si">Sí</option>
+                                </select>
                             </div>
-                             
+                        </div>
+
+                        <div id="co-corretaje-info" style="display: none;">
+                            <hr>
+                            <h5>Información Co-corretaje</h5>
+                            <div id="aliados-container">
+                                <!-- Ally row template -->
+                            </div>
+                            <div id="aliado-comision-alerta" class="mt-2"></div>
+                            <button type="button" id="add-aliado-btn" class="btn btn-secondary btn-sm mt-2"><i class="fas fa-plus"></i> Añadir Aliado</button>
                         </div>
                     </div>
                     </div>
@@ -540,6 +548,138 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     updateProgress();
+
+    // --- Co-corretaje Logic ---
+    const coCorretajeOpcion = document.getElementById('co_corretaje_opcion');
+    const vendedorInfo = document.getElementById('vendedor-info');
+    const coCorretajeInfo = document.getElementById('co-corretaje-info');
+    const vendedorSelect = document.getElementById('vendedor');
+    const porcentajeVendedorInput = document.getElementById('porcentaje_vendedor');
+
+    coCorretajeOpcion.addEventListener('change', function() {
+        const isCoCorretaje = this.value === 'si';
+
+        // Toggle display
+        vendedorInfo.style.display = isCoCorretaje ? 'none' : 'flex';
+        coCorretajeInfo.style.display = isCoCorretaje ? 'block' : 'none';
+
+        // Toggle required and disabled status for Vendedor fields
+        vendedorSelect.required = !isCoCorretaje;
+        vendedorSelect.disabled = isCoCorretaje;
+        porcentajeVendedorInput.disabled = isCoCorretaje;
+
+        if (isCoCorretaje) {
+            vendedorSelect.value = '';
+            porcentajeVendedorInput.value = '';
+        }
+
+        // Toggle required status for Aliado fields
+        document.querySelectorAll('#aliados-container select, #aliados-container input').forEach(field => {
+            if (!field.readOnly) { // Don't change 'readonly' fields like calculated commission
+                field.required = isCoCorretaje;
+                field.disabled = !isCoCorretaje;
+            }
+        });
+
+        if (isCoCorretaje && document.getElementById('aliados-container').childElementCount === 0) {
+            addAliadoRow();
+        }
+        
+        // Recalculate alerts
+        calcularComisionesAliados();
+    });
+
+    document.getElementById('add-aliado-btn').addEventListener('click', addAliadoRow);
+
+    function addAliadoRow() {
+        const container = document.getElementById('aliados-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'row g-3 align-items-center mb-2 aliado-row';
+        newRow.innerHTML = `
+            <div class="col-md-4">
+                <label class="form-label">Aliado</label>
+                <select name="aliado_nombre[]" class="form-select aliado-select" required>
+                    <option value="">Seleccione...</option>
+                    {% for aliado in opciones_aliado %}
+                        <option value="{{ aliado.nombre }}" data-comision="{{ aliado.comision }}">{{ aliado.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">% Aliado</label>
+                <input type="number" name="aliado_porcentaje[]" class="form-control aliado-porcentaje" placeholder="0.00" step="0.01" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Comisión Aliado</label>
+                <input type="text" name="comision_aliado[]" class="form-control currency comision-aliado" placeholder="$0" readonly>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <button type="button" class="btn btn-danger btn-sm remove-aliado-btn"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        container.appendChild(newRow);
+    }
+
+    document.getElementById('aliados-container').addEventListener('change', function(e) {
+        if (e.target.classList.contains('aliado-select')) {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const comision = selectedOption.dataset.comision;
+            const row = e.target.closest('.aliado-row');
+            row.querySelector('.aliado-porcentaje').value = comision || '0';
+            calcularComisionesAliados();
+        }
+    });
+    
+    document.getElementById('aliados-container').addEventListener('input', function(e) {
+        if (e.target.classList.contains('aliado-porcentaje')) {
+            calcularComisionesAliados();
+        }
+    });
+
+    document.getElementById('aliados-container').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-aliado-btn')) {
+            e.target.closest('.aliado-row').remove();
+            calcularComisionesAliados();
+        }
+    });
+
+    function calcularComisionesAliados() {
+        const comisionAgencia = parseFloat(comisionAgenciaInput.value.replace(/\$|\.|,/g, '')) || 0;
+        let totalPorcentaje = 0;
+
+        document.querySelectorAll('.aliado-row').forEach(row => {
+            const porcAliadoInput = row.querySelector('.aliado-porcentaje');
+            const porcAliado = parseFloat(porcAliadoInput.value) || 0;
+            totalPorcentaje += porcAliado;
+            
+            const comisionAliadoInput = row.querySelector('.comision-aliado');
+            const comisionCalculada = comisionAgencia * (porcAliado / 100);
+            comisionAliadoInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+        });
+
+        const alertaContainer = document.getElementById('aliado-comision-alerta');
+        const guardarBtn = document.getElementById('guardarRemisionBtn');
+
+        if (coCorretajeOpcion.value === 'si') {
+            if (totalPorcentaje === 100) {
+                alertaContainer.innerHTML = `<div class="alert alert-success">El porcentaje de comisión de aliados es del 100%.</div>`;
+                guardarBtn.disabled = false;
+            } else {
+                alertaContainer.innerHTML = `<div class="alert alert-danger">El porcentaje total de comisión de aliados es del ${totalPorcentaje}%. Debe ser del 100%.</div>`;
+                guardarBtn.disabled = true;
+            }
+        } else {
+            alertaContainer.innerHTML = '';
+            guardarBtn.disabled = false;
+        }
+    }
+    
+    // Also recalculate allies commission if the main agency commission changes
+    [primaSinIvaInput, porcComisionAgenciaInput].forEach(input => {
+        if(input) input.addEventListener('input', calcularComisionesAliados);
+    });
+
 });
 </script>
 </body>

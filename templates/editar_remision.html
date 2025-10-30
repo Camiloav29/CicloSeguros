@@ -175,19 +175,24 @@
                                 <input type="text" name="comision_agencia" id="comision_agencia" class="form-control currency" placeholder="$0" readonly value="{{ datos.get('comision_agencia') | string | format_currency }}">
                             </div>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-3 mb-3">
+                        <div class="row g-3" id="vendedor-info">
+                            <div class="col-md-4 mb-3">
                                 <label for="vendedor" class="form-label">Vendedor</label>
                                 <select name="vendedor" id="vendedor" class="form-select" required>
                                     <option value="">Seleccione...</option>
                                     {% for vendedor in opciones_vendedor %}<option value="{{ vendedor.nombre }}" data-comision="{{ vendedor.comision }}" {% if datos.get('vendedor') == vendedor.nombre %}selected{% endif %}>{{ vendedor.nombre }}</option>{% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="porcentaje_vendedor" class="form-label">% Part. Vendedor</label>
                                 <input type="number" name="porcentaje_vendedor" id="porcentaje_vendedor" class="form-control" placeholder="0.00" step="0.01" value="{{ datos.get('porcentaje_vendedor', '') }}">
                             </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="comision_vendedor" class="form-label">$ Comisión Vendedor</label>
+                                <input type="text" name="comision_vendedor" id="comision_vendedor" class="form-control currency" placeholder="$0" readonly value="{{ datos.get('comision_vendedor') | string | format_currency }}">
+                            </div>
                         </div>
+
                         <div class="row g-3">
                             <div class="col-md-4 mb-3">
                                 <label for="co_corretaje_opcion" class="form-label">Aplica Co-corretaje</label>
@@ -196,14 +201,43 @@
                                     <option value="si" {% if datos.get('co_corretaje_opcion') == 'si' %}selected{% endif %}>Sí</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="comision_vendedor" class="form-label">$ Comisión Vendedor</label>
-                                <input type="text" name="comision_vendedor" id="comision_vendedor" class="form-control currency" placeholder="$0" readonly value="{{ datos.get('comision_vendedor') | string | format_currency }}">
+                        </div>
+
+                        <div id="co-corretaje-info" style="display: none;">
+                            <hr>
+                            <h5>Información Co-corretaje</h5>
+                            <div id="aliados-container">
+                                {% set aliados_data = datos.get('co_corretaje_aliados') | fromjson %}
+                                {% if aliados_data %}
+                                    {% for aliado in aliados_data %}
+                                    <div class="row g-3 align-items-center mb-2 aliado-row">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Aliado</label>
+                                            <select name="aliado_nombre[]" class="form-select aliado-select" required>
+                                                <option value="">Seleccione...</option>
+                                                {% for opcion_aliado in opciones_aliado %}
+                                                    <option value="{{ opcion_aliado.nombre }}" data-comision="{{ opcion_aliado.comision }}" {% if opcion_aliado.nombre == aliado.nombre %}selected{% endif %}>{{ opcion_aliado.nombre }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">% Aliado</label>
+                                            <input type="number" name="aliado_porcentaje[]" class="form-control aliado-porcentaje" placeholder="0.00" step="0.01" value="{{ aliado.porcentaje }}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Comisión Aliado</label>
+                                            <input type="text" name="comision_aliado[]" class="form-control currency comision-aliado" placeholder="$0" value="{{ aliado.comision | format_currency }}" readonly>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="button" class="btn btn-danger btn-sm remove-aliado-btn"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="comision_cocorretaje" class="form-label">Comisión con Co-correjeta</label>
-                                <input type="text" name="comision_cocorretaje" id="comision_cocorretaje" class="form-control currency" placeholder="$0" readonly value="{{ datos.get('comision_cocorretaje') | string | format_currency }}">
-                            </div>
+                            <div id="aliado-comision-alerta" class="mt-2"></div>
+                            <button type="button" id="add-aliado-btn" class="btn btn-secondary btn-sm mt-2"><i class="fas fa-plus"></i> Añadir Aliado</button>
                         </div>
                     </div>
                 </div>
@@ -354,45 +388,46 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('old_policy_number').required = this.checked;
     });
 
-    const primaNetaInput = document.getElementById('prima_neta');
-    const porcComisionInput = document.getElementById('porcentaje_comision_valor');
+    const primaSinIvaInput = document.getElementById('prima_sin_iva');
+    const porcIvaInput = document.getElementById('porcentaje_iva');
+    const totalAPagarInput = document.getElementById('total_a_pagar');
+    const porcComisionAgenciaInput = document.getElementById('porcentaje_comision_agencia');
     const porcParticipacionVendedorInput = document.getElementById('porcentaje_vendedor');
-    const comisionCalculadaInput = document.getElementById('comision_calculada');
-    const comisionTppInput = document.getElementById('comision_tpp');
-    const participacionUibInput = document.getElementById('uib');
+    const comisionAgenciaInput = document.getElementById('comision_agencia');
+    const comisionVendedorInput = document.getElementById('comision_vendedor');
+    const comisionCocorretajeInput = document.getElementById('comision_cocorretaje');
+    const gastosAdicionalesInput = document.getElementById('gastos_adicionales');
 
-    function calcularComisiones() {
-        const primaNeta = parseFloat(primaNetaInput.value.replace(/\$|\.|,/g, '')) || 0;
-        const porcComision = parseFloat(porcComisionInput.value) || 0;
+    function calcularValores() {
+        const primaSinIva = parseFloat(primaSinIvaInput.value.replace(/\$|\.|,/g, '')) || 0;
+        const porcIva = parseFloat(porcIvaInput.value) || 0;
+        const porcComisionAgencia = parseFloat(porcComisionAgenciaInput.value) || 0;
         const porcParticipacionVendedor = parseFloat(porcParticipacionVendedorInput.value) || 0;
+        const gastosAdicionales = parseFloat(gastosAdicionalesInput.value.replace(/\$|\.|,/g, '')) || 0;
         
         const vendedorSelect = document.getElementById('vendedor');
-        const coCorretajeSelect = document.getElementById('co_corretaje_opcion');
         const selectedVendedorName = vendedorSelect.options[vendedorSelect.selectedIndex].value;
 
-        const comisionCalculada = primaNeta * (porcComision / 100);
-        comisionCalculadaInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+        const iva = primaSinIva * (porcIva / 100);
+        const totalAPagar = primaSinIva + iva + gastosAdicionales;
+        totalAPagarInput.value = '$' + Math.round(totalAPagar).toLocaleString('es-CO');
 
-        let comisionTpp = 0;
-        // If the seller is UIB, their commission is not TPP.
-        if (selectedVendedorName === 'UIB CORREDORES DE SEGUROS S.A.') {
-            comisionTpp = 0;
-        } else if (porcParticipacionVendedor > 0) {
-            // For any other seller, calculate TPP as before.
-            comisionTpp = comisionCalculada * (porcParticipacionVendedor / 100);
+        const comisionAgencia = primaSinIva * (porcComisionAgencia / 100);
+        comisionAgenciaInput.value = '$' + Math.round(comisionAgencia).toLocaleString('es-CO');
+
+        let comisionVendedor = 0;
+        if (selectedVendedorName !== 'UIB CORREDORES DE SEGUROS S.A.' && porcParticipacionVendedor > 0) {
+            comisionVendedor = comisionAgencia * (porcParticipacionVendedor / 100);
         }
         
-        comisionTppInput.value = '$' + Math.round(comisionTpp).toLocaleString('es-CO');
+        comisionVendedorInput.value = '$' + Math.round(comisionVendedor).toLocaleString('es-CO');
         
-        // Automatically set the co-brokerage option based on the TPP commission value.
-        coCorretajeSelect.value = comisionTpp > 0 ? 'si' : 'no';
-
-        const comisionUib = comisionCalculada - comisionTpp;
-        participacionUibInput.value = '$' + Math.round(comisionUib).toLocaleString('es-CO');
+        const comisionCocorretaje = comisionAgencia - comisionVendedor;
+        comisionCocorretajeInput.value = '$' + Math.round(comisionCocorretaje).toLocaleString('es-CO');
     }
 
-    [primaNetaInput, porcComisionInput, porcParticipacionVendedorInput].forEach(input => {
-        if(input) input.addEventListener('input', calcularComisiones);
+    [primaSinIvaInput, porcIvaInput, porcComisionAgenciaInput, porcParticipacionVendedorInput, gastosAdicionalesInput].forEach(input => {
+        if(input) input.addEventListener('input', calcularValores);
     });
 
     document.getElementById('vendedor').addEventListener('change', function() {
@@ -453,6 +488,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('fecha_recepcion').valueAsDate = new Date();
 
+    document.getElementById('tomador_es_asegurado').addEventListener('change', function() {
+        const tomadorInput = document.getElementById('tomador');
+        const nitInput = document.getElementById('nit');
+        const aseguradoInput = document.getElementById('asegurado');
+        const nitAseguradoInput = document.getElementById('nit_asegurado');
+        const beneficiarioInput = document.getElementById('beneficiario');
+        const nitBeneficiarioInput = document.getElementById('nit_beneficiario');
+
+        if (this.checked) {
+            aseguradoInput.value = tomadorInput.value;
+            nitAseguradoInput.value = nitInput.value;
+            beneficiarioInput.value = tomadorInput.value;
+            nitBeneficiarioInput.value = nitInput.value;
+
+            aseguradoInput.readOnly = true;
+            nitAseguradoInput.readOnly = true;
+            beneficiarioInput.readOnly = true;
+            nitBeneficiarioInput.readOnly = true;
+        } else {
+            aseguradoInput.value = '';
+            nitAseguradoInput.value = '';
+            beneficiarioInput.value = '';
+            nitBeneficiarioInput.value = '';
+
+            aseguradoInput.readOnly = false;
+            nitAseguradoInput.readOnly = false;
+            beneficiarioInput.readOnly = false;
+            nitBeneficiarioInput.readOnly = false;
+        }
+    });
+
     document.getElementById('mainForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = document.getElementById('guardarRemisionBtn'); // Correctly select the button by its ID
@@ -488,84 +554,151 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initialize form state on page load
+    updateProgress();
+
+    // --- Co-corretaje Logic ---
+    const coCorretajeOpcion = document.getElementById('co_corretaje_opcion');
+    const vendedorInfo = document.getElementById('vendedor-info');
+    const coCorretajeInfo = document.getElementById('co-corretaje-info');
+    const vendedorSelect = document.getElementById('vendedor');
+    const porcentajeVendedorInput = document.getElementById('porcentaje_vendedor');
+
+    coCorretajeOpcion.addEventListener('change', function() {
+        const isCoCorretaje = this.value === 'si';
+
+        // Toggle display
+        vendedorInfo.style.display = isCoCorretaje ? 'none' : 'flex';
+        coCorretajeInfo.style.display = isCoCorretaje ? 'block' : 'none';
+
+        // Toggle required and disabled status for Vendedor fields
+        vendedorSelect.required = !isCoCorretaje;
+        vendedorSelect.disabled = isCoCorretaje;
+        porcentajeVendedorInput.disabled = isCoCorretaje;
+
+        if (isCoCorretaje) {
+            vendedorSelect.value = '';
+            porcentajeVendedorInput.value = '';
+        }
+
+        // Toggle required status for Aliado fields
+        document.querySelectorAll('#aliados-container select, #aliados-container input').forEach(field => {
+            if (!field.readOnly) { // Don't change 'readonly' fields like calculated commission
+                field.required = isCoCorretaje;
+                field.disabled = !isCoCorretaje;
+            }
+        });
+
+        if (isCoCorretaje && document.getElementById('aliados-container').childElementCount === 0) {
+            addAliadoRow();
+        }
+        
+        // Recalculate alerts
+        calcularComisionesAliados();
+    });
+
+    document.getElementById('add-aliado-btn').addEventListener('click', addAliadoRow);
+
+    function addAliadoRow() {
+        const container = document.getElementById('aliados-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'row g-3 align-items-center mb-2 aliado-row';
+        newRow.innerHTML = `
+            <div class="col-md-4">
+                <label class="form-label">Aliado</label>
+                <select name="aliado_nombre[]" class="form-select aliado-select" required>
+                    <option value="">Seleccione...</option>
+                    {% for aliado in opciones_aliado %}
+                        <option value="{{ aliado.nombre }}" data-comision="{{ aliado.comision }}">{{ aliado.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">% Aliado</label>
+                <input type="number" name="aliado_porcentaje[]" class="form-control aliado-porcentaje" placeholder="0.00" step="0.01" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Comisión Aliado</label>
+                <input type="text" name="comision_aliado[]" class="form-control currency comision-aliado" placeholder="$0" readonly>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <button type="button" class="btn btn-danger btn-sm remove-aliado-btn"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        container.appendChild(newRow);
+    }
+
+    document.getElementById('aliados-container').addEventListener('change', function(e) {
+        if (e.target.classList.contains('aliado-select')) {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const comision = selectedOption.dataset.comision;
+            const row = e.target.closest('.aliado-row');
+            row.querySelector('.aliado-porcentaje').value = comision || '0';
+            calcularComisionesAliados();
+        }
+    });
+    
+    document.getElementById('aliados-container').addEventListener('input', function(e) {
+        if (e.target.classList.contains('aliado-porcentaje')) {
+            calcularComisionesAliados();
+        }
+    });
+
+    document.getElementById('aliados-container').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-aliado-btn')) {
+            e.target.closest('.aliado-row').remove();
+            calcularComisionesAliados();
+        }
+    });
+
+    function calcularComisionesAliados() {
+        const comisionAgencia = parseFloat(comisionAgenciaInput.value.replace(/\$|\.|,/g, '')) || 0;
+        let totalPorcentaje = 0;
+
+        document.querySelectorAll('.aliado-row').forEach(row => {
+            const porcAliadoInput = row.querySelector('.aliado-porcentaje');
+            const porcAliado = parseFloat(porcAliadoInput.value) || 0;
+            totalPorcentaje += porcAliado;
+            
+            const comisionAliadoInput = row.querySelector('.comision-aliado');
+            const comisionCalculada = comisionAgencia * (porcAliado / 100);
+            comisionAliadoInput.value = '$' + Math.round(comisionCalculada).toLocaleString('es-CO');
+        });
+
+        const alertaContainer = document.getElementById('aliado-comision-alerta');
+        const guardarBtn = document.getElementById('guardarRemisionBtn');
+
+        if (coCorretajeOpcion.value === 'si') {
+            if (totalPorcentaje === 100) {
+                alertaContainer.innerHTML = `<div class="alert alert-success">El porcentaje de comisión de aliados es del 100%.</div>`;
+                guardarBtn.disabled = false;
+            } else {
+                alertaContainer.innerHTML = `<div class="alert alert-danger">El porcentaje total de comisión de aliados es del ${totalPorcentaje}%. Debe ser del 100%.</div>`;
+                guardarBtn.disabled = true;
+            }
+        } else {
+            alertaContainer.innerHTML = '';
+            guardarBtn.disabled = false;
+        }
+    }
+    
+    // Also recalculate allies commission if the main agency commission changes
+    [primaSinIvaInput, porcComisionAgenciaInput].forEach(input => {
+        if(input) input.addEventListener('input', calcularComisionesAliados);
+    });
+
+    // Initial state setup and run on load for edit page
+    toggleCoCorretajeView();
+    calcularComisionesAliados();
     document.getElementById('renovacion').dispatchEvent(new Event('change'));
     document.getElementById('policy_number_modified').dispatchEvent(new Event('change'));
     document.getElementById('categorias_grupo').dispatchEvent(new Event('change'));
     handlePaymentOptionsChange();
-    
-    // Nueva lógica de cálculo de valores
-    const primaSinIvaInput = document.getElementById('prima_sin_iva');
-    const porcIvaInput = document.getElementById('porcentaje_iva');
-    const totalAPagarInput = document.getElementById('total_a_pagar');
-    const porcComisionAgenciaInput = document.getElementById('porcentaje_comision_agencia');
-    const porcParticipacionVendedorInput = document.getElementById('porcentaje_vendedor');
-    const comisionAgenciaInput = document.getElementById('comision_agencia');
-    const comisionVendedorInput = document.getElementById('comision_vendedor');
-    const comisionCocorretajeInput = document.getElementById('comision_cocorretaje');
-    const gastosAdicionalesInput = document.getElementById('gastos_adicionales');
-
-    function calcularValores() {
-        const primaSinIva = parseFloat(primaSinIvaInput.value.replace(/\$|\.|,/g, '')) || 0;
-        const porcIva = parseFloat(porcIvaInput.value) || 0;
-        const porcComisionAgencia = parseFloat(porcComisionAgenciaInput.value) || 0;
-        const porcParticipacionVendedor = parseFloat(porcParticipacionVendedorInput.value) || 0;
-        const gastosAdicionales = parseFloat(gastosAdicionalesInput.value.replace(/\$|\.|,/g, '')) || 0;
-        
-        const vendedorSelect = document.getElementById('vendedor');
-        const selectedVendedorName = vendedorSelect.options[vendedorSelect.selectedIndex].value;
-
-        const iva = (primaSinIva + gastosAdicionales) * (porcIva / 100);
-        const totalAPagar = primaSinIva + iva + gastosAdicionales;
-        totalAPagarInput.value = '$' + Math.round(totalAPagar).toLocaleString('es-CO');
-
-        const comisionAgencia = primaSinIva * (porcComisionAgencia / 100);
-        comisionAgenciaInput.value = '$' + Math.round(comisionAgencia).toLocaleString('es-CO');
-
-        let comisionVendedor = 0;
-        if (selectedVendedorName !== 'UIB CORREDORES DE SEGUROS S.A.' && porcParticipacionVendedor > 0) {
-            comisionVendedor = comisionAgencia * (porcParticipacionVendedor / 100);
-        }
-        
-        comisionVendedorInput.value = '$' + Math.round(comisionVendedor).toLocaleString('es-CO');
-        
-        const comisionCocorretaje = comisionAgencia - comisionVendedor;
-        comisionCocorretajeInput.value = '$' + Math.round(comisionCocorretaje).toLocaleString('es-CO');
-    }
-
-    [primaSinIvaInput, porcIvaInput, porcComisionAgenciaInput, porcParticipacionVendedorInput, gastosAdicionalesInput].forEach(input => {
-        if(input) input.addEventListener('input', calcularValores);
-    });
-
-    document.getElementById('tomador_es_asegurado').addEventListener('change', function() {
-        const tomadorInput = document.getElementById('tomador');
-        const nitInput = document.getElementById('nit');
-        const aseguradoInput = document.getElementById('asegurado');
-        const nitAseguradoInput = document.getElementById('nit_asegurado');
-        const beneficiarioInput = document.getElementById('beneficiario');
-        const nitBeneficiarioInput = document.getElementById('nit_beneficiario');
-
-        if (this.checked) {
-            aseguradoInput.value = tomadorInput.value;
-            nitAseguradoInput.value = nitInput.value;
-            beneficiarioInput.value = tomadorInput.value;
-            nitBeneficiarioInput.value = nitInput.value;
-
-            aseguradoInput.readOnly = true;
-            nitAseguradoInput.readOnly = true;
-            beneficiarioInput.readOnly = true;
-            nitBeneficiarioInput.readOnly = true;
-        } else {
-            // No blanquear al desmarcar, por si el usuario quiere editar
-            aseguradoInput.readOnly = false;
-            nitAseguradoInput.readOnly = false;
-            beneficiarioInput.readOnly = false;
-            nitBeneficiarioInput.readOnly = false;
-        }
-    });
-
-    // Llamada inicial para calcular los valores al cargar la página
     calcularValores();
+
+    // Ensure the view is correct on page load
+    toggleCoCorretajeView();
+    calcularComisionesAliados();
 });
 </script>
 </body>
