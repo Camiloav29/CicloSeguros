@@ -1,0 +1,296 @@
+{% extends "_layout.html" %}
+
+{% block title %}{% if edit_mode %}Editar Cliente{% else %}Crear Nuevo Cliente{% endif %}{% endblock %}
+
+{% block content %}
+<header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="h3">
+            {% if edit_mode %}
+            <i class="fas fa-user-edit me-2"></i>Editar Cliente
+            {% else %}
+            <i class="fas fa-user-plus me-2"></i>Crear Nuevo Cliente
+            {% endif %}
+        </h1>
+        <p class="text-muted">
+            {% if edit_mode %}
+            Formulario para actualizar los datos de un cliente.
+            {% else %}
+            Formulario para registrar un nuevo cliente en el sistema.
+            {% endif %}
+        </p>
+    </div>
+    <a href="{{ url_for('crm_panel') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+</header>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="{{ url_for('crm_editar_cliente', id_cliente=cliente.ID_CLIENTE) if edit_mode else url_for('guardar_cliente_route') }}" method="POST">
+            
+            <!-- SECCIÓN 1: INFORMACIÓN GENERAL -->
+            <h5 class="mb-3">1. Información General</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Tipo_Cliente" class="form-label">Tipo de Cliente</label>
+                    <select id="Tipo_Cliente" name="Tipo_Cliente" class="form-select" required>
+                        <option value="Persona Natural" {% if cliente and cliente.Tipo_Cliente == 'Persona Natural' %}selected{% endif %}>Persona Natural</option>
+                        <option value="Persona Jurídica" {% if cliente and cliente.Tipo_Cliente == 'Persona Jurídica' %}selected{% endif %}>Persona Jurídica</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Tipo_Identificacion" class="form-label">Tipo de Identificación</label>
+                    <select id="Tipo_Identificacion" name="Tipo_Identificacion" class="form-select">
+                        <option value="">Seleccionar...</option>
+                        {% for opcion in opciones_tipo_id %}<option value="{{ opcion }}" {% if cliente and cliente.Tipo_Identificacion == opcion %}selected{% endif %}>{{ opcion }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Numero_Identificacion" class="form-label">Número de Identificación</label>
+                    <input type="text" id="Numero_Identificacion" name="Numero_Identificacion" class="form-control" value="{{ cliente.Numero_Identificacion if cliente else '' }}" required>
+                    <div id="cliente-existente-alerta" class="alert alert-warning mt-2 d-none" role="alert">¡Atención! Ya existe un cliente con este número de documento.</div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="Nombre_Completo_Razon_Social" class="form-label">Nombre Completo / Razón Social</label>
+                <input type="text" id="Nombre_Completo_Razon_Social" name="Nombre_Completo_Razon_Social" class="form-control" value="{{ cliente.Nombre_Completo_Razon_Social if cliente else '' }}" required>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Fecha_Nacimiento_Constitucion" class="form-label">Fecha de Nacimiento / Constitución</label>
+                    <input type="date" id="Fecha_Nacimiento_Constitucion" name="Fecha_Nacimiento_Constitucion" class="form-control" value="{{ cliente.Fecha_Nacimiento_Constitucion if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3 natural-only">
+                    <label for="Sexo" class="form-label">Sexo</label>
+                    <select id="Sexo" name="Sexo" class="form-select">
+                        <option value="">Seleccionar...</option>
+                        {% for opcion in opciones_sexo %}<option value="{{ opcion }}" {% if cliente and cliente.Sexo == opcion %}selected{% endif %}>{{ opcion }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3 natural-only">
+                    <label for="Estado_Civil" class="form-label">Estado Civil</label>
+                    <input type="text" id="Estado_Civil" name="Estado_Civil" class="form-control" value="{{ cliente.Estado_Civil if cliente else '' }}">
+                </div>
+            </div>
+             <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Nacionalidad" class="form-label">Nacionalidad</label>
+                    <input type="text" id="Nacionalidad" name="Nacionalidad" class="form-control" value="{{ cliente.Nacionalidad if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Actividad_Economica" class="form-label">Actividad Económica</label>
+                    <input type="text" id="Actividad_Economica" name="Actividad_Economica" class="form-control" value="{{ cliente.Actividad_Economica if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Ocupacion_Cargo" class="form-label">Ocupación / Cargo</label>
+                    <input type="text" id="Ocupacion_Cargo" name="Ocupacion_Cargo" class="form-control" value="{{ cliente.Ocupacion_Cargo if cliente else '' }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                 <label for="Nivel_Riesgo_SARLAFT" class="form-label">Nivel de Riesgo SARLAFT</label>
+                 <input type="text" id="Nivel_Riesgo_SARLAFT" name="Nivel_Riesgo_SARLAFT" class="form-control" value="{{ cliente.Nivel_Riesgo_SARLAFT if cliente else '' }}">
+            </div>
+            <hr class="my-4">
+
+            <!-- SECCIÓN 2: INFORMACIÓN DE CONTACTO -->
+            <h5 class="mb-3">2. Información de Contacto</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Telefono_Principal" class="form-label">Teléfono Principal</label>
+                    <input type="tel" id="Telefono_Principal" name="Telefono_Principal" class="form-control" value="{{ cliente.Telefono_Principal if cliente else '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Telefono_Secundario" class="form-label">Teléfono Secundario</label>
+                    <input type="tel" id="Telefono_Secundario" name="Telefono_Secundario" class="form-control" value="{{ cliente.Telefono_Secundario if cliente else '' }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="Correo_Electronico" class="form-label">Correo Electrónico</label>
+                <input type="email" id="Correo_Electronico" name="Correo_Electronico" class="form-control" value="{{ cliente.Correo_Electronico if cliente else '' }}">
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Direccion" class="form-label">Dirección</label>
+                    <input type="text" id="Direccion" name="Direccion" class="form-control" value="{{ cliente.Direccion if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Ciudad" class="form-label">Ciudad</label>
+                    <input type="text" id="Ciudad" name="Ciudad" class="form-control" value="{{ cliente.Ciudad if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Departamento" class="form-label">Departamento</label>
+                    <input type="text" id="Departamento" name="Departamento" class="form-control" value="{{ cliente.Departamento if cliente else '' }}">
+                </div>
+            </div>
+             <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Pais" class="form-label">País</label>
+                    <input type="text" id="Pais" name="Pais" class="form-control" value="{{ cliente.Pais if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Codigo_Postal" class="form-label">Código Postal</label>
+                    <input type="text" id="Codigo_Postal" name="Codigo_Postal" class="form-control" value="{{ cliente.Codigo_Postal if cliente else '' }}">
+                </div>
+                 <div class="col-md-4 mb-3">
+                    <label for="Pagina_Web" class="form-label">Página Web</label>
+                    <input type="url" id="Pagina_Web" name="Pagina_Web" class="form-control" value="{{ cliente.Pagina_Web if cliente else '' }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="Persona_de_Contacto" class="form-label">Persona de Contacto</label>
+                <input type="text" id="Persona_de_Contacto" name="Persona_de_Contacto" class="form-control" value="{{ cliente.Persona_de_Contacto if cliente else '' }}">
+            </div>
+            <hr class="my-4">
+
+            <!-- SECCIÓN 3: INFORMACIÓN PERSONA JURÍDICA -->
+            <div class="juridica-only">
+                <h5 class="mb-3">3. Información Persona Jurídica</h5>
+                <div class="mb-3">
+                    <label for="Nombre_Comercial" class="form-label">Nombre Comercial</label>
+                    <input type="text" id="Nombre_Comercial" name="Nombre_Comercial" class="form-control" value="{{ cliente.Nombre_Comercial if cliente else '' }}">
+                </div>
+                <h6 class="mt-3">Información del Representante Legal</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="Representante_Legal_Nombre" class="form-label">Nombre Completo</label>
+                        <input type="text" id="Representante_Legal_Nombre" name="Representante_Legal_Nombre" class="form-control" value="{{ cliente.Representante_Legal_Nombre if cliente else '' }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Representante_Legal_Tipo_ID" class="form-label">Tipo de Identificación</label>
+                        <select id="Representante_Legal_Tipo_ID" name="Representante_Legal_Tipo_ID" class="form-select">
+                            <option value="">Seleccionar...</option>
+                            {% for opcion in opciones_tipo_id %}<option value="{{ opcion }}" {% if cliente and cliente.Representante_Legal_Tipo_ID == opcion %}selected{% endif %}>{{ opcion }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Representante_Legal_Numero_ID" class="form-label">Número de Identificación</label>
+                        <input type="text" id="Representante_Legal_Numero_ID" name="Representante_Legal_Numero_ID" class="form-control" value="{{ cliente.Representante_Legal_Numero_ID if cliente else '' }}">
+                    </div>
+                </div>
+                <hr class="my-4">
+            </div>
+
+            <!-- SECCIÓN 4: INFORMACIÓN COMERCIAL Y DE RELACIÓN -->
+            <h5 class="mb-3">4. Información Comercial y de Relación</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Ejecutivo_Asignado" class="form-label">Ejecutivo Asignado</label>
+                    <input type="text" id="Ejecutivo_Asignado" name="Ejecutivo_Asignado" class="form-control" value="{{ cliente.Ejecutivo_Asignado if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Canal_de_Captacion" class="form-label">Canal de Captación</label>
+                    <input type="text" id="Canal_de_Captacion" name="Canal_de_Captacion" class="form-control" value="{{ cliente.Canal_de_Captacion if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Estado_Cliente" class="form-label">Estado del Cliente</label>
+                     <input type="text" id="Estado_Cliente" name="Estado_Cliente" class="form-control" value="{{ cliente.Estado_Cliente if cliente else '' }}">
+                </div>
+            </div>
+             <div class="mb-3">
+                <label for="Fuente_del_Cliente" class="form-label">Fuente del Cliente</label>
+                <input type="text" id="Fuente_del_Cliente" name="Fuente_del_Cliente" class="form-control" value="{{ cliente.Fuente_del_Cliente if cliente else '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="Observaciones" class="form-label">Observaciones</label>
+                <textarea id="Observaciones" name="Observaciones" class="form-control" rows="3">{{ cliente.Observaciones if cliente else '' }}</textarea>
+            </div>
+            <hr class="my-4">
+
+            <!-- SECCIÓN 5: INFORMACIÓN FINANCIERA -->
+            <h5 class="mb-3">5. Información Financiera</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Ingresos_Mensuales_Anuales" class="form-label">Ingresos Mensuales/Anuales</label>
+                    <input type="text" id="Ingresos_Mensuales_Anuales" name="Ingresos_Mensuales_Anuales" class="form-control" value="{{ cliente.Ingresos_Mensuales_Anuales if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Ventas_Anuales" class="form-label">Ventas Anuales</label>
+                    <input type="text" id="Ventas_Anuales" name="Ventas_Anuales" class="form-control" value="{{ cliente.Ventas_Anuales if cliente else '' }}">
+                </div>
+                 <div class="col-md-4 mb-3">
+                    <label for="Patrimonio" class="form-label">Patrimonio</label>
+                    <input type="text" id="Patrimonio" name="Patrimonio" class="form-control" value="{{ cliente.Patrimonio if cliente else '' }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="Tipo_de_Contribuyente" class="form-label">Tipo de Contribuyente</label>
+                <input type="text" id="Tipo_de_Contribuyente" name="Tipo_de_Contribuyente" class="form-control" value="{{ cliente.Tipo_de_Contribuyente if cliente else '' }}">
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="Banco" class="form-label">Banco</label>
+                    <input type="text" id="Banco" name="Banco" class="form-control" value="{{ cliente.Banco if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Tipo_de_Cuenta" class="form-label">Tipo de Cuenta</label>
+                    <input type="text" id="Tipo_de_Cuenta" name="Tipo_de_Cuenta" class="form-control" value="{{ cliente.Tipo_de_Cuenta if cliente else '' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="Numero_de_Cuenta" class="form-label">Número de Cuenta</label>
+                    <input type="text" id="Numero_de_Cuenta" name="Numero_de_Cuenta" class="form-control" value="{{ cliente.Numero_de_Cuenta if cliente else '' }}">
+                </div>
+            </div>
+             <div class="mb-3">
+                <label for="Estado_Financiero_Adjunto" class="form-label">Estado Financiero Adjunto (Ruta/Nombre)</label>
+                <input type="text" id="Estado_Financiero_Adjunto" name="Estado_Financiero_Adjunto" class="form-control" value="{{ cliente.Estado_Financiero_Adjunto if cliente else '' }}">
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4 w-100">
+                <i class="fas fa-save me-2"></i>{% if edit_mode %}Actualizar Cliente{% else %}Guardar Cliente{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoClienteSelector = document.getElementById('Tipo_Cliente');
+    const naturalOnlyFields = document.querySelectorAll('.natural-only');
+    const juridicaOnlyFields = document.querySelectorAll('.juridica-only');
+
+    function toggleFields() {
+        if (tipoClienteSelector.value === 'Persona Natural') {
+            naturalOnlyFields.forEach(field => field.style.display = 'block');
+            juridicaOnlyFields.forEach(field => field.style.display = 'none');
+        } else {
+            naturalOnlyFields.forEach(field => field.style.display = 'none');
+            juridicaOnlyFields.forEach(field => field.style.display = 'block');
+        }
+    }
+
+    tipoClienteSelector.addEventListener('change', toggleFields);
+    toggleFields(); // Initial call
+
+    document.getElementById('Numero_Identificacion').addEventListener('blur', function() {
+        const numeroDocumento = this.value;
+        const alerta = document.getElementById('cliente-existente-alerta');
+        if (numeroDocumento && !{{ 'true' if edit_mode else 'false' }}) { // Only run on create mode
+            fetch('/crm/api/verificar_cliente', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ numero_documento: numeroDocumento })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.existe) {
+                    alerta.classList.remove('d-none');
+                    // Auto-fill fields
+                    document.getElementById('Tipo_Cliente').value = data.cliente.Tipo_Cliente;
+                    document.getElementById('Tipo_Identificacion').value = data.cliente.Tipo_Identificacion;
+                    document.getElementById('Nombre_Completo_Razon_Social').value = data.cliente.Nombre_Completo_Razon_Social;
+                    document.getElementById('Correo_Electronico').value = data.cliente.Correo_Electronico;
+                    document.getElementById('Telefono_Principal').value = data.cliente.Telefono_Principal;
+                    document.getElementById('Direccion').value = data.cliente.Direccion;
+                    toggleFields(); // Update visibility based on fetched client type
+                } else {
+                    alerta.classList.add('d-none');
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

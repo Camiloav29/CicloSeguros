@@ -1,0 +1,131 @@
+{% extends "_layout.html" %}
+
+{% block title %}Ficha del Cliente{% endblock %}
+
+{% block content %}
+<header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="h3"><i class="fas fa-user-tag me-2"></i>Ficha del Cliente</h1>
+        <p class="text-muted">Información detallada y documentos del cliente.</p>
+    </div>
+    <a href="{{ url_for('crm_panel') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Volver al Panel</a>
+</header>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title">{{ cliente.Nombre_Completo_Razon_Social }}</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Documento:</strong> {{ cliente.Numero_Identificacion }} ({{ cliente.Tipo_Identificacion }})</p>
+                <p><strong>Correo Electrónico:</strong> {{ cliente.Correo_Electronico }}</p>
+                <p><strong>Teléfono:</strong> {{ cliente.Telefono_Principal }}</p>
+                <p><strong>Dirección:</strong> {{ cliente.Direccion }}, {{ cliente.Ciudad }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Tipo de Cliente:</strong> {{ cliente.Tipo_Cliente }}</p>
+                <p><strong>Ejecutivo Asignado:</strong> {{ cliente.Ejecutivo_Asignado }}</p>
+                <p><strong>Estado:</strong> {{ cliente.Estado_Cliente }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="polizas-tab" data-bs-toggle="tab" data-bs-target="#polizas" type="button" role="tab" aria-controls="polizas" aria-selected="true">Pólizas</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="cobros-tab" data-bs-toggle="tab" data-bs-target="#cobros" type="button" role="tab" aria-controls="cobros" aria-selected="false">Cobros</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos" type="button" role="tab" aria-controls="documentos" aria-selected="false">Documentos</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="formularios-tab" data-bs-toggle="tab" data-bs-target="#formularios" type="button" role="tab" aria-controls="formularios" aria-selected="false">Formularios</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="reportes-tab" data-bs-toggle="tab" data-bs-target="#reportes" type="button" role="tab" aria-controls="reportes" aria-selected="false">Reportes</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="polizas" role="tabpanel" aria-labelledby="polizas-tab">
+        <div class="table-responsive mt-3">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Consecutivo</th>
+                        <th>Póliza</th>
+                        <th>Ramo</th>
+                        <th>Aseguradora</th>
+                        <th>Vigencia</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for poliza in polizas %}
+                    <tr>
+                        <td>{{ poliza.consecutivo }}</td>
+                        <td>{{ poliza.poliza }}</td>
+                        <td>{{ poliza.ramo }}</td>
+                        <td>{{ poliza.aseguradora }}</td>
+                        <td>{{ poliza.fecha_inicio }} - {{ poliza.fecha_fin }}</td>
+                        <td><span class="badge bg-{{ 'warning' if poliza.estado == 'Pendiente' else 'success' }}">{{ poliza.estado }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">No hay pólizas asociadas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="cobros" role="tabpanel" aria-labelledby="cobros-tab">
+        <div class="table-responsive mt-3">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th># Póliza</th>
+                        <th># Cuota</th>
+                        <th>Fecha Vencimiento</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                     {% for cobro in cobros %}
+                    <tr>
+                        <td>{{ cobro.N_Poliza }}</td>
+                        <td>{{ cobro.N_Cuota }} de {{ cobro.Total_Cuotas }}</td>
+                        <td>{{ cobro.Fecha_Vencimiento_Cuota.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ cobro.Estado }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center">No hay cobros asociados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="documentos" role="tabpanel" aria-labelledby="documentos-tab">
+        <div class="list-group mt-3">
+            {% for doc_path in documentos %}
+            <a href="{{ url_for('crm_descargar_documento', filepath=doc_path) }}" class="list-group-item list-group-item-action">
+                {{ doc_path.split('/')[-1] }}
+            </a>
+            {% else %}
+            <div class="list-group-item">No hay documentos asociados.</div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="tab-pane fade" id="formularios" role="tabpanel" aria-labelledby="formularios-tab">
+        <p class="mt-3">Funcionalidad de Formularios en desarrollo.</p>
+    </div>
+    <div class="tab-pane fade" id="reportes" role="tabpanel" aria-labelledby="reportes-tab">
+        <p class="mt-3">Funcionalidad de Reportes en desarrollo.</p>
+    </div>
+</div>
+{% endblock %}
+

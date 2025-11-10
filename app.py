@@ -202,6 +202,58 @@ ORDEN_COLUMNAS_COBROS = [
     'Periodicidad'
 ]
 
+# --- Clientes (CRM) Module Constants & Config ---
+CLIENTES_FILENAME = 'clientes.xlsx'
+CLIENTES_FILE = os.path.join(BASE_DIR, CLIENTES_FILENAME)
+ORDEN_COLUMNAS_CLIENTES = [
+    # Información General
+    'ID_CLIENTE',
+    'Tipo_Cliente',
+    'Tipo_Identificacion',
+    'Numero_Identificacion',
+    'Nombre_Completo_Razon_Social',
+    'Nombre_Comercial',
+    'Fecha_Nacimiento_Constitucion',
+    'Sexo',
+    'Estado_Civil',
+    'Nacionalidad',
+    'Actividad_Economica',
+    'Ocupacion_Cargo',
+    'Nivel_Riesgo_SARLAFT',
+    # Información de Contacto
+    'Telefono_Principal',
+    'Telefono_Secundario',
+    'Correo_Electronico',
+    'Direccion',
+    'Ciudad',
+    'Departamento',
+    'Pais',
+    'Codigo_Postal',
+    'Pagina_Web',
+    'Persona_de_Contacto',
+    # Campos para Persona Jurídica
+    'Representante_Legal_Nombre',
+    'Representante_Legal_Tipo_ID',
+    'Representante_Legal_Numero_ID',
+    # Información Comercial y de Relación
+    'Fecha_Ingreso_Sistema',
+    'Ejecutivo_Asignado',
+    'Canal_de_Captacion',
+    'Estado_Cliente',
+    'Observaciones',
+    'Fuente_del_Cliente',
+    # Información Financiera
+    'Ingresos_Mensuales_Anuales',
+    'Ventas_Anuales',
+    'Patrimonio',
+    'Tipo_de_Contribuyente',
+    'Banco',
+    'Tipo_de_Cuenta',
+    'Numero_de_Cuenta',
+    'Estado_Financiero_Adjunto'
+]
+
+
 # This is the definitive column order for remisiones.xlsx
 # It includes all fields from the form, including calculated ones.
 ORDEN_COLUMNAS_EXCEL_REMISIONES = [
@@ -340,6 +392,81 @@ def cargar_remisiones():
             print(f"Error al cargar desde Excel: {e}")
             return []
     return []
+
+def cargar_clientes():
+    """
+    Carga los clientes desde el archivo Excel. Si el archivo no existe, lo crea.
+    Si al archivo le faltan columnas, las añade y lo guarda para corregirlo.
+    """
+    if not os.path.exists(CLIENTES_FILE):
+        try:
+            # Si el archivo no existe, crear uno vacío con las columnas correctas.
+            df_vacio = pd.DataFrame(columns=ORDEN_COLUMNAS_CLIENTES)
+            df_vacio.to_excel(CLIENTES_FILE, index=False)
+            return []  # No hay clientes todavía.
+        except Exception as e:
+            print(f"Error crítico al intentar crear '{CLIENTES_FILENAME}': {e}")
+            return []
+
+    try:
+        df = pd.read_excel(CLIENTES_FILE)
+        
+        # Verificar si faltan columnas y añadirlas si es necesario.
+        columnas_actuales = df.columns.tolist()
+        columnas_faltantes = [col for col in ORDEN_COLUMNAS_CLIENTES if col not in columnas_actuales]
+
+        if columnas_faltantes:
+            print(f"Detectadas y añadidas columnas faltantes en '{CLIENTES_FILENAME}': {columnas_faltantes}")
+            for col in columnas_faltantes:
+                df[col] = ""  # Añadir columna con valor por defecto.
+            
+            # Reordenar y guardar el archivo corregido.
+            df = df[ORDEN_COLUMNAS_CLIENTES]
+            df.to_excel(CLIENTES_FILE, index=False)
+
+        return df.to_dict(orient='records')
+
+    except Exception as e:
+        print(f"Error al leer o reparar '{CLIENTES_FILENAME}': {e}")
+        return [] # Devolver lista vacía en caso de error de lectura.
+
+def guardar_clientes(df_clientes):
+    try:
+        # Ensure all columns exist and are in order
+        for col in ORDEN_COLUMNAS_CLIENTES:
+            if col not in df_clientes.columns:
+                df_clientes[col] = ""
+        df_clientes = df_clientes[ORDEN_COLUMNAS_CLIENTES]
+        df_clientes.to_excel(CLIENTES_FILE, index=False)
+        return True
+    except Exception as e:
+        print(f"Error al guardar en {CLIENTES_FILENAME}: {e}")
+        return False
+
+def limpiar_datos_cliente(datos_dict):
+    """
+    Limpia los campos numéricos de un diccionario de datos de cliente,
+    convirtiéndolos a enteros si es posible, pero preservando formatos especiales.
+    """
+    campos_a_entero = [
+        'Telefono_Principal', 'Telefono_Secundario', 'Codigo_Postal',
+        'Representante_Legal_Numero_ID', 'Numero_de_Cuenta'
+    ]
+    
+    for campo, valor in datos_dict.items():
+        if campo in campos_a_entero and isinstance(valor, str) and valor.strip().isdigit():
+            try:
+                datos_dict[campo] = int(float(valor))
+            except (ValueError, TypeError):
+                # Si falla la conversión, mantener el valor original
+                pass
+        # Caso especial para Numero_Identificacion: solo convertir si no tiene guiones u otros caracteres no numéricos
+        elif campo == 'Numero_Identificacion' and isinstance(valor, str) and valor.strip().isdigit():
+             try:
+                datos_dict[campo] = int(float(valor))
+             except (ValueError, TypeError):
+                pass
+    return datos_dict
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -2550,6 +2677,225 @@ def marcar_cobrado(id_cobro):
         flash('Error: Archivo de cobros no encontrado.', 'danger')
 
     return redirect(url_for('panel_cobros'))
+
+@app.route('/crm/documento/<path:filepath>')
+@login_required
+def crm_descargar_documento(filepath):
+    # Security check: ensure the path is within the client folders base directory
+    if not os.path.abspath(filepath).startswith(os.path.abspath(app.config['CLIENT_FOLDERS_BASE_DIR'])):
+        return "Acceso no autorizado", 403
+    return send_file(filepath)
+
+# --- CRM Routes ---
+
+@app.route('/crm')
+@login_required
+def crm_panel():
+    clientes = cargar_clientes()
+    df_clientes = pd.DataFrame(clientes)
+
+    search_query = request.args.get('search_query', '').strip().lower()
+    tipo_cliente_query = request.args.get('tipo_cliente', '').strip()
+    estado_cliente_query = request.args.get('estado_cliente', '').strip()
+
+    if not df_clientes.empty:
+        if search_query:
+            df_clientes = df_clientes[
+                df_clientes['Nombre_Completo_Razon_Social'].str.lower().str.contains(search_query, na=False) |
+                df_clientes['Numero_Identificacion'].astype(str).str.contains(search_query, na=False)
+            ]
+        if tipo_cliente_query:
+            df_clientes = df_clientes[df_clientes['Tipo_Cliente'] == tipo_cliente_query]
+        if estado_cliente_query:
+            df_clientes = df_clientes[df_clientes['Estado_Cliente'] == estado_cliente_query]
+
+    clientes_filtrados = df_clientes.to_dict(orient='records')
+    return render_template('crm_panel.html', clientes=clientes_filtrados)
+
+@app.route('/crm/cliente/<id_cliente>')
+@login_required
+def crm_ficha_cliente(id_cliente):
+    clientes = cargar_clientes()
+    cliente_seleccionado = None
+    for c in clientes:
+        if str(c.get('ID_CLIENTE')) == str(id_cliente):
+            cliente_seleccionado = c
+            break
+
+    if not cliente_seleccionado:
+        flash('Cliente no encontrado.', 'danger')
+        return redirect(url_for('crm_panel'))
+
+    # Cargar pólizas y cobros relacionados
+    remisiones = cargar_remisiones()
+    cobros = []
+    if os.path.exists(COBROS_FILE):
+        cobros = pd.read_excel(COBROS_FILE).to_dict(orient='records')
+    
+    documento_cliente = cliente_seleccionado.get('Numero_Identificacion')
+    polizas_cliente = [r for r in remisiones if str(r.get('nit')) == str(documento_cliente)]
+    cobros_cliente = [c for c in cobros if str(c.get('NIT_CC')) == str(documento_cliente)]
+
+    # Lógica para encontrar documentos
+    documentos_cliente = []
+    nombre_carpeta_cliente = f"{cliente_seleccionado.get('Nombre_Completo_Razon_Social')}_{documento_cliente}"
+    ruta_carpeta_cliente = os.path.join(app.config['CLIENT_FOLDERS_BASE_DIR'], secure_filename(nombre_carpeta_cliente))
+    
+    if os.path.exists(ruta_carpeta_cliente):
+        for root, dirs, files in os.walk(ruta_carpeta_cliente):
+            for file in files:
+                documentos_cliente.append(os.path.join(root, file))
+
+    return render_template('crm_ficha_cliente.html', 
+                           cliente=cliente_seleccionado,
+                           polizas=polizas_cliente,
+                           cobros=cobros_cliente,
+                           documentos=documentos_cliente)
+
+@app.route('/crm/cliente/nuevo', methods=['GET'])
+@login_required
+def crm_formulario_cliente():
+    return render_template('crm_formulario.html',
+                           opciones_tipo_id=config_manager.get_list('tipos_identificacion'),
+                           opciones_sexo=config_manager.get_list('sexo'))
+
+@app.route('/crm/api/verificar_cliente', methods=['POST'])
+@login_required
+def verificar_cliente():
+    numero_documento = request.json.get('numero_documento')
+    if not numero_documento:
+        return jsonify({'existe': False, 'error': 'Número de documento no proporcionado.'})
+
+    clientes = cargar_clientes()
+    for cliente in clientes:
+        if str(cliente.get('Numero_Identificacion')) == str(numero_documento):
+            return jsonify({'existe': True, 'cliente': cliente})
+    
+    return jsonify({'existe': False})
+
+@app.route('/crm/cliente/editar/<id_cliente>', methods=['GET', 'POST'])
+@login_required
+def crm_editar_cliente(id_cliente):
+    df_clientes = pd.DataFrame(cargar_clientes())
+    # Ensure ID_CLIENTE is string for comparison
+    df_clientes['ID_CLIENTE'] = df_clientes['ID_CLIENTE'].astype(str)
+    cliente_data = df_clientes[df_clientes['ID_CLIENTE'] == id_cliente].to_dict('records')
+
+    if not cliente_data:
+        flash('Cliente no encontrado.', 'danger')
+        return redirect(url_for('crm_panel'))
+
+    if request.method == 'POST':
+        datos_formulario = request.form.to_dict()
+        
+        # Aplicar formato a mayúsculas
+        campos_a_mayusculas = ['Nombre_Completo_Razon_Social', 'Correo_Electronico', 'Nombre_Comercial']
+        for campo in campos_a_mayusculas:
+            if campo in datos_formulario:
+                datos_formulario[campo] = datos_formulario[campo].upper()
+
+        # Limpiar y formatear datos numéricos
+        datos_formulario = limpiar_datos_cliente(datos_formulario)
+
+        # Find index and update
+        idx = df_clientes[df_clientes['ID_CLIENTE'] == id_cliente].index[0]
+        
+        for campo in ORDEN_COLUMNAS_CLIENTES:
+            if campo in datos_formulario:
+                df_clientes.loc[idx, campo] = datos_formulario.get(campo)
+        
+        if guardar_clientes(df_clientes):
+            flash('Cliente actualizado exitosamente.', 'success')
+        else:
+            flash('Error al actualizar el cliente.', 'danger')
+        return redirect(url_for('crm_panel'))
+
+    return render_template('crm_formulario.html', 
+                           cliente=cliente_data[0], 
+                           edit_mode=True,
+                           opciones_tipo_id=config_manager.get_list('tipos_identificacion'),
+                           opciones_sexo=config_manager.get_list('sexo'))
+
+@app.route('/crm/cliente/eliminar/<id_cliente>')
+@login_required
+def crm_eliminar_cliente(id_cliente):
+    df_clientes = pd.DataFrame(cargar_clientes())
+    # Ensure ID_CLIENTE is string for comparison and it's not empty
+    if not df_clientes.empty:
+        df_clientes['ID_CLIENTE'] = df_clientes['ID_CLIENTE'].astype(str)
+        df_clientes = df_clientes[df_clientes['ID_CLIENTE'] != id_cliente]
+        if guardar_clientes(df_clientes):
+            flash('Cliente eliminado exitosamente.', 'success')
+        else:
+            flash('Error al eliminar el cliente.', 'danger')
+    else:
+        flash('No hay clientes para eliminar.', 'warning')
+    return redirect(url_for('crm_panel'))
+
+@app.route('/crm/guardar_cliente', methods=['POST'])
+@login_required
+def guardar_cliente_route():
+    datos_formulario = request.form.to_dict()
+    
+    # Aplicar formato a mayúsculas
+    campos_a_mayusculas = ['Nombre_Completo_Razon_Social', 'Correo_Electronico', 'Nombre_Comercial']
+    for campo in campos_a_mayusculas:
+        if campo in datos_formulario:
+            datos_formulario[campo] = datos_formulario[campo].upper()
+            
+    # Limpiar y formatear datos numéricos
+    datos_formulario = limpiar_datos_cliente(datos_formulario)
+
+    clientes_df = pd.DataFrame(cargar_clientes())
+    
+    # Verificar si el cliente ya existe
+    numero_documento = datos_formulario.get('Numero_Identificacion')
+    if not clientes_df.empty and numero_documento in clientes_df['Numero_Identificacion'].astype(str).values:
+        flash('Ya existe un cliente con este número de documento.', 'warning')
+        return redirect(url_for('crm_formulario_cliente'))
+
+    nuevo_cliente = {
+        'ID_CLIENTE': uuid.uuid4().hex[:8].upper(),
+        'Fecha_Ingreso_Sistema': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    for campo in ORDEN_COLUMNAS_CLIENTES:
+        if campo in datos_formulario:
+            nuevo_cliente[campo] = datos_formulario.get(campo)
+
+    nuevos_datos_df = pd.DataFrame([nuevo_cliente])
+    df_final = pd.concat([clientes_df, nuevos_datos_df], ignore_index=True)
+    
+    if guardar_clientes(df_final):
+        # --- Lógica para crear carpeta de cliente ---
+        try:
+            nombre_cliente = datos_formulario.get('Nombre_Completo_Razon_Social', 'SIN_NOMBRE').strip()
+            nit_cliente = str(datos_formulario.get('Numero_Identificacion', 'SIN_NIT')).strip()
+            
+            nombre_carpeta_base = f"{nombre_cliente}_{nit_cliente}"
+            nombre_carpeta_seguro = secure_filename(nombre_carpeta_base)
+            
+            if nombre_carpeta_seguro:
+                ruta_completa = os.path.join(app.config['CLIENT_FOLDERS_BASE_DIR'], nombre_carpeta_seguro)
+                if not os.path.exists(ruta_completa):
+                    os.makedirs(ruta_completa)
+                    ano_actual = datetime.now().strftime('%Y')
+                    subcarpetas = [os.path.join("SARLAFT", ano_actual), "POLIZAS", "DOCUMENTOS", "SINIESTROS"]
+                    for subcarpeta_rel in subcarpetas:
+                        os.makedirs(os.path.join(ruta_completa, subcarpeta_rel), exist_ok=True)
+                    flash('Cliente creado exitosamente y estructura de carpetas generada.', 'success')
+                else:
+                    flash('Cliente creado exitosamente. La carpeta del cliente ya existía.', 'info')
+            else:
+                flash('Cliente creado, pero no se pudo generar la estructura de carpetas debido a un nombre inválido.', 'warning')
+
+        except Exception as e:
+            flash(f'Cliente creado, pero ocurrió un error al generar la estructura de carpetas: {e}', 'warning')
+    else:
+        flash('Error al guardar el cliente.', 'danger')
+
+    return redirect(url_for('crm_panel'))
+
 
 if __name__ == '__main__':
     try:
